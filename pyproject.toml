@@ -18,4 +18,4 @@ dynamic = ["version", "dependencies"]
 write_to = "src/__version__.py"
 
 [tool.setuptools.dynamic]
-dependencies = {file = "requirements.txt", format = "requirements"}
+dependencies = {file = "requirements.txt"}
