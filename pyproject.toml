@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "nio-bot"
+description = "Making matrix bots simple"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.11"
+license = { text = "GNU GPLv3" }
+authors = [
+    {name = "Nexus", email = "packages@nexy7574.co.uk"}
+]
+dynamic = ["version", "dependencies"]
+
+[tool.setuptools_scm]
+write_to = "src/__version__.py"
+
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt", format = "requirements"}
