@@ -110,7 +110,7 @@ class NioBot(nio.AsyncClient):
             self.log.debug("Ignoring message sent by self.")
             return
         if self.ignore_old_events and self.start_time is not None:
-            if self.start_time - event.server_timestamp / 1000:
+            if self.start_time - event.server_timestamp / 1000 > 0:
                 age = self.start_time - event.server_timestamp / 1000
                 self.log.debug("Ignoring message sent {:.0f} seconds before startup.".format(age))
                 return
