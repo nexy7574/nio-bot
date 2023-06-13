@@ -153,7 +153,7 @@ class MediaAttachment:
 
         result = await client.upload(
             self.file,
-            mime_type=self.mime,
+            content_type=self.mime,
             filename=file_name or self.file.name,
             filesize=self.size
         )
