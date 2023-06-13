@@ -280,7 +280,7 @@ class NioBot(nio.AsyncClient):
             room: nio.MatrixRoom,
             event_id: str,
             content: str
-    ):
+    ) -> nio.RoomSendResponse:
         """
         Edit an existing message. You must be the sender of the message.
 
@@ -294,7 +294,7 @@ class NioBot(nio.AsyncClient):
         """
 
         content = {
-            "msgtype": "m.text",
+            "msgtype": self.global_message_type,
             "body": content,
             "format": "org.matrix.custom.html",
             "formatted_body": await self._markdown_to_html(content),
@@ -323,7 +323,7 @@ class NioBot(nio.AsyncClient):
         self.log.debug("edit_message: %r" % response)
         return response
 
-    async def delete_message(self, room: nio.MatrixRoom, message_id: str, reason: str = None):
+    async def delete_message(self, room: nio.MatrixRoom, message_id: str, reason: str = None) -> nio.RoomRedactResponse:
         """
         Delete an existing message. You must be the sender of the message.
 
@@ -335,20 +335,8 @@ class NioBot(nio.AsyncClient):
         # TODO: Check power level
         # if message.sender != self.user_id:
         #     raise RuntimeError("You cannot delete a message you did not send.")
-
-        body = {
-            "reason": reason,
-            "m.relates_to": {
-                "rel_type": "m.replace",
-                "event_id": message_id,
-            },
-        }
-        response = await self.room_send(
-            room.room_id,
-            "m.room.redaction",
-            body,
-        )
-        if isinstance(response, nio.RoomSendError):
+        response = await self.room_redact(room.room_id, message_id, reason=reason)
+        if isinstance(response, nio.RoomRedactError):
             raise MessageException("Failed to delete message.", response)
         self.log.debug("delete_message: %r", response)
         return response
