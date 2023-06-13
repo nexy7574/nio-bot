@@ -5,6 +5,7 @@ __all__ = (
     "NioBotException",
     "MessageException",
     "LoginException",
+    "MediaUploadException"
 )
 
 
@@ -32,4 +33,10 @@ class MessageException(NioBotException):
 class LoginException(NioBotException):
     """
     Exception for login-related errors.
+    """
+
+
+class MediaUploadException(NioBotException):
+    """
+    Exception for media-uploading related errors
     """

@@ -13,6 +13,7 @@ import tempfile
 import aiofiles
 
 from .utils import run_blocking
+from .exceptions import MediaUploadException
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -169,6 +170,8 @@ class MediaAttachment:
             )
         if isinstance(result, nio.UploadResponse):
             self._url = result.content_uri
+        else:
+            raise MediaUploadException(original=result)
         return result
 
     def to_dict(self) -> dict:
