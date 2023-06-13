@@ -13,8 +13,8 @@ log = logging.getLogger(__name__)
 
 class ArgumentView:
     def __init__(self, string: str):
-        if not string:
-            raise ValueError("Cannot create an empty view")
+        # if not string:
+        #     raise ValueError("Cannot create an empty view")
         self.source = string
         self.index = 0
 
