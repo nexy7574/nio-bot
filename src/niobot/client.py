@@ -338,9 +338,11 @@ class NioBot(nio.AsyncClient):
         async def event_handler(_room, _event):
             if room_id:
                 if _room.room_id != room_id:
+                    self.log.debug("Ignoring bubbling message from %r (vs %r)", _room.room_id, room_id)
                     return False
             if sender:
                 if _event.sender != sender:
+                    self.log.debug("Ignoring bubbling message from %r (vs %r)", _event.sender, sender)
                     return False
             if check:
                 try:
@@ -349,6 +351,7 @@ class NioBot(nio.AsyncClient):
                     self.log.error("Error in check function: %r", e, exc_info=e)
                     return False
                 if not result:
+                    self.log.debug("Ignoring bubbling message, check was false")
                     return False
             event.set()
             nonlocal value
