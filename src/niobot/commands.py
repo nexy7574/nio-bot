@@ -24,7 +24,7 @@ class Command:
         self.description = description
         self.disabled = disabled
         self.aliases = aliases or []
-        self.usage = kwargs.pop("usage")
+        self.usage = kwargs.pop("usage", None)
 
     def __repr__(self):
         return "<Command name={0.name} aliases={0.aliases} disabled={0.disabled}>".format(self)
