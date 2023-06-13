@@ -54,7 +54,7 @@ class Context:
     @property
     def command(self) -> "Command":
         """The current command being invoked"""
-        return self.command
+        return self._command
 
     @property
     def args(self) -> list[str]:
