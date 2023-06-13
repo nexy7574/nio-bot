@@ -76,6 +76,10 @@ class NioBot(nio.AsyncClient):
 
         # noinspection PyTypeChecker
         self.add_event_callback(self.process_message, nio.RoomMessageText)
+        self.add_event_callback(
+            self.update_read_receipts,
+            nio.RoomMessage
+        )
 
     def dispatch(self, event_name: str, *args, **kwargs):
         """Dispatches an event to listeners"""
@@ -88,6 +92,11 @@ class NioBot(nio.AsyncClient):
                 )
                 self._event_tasks.append(task)
                 task.add_done_callback(lambda: self._event_tasks.remove(task))
+
+    async def update_read_receipts(self, room, event):
+        """part of spec module 11.6"""
+        self.log.debug("Updating read receipts for %s", room.room_id)
+        await self.room_read_markers(room, event.event_id, event.event_id)
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
         """Processes a message and runs the command it is trying to invoke if any."""
