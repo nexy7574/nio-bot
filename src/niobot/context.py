@@ -32,8 +32,10 @@ class Context:
         self._invoking_string = invoking_string
         to_parse = event.body
         if invoking_string:
-            if invoking_string != event.body:
+            try:
                 to_parse = event.body[len(invoking_string):]
+            except IndexError:
+                to_parse = ""
         self._args = ArgumentView(to_parse)
         self._args.parse_arguments()
 
