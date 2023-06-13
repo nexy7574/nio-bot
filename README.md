@@ -55,6 +55,78 @@ def do_echo(ctx: Context):
     """Repeats what you say!"""
     await ctx.reply(f"You said: {' '.join(ctx.arguments)}")
 
-bot.run("password")  # starts the bot with a password. If you already have a login token, see:
-bot.run(token="my_token") # starts the bot with a login token.
+bot.run(password="password")  # starts the bot with a password. If you already have a login token, see:
+bot.run(access_token="my_token") # starts the bot with a login token.
 ```
+
+### With modules
+Eventually, you will want to split your code up into several "modules" to make your code easier to read, and also
+modular. You can do this using the `NioBot.mount_module` function.
+
+> Note: Once a module is loaded, you cannot "reload" it. You can unload it, but there is no way to refresh code yet.
+
+Let's assume this file tree:
+```
+project_root
+|- main.py  (your bot file, the bit that runs your bot)
+|- modules
+    |- ping.py
+```
+
+In main.py, you'll put some similar code:
+```python
+import niolib
+
+bot = niolib.Bot(...)
+bot.mount_module("modules.ping")  # mounts the ping module
+
+bot.run(password="password")
+```
+
+When you call `mount_module`, it effectively calls `import module` under the hood, and then does one of the following:
+
+1. Calls the `module.setup(bot)` function, if it exists
+2. Discovers all classes that subclass `niolib.Module` in the module, and calls their `__setup__`, adding all commands
+registered under that class
+
+Take the following file as ping.py:
+```python
+import niolib
+
+
+class MyPingModule(niolib.Module):
+    # This class is a subclass of niolib.Module, so it will be automatically discovered and loaded
+    # It also has two attributes defined that you can use:
+    # * self.bot: the instance of the bot
+    # * self.log: An instance of logging.Logger, which you can use to log messages to the console or log file.
+    #   It is recommended to use this instead of print().
+    
+    # Now we will define a command
+    @niolib.command()
+    async def ping(self, ctx: niolib.Context):
+        """Shows the latency"""
+        roundtrip = (time.time() * 1000 - ctx.event.server_timestamp)
+        await ctx.reply("Pong! Took {:,.2f}ms".format(roundtrip))
+```
+
+Notice how here, we use `@niolib.command`, instead of `@bot.command`? They work the same, however
+`niolib.command` is designed to be loaded in a module context, where you usually don't have the bot instance at runtime
+(since that is injected by `NioBot.mount_module`). If you do have the bot instance, you can use `@bot.command` instead,
+which will register your command instantly.
+
+Once `mount_module` is called, it will scan through `ping.py`. It will find `MyPingModule`, realise it is a subclass
+of `Module`, and will automatically add any commands defined by `@niolib.command`.
+
+After all of this, `[prefix]ping` is now available!
+
+---
+
+You can customise the behaviour of the loading process at two-levels:
+
+1. By overriding `Module.__setup__`, you can customise how the module is loaded. By default, it will scan through the
+class' functions and detect any that're annotated with `@niolib.command`, and register them. You can override this
+to do whatever you want.
+2. Providing a `setup(niobot)` function in your module. This will be called when the module is loaded, and you can
+do whatever you want in here. This is useful if you want to do something that isn't related to commands, such as
+registering event handlers. Note that defining `setup` must be outside any classes, and it will disable the
+auto-discovery of commands.
