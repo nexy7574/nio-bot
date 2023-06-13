@@ -5,13 +5,14 @@ import importlib
 import time
 import inspect
 import typing
+from collections import deque
 
 import nio
 import marko
 
 from .attachment import MediaAttachment
 from .exceptions import MessageException, LoginException
-from .utils import run_blocking, Typing
+from .utils import run_blocking, Typing, force_await
 from .utils.help_command import help_command
 from .commands import Command, Module
 
@@ -90,6 +91,11 @@ class NioBot(nio.AsyncClient):
             nio.RoomMessage
         )
 
+        self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
+            maxlen=kwargs.pop("max_message_cache", 1000)
+        )
+        self._waiting_events = {}
+
     def dispatch(self, event_name: str, *args, **kwargs):
         """Dispatches an event to listeners"""
         if event_name in self._events:
@@ -123,6 +129,7 @@ class NioBot(nio.AsyncClient):
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
         """Processes a message and runs the command it is trying to invoke if any."""
+        self.message_cache.append((room, event))
         self.dispatch("message", room, event)
         if event.sender == self.user:
             self.log.debug("Ignoring message sent by self.")
@@ -266,6 +273,12 @@ class NioBot(nio.AsyncClient):
             return func
         return wrapper
 
+    def remove_event_listener(self, function):
+        for event_type, functions in self._events.items():
+            if function in functions:
+                self._events[event_type].remove(function)
+                self.log.debug("Removed %r from event %r", function, event_type)
+
     async def wait_for(self, event_name: str, timeout: float = None, checks=None):
         """
         Waits for an event and returns its result
@@ -295,6 +308,58 @@ class NioBot(nio.AsyncClient):
             tx_id,
             ignore_unverified_devices,
         )
+
+    def get_cached_message(self, event_id: str) -> typing.Optional[
+        typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]
+    ]:
+        """Fetches a message from the cache.
+
+        This returns both the room the message was sent in, and the event itself.
+
+        If the message is not in the cache, this returns None."""
+        for room, event in self.message_cache:
+            if event_id == event.event_id:
+                return room, event
+
+    async def wait_for_message(
+            self,
+            room_id: str = None,
+            sender: str = None,
+            check: typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any] = None,
+            *,
+            timeout: float = None
+    ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]]:
+        """Waits for a message, optionally with a filter.
+
+        If this function times out, asyncio.TimeoutError is raised."""
+        event = asyncio.Event()
+        value = None
+
+        async def event_handler(_room, _event):
+            if room_id:
+                if _room.room_id != room_id:
+                    return False
+            if sender:
+                if _event.sender != sender:
+                    return False
+            if check:
+                try:
+                    result = await force_await(check, _room, _event)
+                except Exception as e:
+                    self.log.error("Error in check function: %r", e, exc_info=e)
+                    return False
+                if not result:
+                    return False
+            event.set()
+            nonlocal value
+            value = _room, _event
+
+        self.on_event("message")(event_handler)
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout)
+        finally:
+            self.remove_event_listener(event_handler)
+        return value
 
     @staticmethod
     async def _markdown_to_html(text: str) -> str:

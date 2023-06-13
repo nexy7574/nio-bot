@@ -3,7 +3,7 @@ import typing
 import functools
 
 
-__all__ = ("run_blocking",)
+__all__ = ("run_blocking", "force_await")
 
 
 async def run_blocking(function: typing.Callable, *args, **kwargs):
@@ -16,3 +16,13 @@ async def run_blocking(function: typing.Callable, *args, **kwargs):
     obj = functools.partial(function, *args, **kwargs)
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, obj)
+
+
+async def force_await(function: typing.Union[typing.Callable, typing.Coroutine], *args, **kwargs):
+    """
+    Takes a function, and if it needs awaiting, it will be awaited.
+    If it is a synchronous function, it runs it in the event loop, preventing it from blocking."""
+    if asyncio.iscoroutinefunction(function):
+        return await function(*args, **kwargs)
+    else:
+        return await run_blocking(function, *args, **kwargs)
