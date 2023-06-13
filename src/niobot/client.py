@@ -11,7 +11,7 @@ import nio
 import marko
 
 from .attachment import MediaAttachment
-from .exceptions import MessageException, LoginException
+from .exceptions import MessageException, LoginException, NioBotException
 from .utils import run_blocking, Typing, force_await
 from .utils.help_command import help_command
 from .commands import Command, Module
@@ -95,6 +95,16 @@ class NioBot(nio.AsyncClient):
             maxlen=kwargs.pop("max_message_cache", 1000)
         )
         self._waiting_events = {}
+
+    @property
+    def commands(self):
+        """A copy of the commands register"""
+        return self._commands.copy()
+
+    @property
+    def modules(self):
+        """A copy of the modules register"""
+        return self._modules.copy()
 
     def dispatch(self, event_name: str, *args, **kwargs):
         """Dispatches an event to listeners"""
@@ -522,6 +532,11 @@ class NioBot(nio.AsyncClient):
         else:
             raise LoginException("You must specify either a password/SSO token or an access token.")
 
+        self.log.info("Performing first sync...")
+        result = await self.sync(timeout=30000, full_state=True, set_presence="unavailable")
+        if not isinstance(result, nio.SyncResponse):
+            raise NioBotException("Failed to perform first sync.", result)
+        self.dispatch("ready", result)
         self.log.info("Starting sync loop")
         try:
             await self.sync_forever(
