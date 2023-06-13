@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 
 import nio
@@ -63,6 +64,8 @@ class NioBot(nio.AsyncClient):
 
         self.start_time: float | None = None
         self._commands = {}
+        self._events = {}
+        self._event_tasks = []
         self.global_message_type = kwargs.pop(
             "global_message_type",
             "m.notice"
@@ -74,8 +77,21 @@ class NioBot(nio.AsyncClient):
         # noinspection PyTypeChecker
         self.add_event_callback(self.process_message, nio.RoomMessageText)
 
+    def dispatch(self, event_name: str, *args, **kwargs):
+        """Dispatches an event to listeners"""
+        if event_name in self._events:
+            for handler in self._events[event_name]:
+                self.log.debug("Dispatching %s to %r" % (event_name, handler))
+                task = asyncio.create_task(
+                    handler(*args, **kwargs),
+                    name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
+                )
+                self._event_tasks.append(task)
+                task.add_done_callback(lambda: self._event_tasks.remove(task))
+
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
         """Processes a message and runs the command it is trying to invoke if any."""
+        self.dispatch("message", room, event)
         if event.sender == self.user:
             self.log.debug("Ignoring message sent by self.")
             return
@@ -96,11 +112,15 @@ class NioBot(nio.AsyncClient):
             command = self.get_command(command)
             if command:
                 context = command.construct_context(self, room, event)
+                self.dispatch("command", context)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
                 try:
-                    await command.callback(context)
+                    result = await command.callback(context)
                 except Exception as e:
+                    self.dispatch("command_error", context, e)
                     self.log.exception("Error running command %s: %s", command.name, e, exc_info=e)
+                else:
+                    self.dispatch("command_complete", context, result)
             else:
                 self.log.debug(f"Command {command.name} not found.")
 
@@ -140,6 +160,30 @@ class NioBot(nio.AsyncClient):
                 self._commands[alias] = command
             return func
         return decorator
+
+    def on_event(self, event_type: str = None):
+        if event_type.startswith("on_"):
+            self.log.warning("No events start with 'on_' - stripping prefix")
+            event_type = event_type[3:]
+
+        def wrapper(func):
+            nonlocal event_type
+            event_type = event_type or func.__name__
+            self._events.setdefault(event_type, [])
+            self._events[event_type].append(func)
+            return func
+        return wrapper
+
+    async def wait_for(self, event_name: str, timeout: float = None, checks=None):
+        """
+        Waits for an event and returns its result
+
+        :param event_name: The name of the event to listen to
+        :param timeout: A timeout, in seconds. Defaults to None for no timeout
+        :param checks: A list of check functions to run. Each check function should take a single parameter, the event.
+        :return:
+        """
+        raise NotImplementedError
 
     async def room_send(
         self,
@@ -235,7 +279,7 @@ class NioBot(nio.AsyncClient):
     async def edit_message(
             self,
             room: nio.MatrixRoom,
-            message: nio.RoomMessageText,
+            event_id: str,
             content: str
     ):
         """
@@ -244,16 +288,11 @@ class NioBot(nio.AsyncClient):
         You also cannot edit messages that are attachments.
 
         :param room: The room the message is in.
-        :param message: The message to edit.
+        :param event_id: The message to edit.
         :param content: The new content of the message.
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
-        if message.sender != self.user_id:
-            raise RuntimeError("You cannot edit a message you did not send.")
-
-        if not isinstance(message, nio.RoomMessageText):
-            raise TypeError("You cannot edit a non-text message.")
 
         content = {
             "msgtype": "m.text",
@@ -270,7 +309,7 @@ class NioBot(nio.AsyncClient):
             },
             "m.relates_to": {
                 "rel_type": "m.replace",
-                "event_id": message.event_id,
+                "event_id": event_id,
             },
             "format": "org.matrix.custom.html",
             "formatted_body": content["formatted_body"]
@@ -285,24 +324,24 @@ class NioBot(nio.AsyncClient):
         self.log.debug("edit_message: %r" % response)
         return response
 
-    async def delete_message(self, room: nio.MatrixRoom, message: nio.RoomMessage, reason: str = None):
+    async def delete_message(self, room: nio.MatrixRoom, message_id: str, reason: str = None):
         """
         Delete an existing message. You must be the sender of the message.
 
         :param room: The room the message is in.
-        :param message: The message to delete.
+        :param message_id: The message to delete.
         :param reason: The reason for deleting the message.
         :raises RuntimeError: If you are not the sender of the message.
         """
         # TODO: Check power level
-        if message.sender != self.user_id:
-            raise RuntimeError("You cannot delete a message you did not send.")
+        # if message.sender != self.user_id:
+        #     raise RuntimeError("You cannot delete a message you did not send.")
 
         body = {
             "reason": reason,
             "m.relates_to": {
                 "rel_type": "m.replace",
-                "event_id": message.event_id,
+                "event_id": message_id,
             },
         }
         response = await self.room_send(
