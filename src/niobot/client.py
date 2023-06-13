@@ -191,9 +191,9 @@ class NioBot(nio.AsyncClient):
                 instance = item(self)
                 if not isinstance(instance, Module):
                     raise TypeError("%r is not a subclass of Module." % instance.__class__.__name__)
-                item.__setup__()
+                instance.__setup__()
                 self._modules[item] = instance
-                added += list(item.list_commands())
+                added += list(instance.list_commands())
         return added
 
     def get_command(self, name: str) -> Command | None:
