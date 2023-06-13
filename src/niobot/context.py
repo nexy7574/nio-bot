@@ -21,13 +21,20 @@ class Context:
             _client: "NioBot",
             room: nio.MatrixRoom,
             event: nio.RoomMessageText,
-            command: "Command"
+            command: "Command",
+            *,
+            invoking_string: str = None
     ):
         self._client = _client
         self._room = room
         self._event = event
         self._command = command
-        self._args = ArgumentView(event.body.split(' ', 1)[1])
+        self._invoking_string = invoking_string
+        if invoking_string:
+            to_parse = event.body[len(invoking_string):]
+        else:
+            to_parse = event.body
+        self._args = ArgumentView(to_parse)
         self._args.parse_arguments()
 
     @property
