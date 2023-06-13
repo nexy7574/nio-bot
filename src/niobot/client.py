@@ -8,7 +8,7 @@ import marko
 
 from .attachment import MediaAttachment
 from .exceptions import MessageException, LoginException
-from .utils import run_blocking
+from .utils import run_blocking, Typing
 from .commands import Command
 
 
@@ -274,14 +274,15 @@ class NioBot(nio.AsyncClient):
                 rendered = await run_blocking(marko.render, parsed)
                 body["formatted_body"] = rendered
                 body["format"] = "org.matrix.custom.html"
-
-        response = await self.room_send(
-            room.room_id,
-            "m.room.message",
-            body,
-        )
+        async with Typing(self, room.room_id):
+            response = await self.room_send(
+                room.room_id,
+                "m.room.message",
+                body,
+            )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to send message.", response)
+        await self.room_typing(room.room_id, False)
         return response
 
     async def edit_message(
@@ -322,11 +323,12 @@ class NioBot(nio.AsyncClient):
             "format": "org.matrix.custom.html",
             "formatted_body": content["formatted_body"]
         }
-        response = await self.room_send(
-            room.room_id,
-            "m.room.message",
-            body,
-        )
+        async with Typing(self, room.room_id):
+            response = await self.room_send(
+                room.room_id,
+                "m.room.message",
+                body,
+            )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to edit message.", response)
         self.log.debug("edit_message: %r" % response)
