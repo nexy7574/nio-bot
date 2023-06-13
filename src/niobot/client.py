@@ -98,8 +98,22 @@ class NioBot(nio.AsyncClient):
                 self._event_tasks.append(task)
                 task.add_done_callback(lambda: self._event_tasks.remove(task))
 
+    def is_old(self, event: nio.Event) -> bool:
+        """Checks if an event was sent before the bot started. Always returns False when ignore_old_evens is False"""
+        if not self.start_time:
+            self.log.warning("have not started yet, using relative age comparison")
+            start_time = time.time() - 30  # relative
+        else:
+            start_time = self.start_time
+        if self.ignore_old_events is False:
+            return False
+        return start_time - event.server_timestamp / 1000 > 0
+
     async def update_read_receipts(self, room, event):
         """part of spec module 11.6"""
+        if self.is_old(event):
+            self.log.debug("Ignoring event %s, sent before bot started.", event.event_id)
+            return
         self.log.debug("Updating read receipts for %s", room.room_id)
         await self.room_read_markers(room, event.event_id, event.event_id)
 
@@ -109,11 +123,10 @@ class NioBot(nio.AsyncClient):
         if event.sender == self.user:
             self.log.debug("Ignoring message sent by self.")
             return
-        if self.ignore_old_events and self.start_time is not None:
-            if self.start_time - event.server_timestamp / 1000 > 0:
-                age = self.start_time - event.server_timestamp / 1000
-                self.log.debug("Ignoring message sent {:.0f} seconds before startup.".format(age))
-                return
+        if self.is_old(event):
+            age = self.start_time - event.server_timestamp / 1000
+            self.log.debug("Ignoring message sent {:.0f} seconds before startup.".format(age))
+            return
 
         if self.case_insensitive:
             content = event.body.lower()
