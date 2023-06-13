@@ -10,6 +10,7 @@ import typing
 import magic
 import typing
 import tempfile
+import aiofiles
 
 from .utils import run_blocking
 
@@ -151,12 +152,21 @@ class MediaAttachment:
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
             self._file.seek(0)
 
-        result = await client.upload(
-            self.file,
-            content_type=self.mime,
-            filename=file_name or self.file.name,
-            filesize=self.size
-        )
+        if not isinstance(self.file, io.BytesIO):
+            async with aiofiles.open(self.file, "r+b") as file:
+                result = await client.upload(
+                    file,
+                    content_type=self.mime,
+                    filename=file_name or self.file.name,
+                    filesize=self.size
+                )
+        else:
+            result = await client.upload(
+                self.file,
+                content_type=self.mime,
+                filename=file_name or self.file.name,
+                filesize=self.size
+            )
         if isinstance(result, nio.UploadResponse):
             self._url = result.content_uri
         return result
