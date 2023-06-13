@@ -3,6 +3,7 @@ import logging
 import os
 import importlib
 import time
+import inspect
 import typing
 
 import nio
@@ -184,24 +185,25 @@ class NioBot(nio.AsyncClient):
             module.setup(self)
             return
 
-        self.log.debug("%r does not have its own setup() - auto-discovering commands")
-        for item in module.__dict__.values():
-            if getattr(item, "__is_nio_module__", False):
-                if item in self._modules:
-                    raise ValueError("%r is already loaded." % item.__class__.__name__)
-                instance = item(self)
-                if not isinstance(instance, Module):
-                    raise TypeError("%r is not a subclass of Module." % instance.__class__.__name__)
-                instance.__setup__()
-                self._modules[item] = instance
-                added += list(instance.list_commands())
-                self.log.debug(
-                    "Loaded %d commands from %r",
-                    len(set(instance.list_commands())),
-                    instance.__class__.__qualname__
-                )
-            else:
-                self.log.debug("%r does not appear to be a niobot module", item)
+        self.log.debug("%r does not have its own setup() - auto-discovering commands", module)
+        for _, item in inspect.getmembers(module):
+            if inspect.isclass(item):
+                if getattr(item, "__is_nio_module__", False):
+                    if item in self._modules:
+                        raise ValueError("%r is already loaded." % item.__class__.__name__)
+                    instance = item(self)
+                    if not isinstance(instance, Module):
+                        raise TypeError("%r is not a subclass of Module." % instance.__class__.__name__)
+                    instance.__setup__()
+                    self._modules[item] = instance
+                    added += list(instance.list_commands())
+                    self.log.debug(
+                        "Loaded %d commands from %r",
+                        len(set(instance.list_commands())),
+                        instance.__class__.__qualname__
+                    )
+                else:
+                    self.log.debug("%r does not appear to be a niobot module", item)
         return added
 
     def get_command(self, name: str) -> Command | None:
