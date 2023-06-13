@@ -184,6 +184,7 @@ class NioBot(nio.AsyncClient):
             module.setup(self)
             return
 
+        self.log.debug("%r does not have its own setup() - auto-discovering commands")
         for item in module.__dict__.values():
             if getattr(item, "__is_nio_module__", False):
                 if item in self._modules:
@@ -194,6 +195,13 @@ class NioBot(nio.AsyncClient):
                 instance.__setup__()
                 self._modules[item] = instance
                 added += list(instance.list_commands())
+                self.log.debug(
+                    "Loaded %d commands from %r",
+                    len(set(instance.list_commands())),
+                    instance.__class__.__qualname__
+                )
+            else:
+                self.log.debug("%r does not appear to be a niobot module", item.__qualname__)
         return added
 
     def get_command(self, name: str) -> Command | None:
