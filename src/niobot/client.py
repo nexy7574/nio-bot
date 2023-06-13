@@ -1,22 +1,114 @@
+import asyncio
+import logging
+
 import nio
 import marko
 
 from .attachment import MediaAttachment
-from .exceptions import MessageException
+from .exceptions import MessageException, LoginException
 from .utils import run_blocking
+from .commands import Command
 
 
 class NioBot(nio.AsyncClient):
     """
     The main client for NioBot.
+
+    :param homeserver: The homeserver to connect to. e.g. https://matrix-client.matrix.org
+    :param user_id: The user ID to log in as. e.g. @user:matrix.org
+    :param device_id: The device ID to log in as. e.g. nio-bot
+    :param store_path: The path to the store file. Defaults to ./store. Must be a directory.
+    :param command_prefix: The prefix to use for commands. e.g. !
+    :param case_insensitive: Whether to ignore case when checking for commands. If True, this lower()s
+     incoming messages for parsing.
+    :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     """
     def __init__(
             self,
             homeserver: str,
+            user_id: str,
+            device_id: str = "nio-bot",
+            store_path: str = "./store",
+            *,
+            command_prefix: str,
+            case_insensitive: bool = True,
+            owner_id: str = None,
+            **kwargs
     ):
-        super().__init__(homeserver)
+        super().__init__(
+            homeserver,
+            user_id,
+            device_id,
+            store_path=store_path,
+            config=kwargs.pop("config", None),
+            ssl=kwargs.pop("ssl", True),
+            proxy=kwargs.pop("proxy", None),
+        )
 
+        self.log = logging.getLogger(__name__)
+        self.case_insensitive = case_insensitive
+        self.command_prefix = command_prefix
+        self.owner_id = owner_id
         self._commands = {}
+
+    async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
+        """Processes a message and runs the command it is trying to invoke if any."""
+        if event.sender == self.user:
+            return
+
+        if self.case_insensitive:
+            content = event.body.lower()
+        else:
+            content = event.body
+
+        if content.startswith(self.command_prefix):
+            command = content[len(self.command_prefix):].split(" ")[0]
+            command = self.get_command(command)
+            if command:
+                self.log.debug(f"Running command {command.name}")
+                try:
+                    await command.callback(self, room, event)
+                except Exception as e:
+                    self.log.exception("Error running command %s: %s", command.name, e, exc_info=e)
+            else:
+                self.log.debug(f"Command {command.name} not found.")
+
+    def is_owner(self, user_id: str) -> bool:
+        """
+        Checks whether a user is the owner of the bot.
+
+        :param user_id: The user ID to check.
+        :return: Whether the user is the owner.
+        """
+        if not self.owner_id:
+            self.log.warning("Attempted to check for owner, but no owner ID was set!")
+            return False  # no owner ID set.
+        return self.owner_id == user_id
+
+    def get_command(self, name: str) -> Command | None:
+        """Attempts to retrieve an internal command
+
+        :param name: The name of the command to retrieve
+        :return: The command, if found. None otherwise.
+        """
+        return self._commands.get(name)
+
+    def command(self, name: str = None, **kwargs):
+        """Registers a command with the bot."""
+        def decorator(func):
+            nonlocal name
+            name = name or func.__name__
+            command = Command(name, func, **kwargs)
+            if self.get_command(name):
+                raise ValueError(f"Command or alias {name} is already registered.")
+
+            self._commands[name] = command
+            for alias in command.aliases:
+                if self.get_command(alias):
+                    raise ValueError(f"Command or alias {alias} is already registered.")
+                self._commands[alias] = command
+            return func
+        return decorator
 
     async def room_send(
         self,
@@ -186,3 +278,36 @@ class NioBot(nio.AsyncClient):
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to delete message.", response)
         return response
+
+    async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:
+        """Starts the bot, running the sync loop."""
+        if password or sso_token:
+            login_response = await self.login(password=password, token=sso_token)
+            if isinstance(login_response, nio.LoginError):
+                raise LoginException("Failed to log in.", login_response)
+        elif access_token:
+            self.access_token = access_token
+        else:
+            raise LoginException("You must specify either a password/SSO token or an access token.")
+
+        await self.sync_forever(
+            timeout=30000,
+            full_state=True,
+            set_presence="online",
+        )
+
+    def run(self, *, password: str = None, access_token: str = None, sso_token: str = None) -> None:
+        """
+        Runs the bot, blocking the program until the event loop exists.
+        This should be the last function to be called in your script, as once it exits, the bot will stop running.
+
+        Note:
+            This function is literally just asyncio.run(NioBot.start(...)), so you won't have much control over the
+            asyncio event loop. If you want more control, you should use await NioBot.start(...) instead.
+
+        :param password: The password to log in with.
+        :param access_token: An existing login token.
+        :param sso_token: An SSO token to sign in with.
+        :return:
+        """
+        asyncio.run(self.start(password=password, access_token=access_token, sso_token=sso_token))

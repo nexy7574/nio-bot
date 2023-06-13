@@ -19,7 +19,12 @@ pip install git+https://github.com/EEKIM10/nio-botlib#egg=nio-botlib[e2ee]
 ```
 
 ## Features
-Active early alpha: [TODO.md](/TODO.md)
+Nio-bot aims to be as easy to use as possible, so form is preferred over function. This means that some features may be
+missing, such as full E2EE (it *is* supported, however is very hit or miss), and other newer features.
+
+However, like any good client, NB tries to adhere to the 
+[Matrix Spec](https://spec.matrix.org/v1.7/client-server-api) (in terms of design at least, all the hard work is 
+done by matrix-nio)
 
 ## Quickstart
 ```python
@@ -29,13 +34,12 @@ from niobot import Bot, Context
 bot = Bot(
     homeserver="https://matrix.org",  # your homeserver
     user_id="@__example__:matrix.org",  # the user ID to log in as (Fully qualified)
-    password="password",  # You should not use your password in production. Use an access token instead.
     command_prefix="!",  # the prefix to respond to (case sensitive, must be lowercase if below is True)
     case_insensitive=True,  # messages will be lower()cased before being handled. This is recommended.
     owner_id="@owner:homeserver.com"  # The user ID who owns this bot. Optional, but required for bot.is_owner(...).
 )
 
-@bot.register()  # tells the bot to register a command
+@bot.command()  # tells the bot to register a command
 async def ping(ctx: Context):  # Commands can only have one argument, which is the context.
     """Shows the latency"""  # a description to be shown in <prefix>help (optional)
     roundtrip = (time.time() * 1000 - ctx.event.server_timestamp)
@@ -46,10 +50,11 @@ async def ping(ctx: Context):  # Commands can only have one argument, which is t
     # This is recommended when responding to a command, as it makes it easier to follow the conversation, and can
     # prevent spam by having ownership over commands.
 
-@bot.register(name="echo", disabled=True)  # creates !echo, but disables the command (it won't show up in help, or run)
+@bot.command(name="echo", disabled=True)  # creates !echo, but disables the command (it won't show up in help, or run)
 def do_echo(ctx: Context):
     """Repeats what you say!"""
     await ctx.reply(f"You said: {' '.join(ctx.arguments)}")
 
-bot.run()  # starts the bot
+bot.run("password")  # starts the bot with a password. If you already have a login token, see:
+bot.run(token="my_token") # starts the bot with a login token.
 ```
