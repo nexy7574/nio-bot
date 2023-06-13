@@ -145,7 +145,7 @@ class NioBot(nio.AsyncClient):
                 self.dispatch("command", context)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
                 try:
-                    result = await command.callback(context)
+                    result = await command.invoke(context)
                 except Exception as e:
                     self.dispatch("command_error", context, e)
                     self.log.exception("Error running command %s: %s", command.name, e, exc_info=e)

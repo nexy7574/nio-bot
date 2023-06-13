@@ -35,12 +35,19 @@ class Command:
         self.disabled = disabled
         self.aliases = aliases or []
         self.usage = kwargs.pop("usage", None)
+        self.module = kwargs.pop("module", None)
 
     def __repr__(self):
         return "<Command name={0.name} aliases={0.aliases} disabled={0.disabled}>".format(self)
 
     def __str__(self):
         return self.name
+
+    def invoke(self, ctx: Context):
+        if self.module:
+            return self.callback(self.module, ctx)
+        else:
+            return self.callback(ctx)
 
     def construct_context(
             self,
@@ -83,21 +90,16 @@ class Module:
 
     def list_commands(self, mounted_only: bool = False):
         for _, potential_command in inspect.getmembers(self):
-            self.log.debug("Found member: %r", potential_command)
-            if inspect.isfunction(potential_command):
-                self.log.debug("%r is a function", potential_command)
-                if hasattr(potential_command, "__nio_command__"):
-                    self.log.debug("%r is a command!", potential_command)
-                    if mounted_only:
-                        if not self.bot.get_command(potential_command.__nio_command__.name):
-                            continue
-                    yield potential_command.__nio_command__
-                else:
-                    self.log.debug("%r is not a command.", potential_command)
+            if hasattr(potential_command, "__nio_command__"):
+                if mounted_only:
+                    if not self.bot.get_command(potential_command.__nio_command__.name):
+                        continue
+                yield potential_command.__nio_command__
 
     def __setup__(self):
         """Setup function called once by NioBot.mount_module(). Mounts every command discovered."""
         for cmd in self.list_commands():
+            cmd.module = self
             logging.getLogger(__name__).info("Discovered command %r in %s.", cmd, self.__class__.__name__)
             self.bot.add_command(cmd)
 
