@@ -153,13 +153,8 @@ class NioBot(nio.AsyncClient):
                 context = command.construct_context(self, room, event, self.command_prefix + original_command)
                 self.dispatch("command", context)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
-                try:
-                    result = await command.invoke(context)
-                except Exception as e:
-                    self.dispatch("command_error", context, e)
-                    self.log.exception("Error running command %s: %s", command.name, e, exc_info=e)
-                else:
-                    self.dispatch("command_complete", context, result)
+                task = asyncio.create_task(command.invoke(context))
+                task.add_done_callback(lambda _: self.dispatch("command_complete", context, task.result()))
             else:
                 self.log.debug(f"Command {original_command!r} not found.")
 
