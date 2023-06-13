@@ -27,7 +27,7 @@ class Context:
         self._room = room
         self._event = event
         self._command = command
-        self._args = ArgumentView(event.body)
+        self._args = ArgumentView(event.body.split(' ', 1)[1])
         self._args.parse_arguments()
 
     @property

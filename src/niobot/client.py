@@ -61,6 +61,8 @@ class NioBot(nio.AsyncClient):
 
         if command_prefix == "/":
             self.log.warning("The prefix '/' may interfere with client-side commands.")
+        if " " in command_prefix:
+            raise RuntimeError("Command prefix cannot contain spaces.")
 
         self.start_time: float | None = None
         self._commands = {}
@@ -116,7 +118,7 @@ class NioBot(nio.AsyncClient):
             content = event.body
 
         if content.startswith(self.command_prefix):
-            command = content[len(self.command_prefix):].split(" ")[0]
+            command = original_command = content[len(self.command_prefix):].split(" ")[0]
             command = self.get_command(command)
             if command:
                 context = command.construct_context(self, room, event)
@@ -130,7 +132,7 @@ class NioBot(nio.AsyncClient):
                 else:
                     self.dispatch("command_complete", context, result)
             else:
-                self.log.debug(f"Command {command.name} not found.")
+                self.log.debug(f"Command {original_command!r} not found.")
 
     def is_owner(self, user_id: str) -> bool:
         """
