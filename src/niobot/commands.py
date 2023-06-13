@@ -16,13 +16,15 @@ class Command:
             *,
             aliases: list[str] = None,
             description: str = None,
-            disabled: bool = False
+            disabled: bool = False,
+            **kwargs
     ):
         self.name = name
         self.callback = callback
         self.description = description
         self.disabled = disabled
         self.aliases = aliases or []
+        self.usage = kwargs.pop("usage")
 
     def __repr__(self):
         return "<Command name={0.name} aliases={0.aliases} disabled={0.disabled}>".format(self)
