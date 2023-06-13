@@ -9,6 +9,7 @@ import marko
 from .attachment import MediaAttachment
 from .exceptions import MessageException, LoginException
 from .utils import run_blocking, Typing
+from .utils.help_command import help_command
 from .commands import Command
 
 
@@ -65,7 +66,9 @@ class NioBot(nio.AsyncClient):
             raise RuntimeError("Command prefix cannot contain spaces.")
 
         self.start_time: float | None = None
-        self._commands = {}
+        self._commands = {
+            "help": Command("help", help_command, aliases=["h"], description="Shows a list of commands for this bot")
+        }
         self._events = {}
         self._event_tasks = []
         self.global_message_type = kwargs.pop(
