@@ -30,5 +30,11 @@ class Command:
     def __str__(self):
         return self.name
 
-    def construct_context(self, client: "NioBot", room: nio.MatrixRoom, event: nio.RoomMessageText) -> Context:
-        return Context(client, room, event, self)
+    def construct_context(
+            self,
+            client: "NioBot",
+            room: nio.MatrixRoom,
+            event: nio.RoomMessageText,
+            meta: str
+    ) -> Context:
+        return Context(client, room, event, self, invoking_string=meta)

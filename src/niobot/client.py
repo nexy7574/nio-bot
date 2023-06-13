@@ -110,8 +110,8 @@ class NioBot(nio.AsyncClient):
             self.log.debug("Ignoring message sent by self.")
             return
         if self.ignore_old_events and self.start_time is not None:
-            server_timestamp_s = event.server_timestamp / 1000
-            if self.start_time > server_timestamp_s:
+            server_timestamp_s = event.server_timestamp * 1000
+            if (self.start_time - server_timestamp_s) > 0:
                 age = self.start_time - server_timestamp_s
                 self.log.debug("Ignoring message sent {:.0f} seconds before startup.".format(age))
 
@@ -124,7 +124,7 @@ class NioBot(nio.AsyncClient):
             command = original_command = content[len(self.command_prefix):].split(" ")[0]
             command = self.get_command(command)
             if command:
-                context = command.construct_context(self, room, event)
+                context = command.construct_context(self, room, event, self.command_prefix + original_command)
                 self.dispatch("command", context)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
                 try:

@@ -30,10 +30,10 @@ class Context:
         self._event = event
         self._command = command
         self._invoking_string = invoking_string
+        to_parse = event.body
         if invoking_string:
-            to_parse = event.body[len(invoking_string):]
-        else:
-            to_parse = event.body
+            if invoking_string != event.body:
+                to_parse = event.body[len(invoking_string):]
         self._args = ArgumentView(to_parse)
         self._args.parse_arguments()
 
