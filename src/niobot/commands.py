@@ -1,4 +1,11 @@
+import nio
+import typing
+
 from .context import Context
+
+if typing.TYPE_CHECKING:
+    from .client import NioBot
+
 
 class Command:
     """Represents a command."""
@@ -18,11 +25,10 @@ class Command:
         self.aliases = aliases or []
 
     def __repr__(self):
-        return f"<Command name={self.name} aliases={self.aliases}>"
+        return "<Command name={0.name} aliases={0.aliases} disabled={0.disabled}>".format(self)
 
     def __str__(self):
         return self.name
 
-    @staticmethod
-    def construct_context(self, client, room, event):
-        return Context(client, room, event)
+    def construct_context(self, client: "NioBot", room: nio.MatrixRoom, event: nio.RoomMessageText) -> Context:
+        return Context(client, room, event, self)

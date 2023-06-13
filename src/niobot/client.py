@@ -10,6 +10,11 @@ from .utils import run_blocking
 from .commands import Command
 
 
+__all__ = (
+    "NioBot",
+)
+
+
 class NioBot(nio.AsyncClient):
     """
     The main client for NioBot.
@@ -21,6 +26,7 @@ class NioBot(nio.AsyncClient):
     :param command_prefix: The prefix to use for commands. e.g. !
     :param case_insensitive: Whether to ignore case when checking for commands. If True, this lower()s
      incoming messages for parsing.
+     :param global_message_type: The message type to default to. Defaults to m.notice
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     """
     def __init__(
@@ -51,9 +57,20 @@ class NioBot(nio.AsyncClient):
         self.owner_id = owner_id
         self._commands = {}
 
+        self.global_message_type = kwargs.pop(
+            "global_message_type",
+            "m.notice"
+        )
+        # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
+        # (In element at least).
+
+        # noinspection PyTypeChecker
+        self.add_event_callback(self.process_message, nio.RoomMessageText)
+
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
         """Processes a message and runs the command it is trying to invoke if any."""
         if event.sender == self.user:
+            self.log.debug("Ignoring message sent by self.")
             return
 
         if self.case_insensitive:
@@ -65,9 +82,10 @@ class NioBot(nio.AsyncClient):
             command = content[len(self.command_prefix):].split(" ")[0]
             command = self.get_command(command)
             if command:
-                self.log.debug(f"Running command {command.name}")
+                context = command.construct_context(self, room, event)
+                self.log.debug(f"Running command {command.name} with context {context!r}")
                 try:
-                    await command.callback(self, room, event)
+                    await command.callback(context)
                 except Exception as e:
                     self.log.exception("Error running command %s: %s", command.name, e, exc_info=e)
             else:
@@ -144,6 +162,7 @@ class NioBot(nio.AsyncClient):
             content: str = None,
             file: MediaAttachment = None,
             reply_to: nio.RoomMessageText = None,
+            message_type: str = None
     ) -> nio.RoomSendResponse:
         """
         Sends a message.
@@ -152,6 +171,8 @@ class NioBot(nio.AsyncClient):
         :param content: The content to send. Cannot be used with file.
         :param file: A file to send, if any. Cannot be used with content.
         :param reply_to: A message to reply to.
+        :param message_type: The message type to send. If none, defaults to NioBot.global_message_type, which itself
+        is `m.notice` by default.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified both file and content, or neither.
@@ -162,7 +183,7 @@ class NioBot(nio.AsyncClient):
             raise ValueError("You must specify either content or file.")
 
         body = {
-            "msgtype": "m.text",
+            "msgtype": message_type or self.global_message_type,
             "body": content,
         }
 
@@ -248,6 +269,7 @@ class NioBot(nio.AsyncClient):
         )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to edit message.", response)
+        self.log.debug("edit_message: %r" % response)
         return response
 
     async def delete_message(self, room: nio.MatrixRoom, message: nio.RoomMessage, reason: str = None):
@@ -277,24 +299,35 @@ class NioBot(nio.AsyncClient):
         )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to delete message.", response)
+        self.log.debug("delete_message: %r", response)
         return response
 
     async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:
         """Starts the bot, running the sync loop."""
         if password or sso_token:
+            self.log.info("Logging in with a password or SSO token")
             login_response = await self.login(password=password, token=sso_token)
             if isinstance(login_response, nio.LoginError):
                 raise LoginException("Failed to log in.", login_response)
+            else:
+                self.log.info("Logged in as %s", login_response.user_id)
+                self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
         elif access_token:
+            self.log.info("Logging in with existing access token.")
             self.access_token = access_token
         else:
             raise LoginException("You must specify either a password/SSO token or an access token.")
 
-        await self.sync_forever(
-            timeout=30000,
-            full_state=True,
-            set_presence="online",
-        )
+        self.log.info("Starting sync loop")
+        try:
+            await self.sync_forever(
+                timeout=30000,
+                full_state=True,
+                set_presence="online",
+            )
+        finally:
+            self.log.info("Closing http session and logging out.")
+            await self.close()
 
     def run(self, *, password: str = None, access_token: str = None, sso_token: str = None) -> None:
         """

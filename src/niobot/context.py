@@ -21,7 +21,7 @@ class Context:
             _client: "NioBot",
             room: nio.MatrixRoom,
             event: nio.RoomMessageText,
-            command: "Command" = None
+            command: "Command"
     ):
         self._client = _client
         self._room = room
