@@ -155,23 +155,22 @@ class MediaAttachment:
 
         if not isinstance(self.file, io.BytesIO):
             async with aiofiles.open(self.file, "r+b") as file:
-                result = await client.upload(
+                result, _ = await client.upload(
                     file,
                     content_type=self.mime,
                     filename=file_name or self.file.name,
                     filesize=self.size
                 )
         else:
-            result = await client.upload(
+            result, _ = await client.upload(
                 self.file,
                 content_type=self.mime,
                 filename=file_name or self.file.name,
                 filesize=self.size
             )
-        if isinstance(result, nio.UploadResponse):
-            self._url = result.content_uri
-        else:
+        if isinstance(result, nio.UploadError):
             raise MediaUploadException(original=result)
+        self._url = result.content_uri
         return result
 
     def to_dict(self) -> dict:
