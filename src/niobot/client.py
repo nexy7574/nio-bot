@@ -1,7 +1,9 @@
 import asyncio
 import logging
 import os
+import importlib
 import time
+import typing
 
 import nio
 import marko
@@ -10,7 +12,7 @@ from .attachment import MediaAttachment
 from .exceptions import MessageException, LoginException
 from .utils import run_blocking, Typing
 from .utils.help_command import help_command
-from .commands import Command
+from .commands import Command, Module
 
 
 __all__ = (
@@ -69,6 +71,7 @@ class NioBot(nio.AsyncClient):
         self._commands = {
             "help": Command("help", help_command, aliases=["h"], description="Shows a list of commands for this bot")
         }
+        self._modules = {}
         self._events = {}
         self._event_tasks = []
         self.global_message_type = kwargs.pop(
@@ -162,6 +165,37 @@ class NioBot(nio.AsyncClient):
             return False  # no owner ID set.
         return self.owner_id == user_id
 
+    def mount_module(self, import_path: str) -> typing.Optional[list[Command]]:
+        """Mounts a module including all of its commands.
+
+        Must be a subclass of niobot.commands.Module, or else this function will not work.
+
+        :param import_path: The import path (such as modules.file), which would be ./modules/file.py in a file tree.
+        :returns: Optional[List[Command]] - A list of commands mounted. None if the module's setup() was called.
+        :raises: ImportError - The module path is incorrect of there was another error while importing
+        :raises: TypeError - The module was not a subclass of Module.
+        :raises: ValueError - There was an error registering a command (e.g. name conflict)
+        """
+        added = []
+        module = importlib.import_module(import_path)
+        if hasattr(module, "setup") and callable(module.setup):
+            # call setup
+            self.log.debug("Calling module-defined setup() function rather than doing it manually.")
+            module.setup(self)
+            return
+
+        for item in module.__dict__.values():
+            if getattr(item, "__is_nio_module__", False):
+                if item in self._modules:
+                    raise ValueError("%r is already loaded." % item.__class__.__name__)
+                instance = item.__init__(self)
+                if not isinstance(instance, Module):
+                    raise TypeError("%r is not a subclass of Module." % instance.__class__.__name__)
+                item.__setup__()
+                self._modules[item] = instance
+                added += list(item.list_commands())
+        return added
+
     def get_command(self, name: str) -> Command | None:
         """Attempts to retrieve an internal command
 
@@ -170,20 +204,42 @@ class NioBot(nio.AsyncClient):
         """
         return self._commands.get(name)
 
+    def add_command(self, command: Command) -> None:
+        """Adds a command to the internal register
+
+        if a name or alias is already registered, this throws a ValueError.
+        Otherwise, it returns None."""
+        if self.get_command(command.name):
+            raise ValueError(f"Command or alias {command.name} is already registered.")
+        if any((self.get_command(alias) for alias in command.aliases)):
+            raise ValueError(f"Command or alias for {command.name} is already registered.")
+
+        self._commands[command.name] = command
+        self.log.debug("Registered command %r into %s", command, command.name)
+        for alias in command.aliases:
+            self._commands[alias] = command
+            self.log.debug("Registered command %r into %s", command, alias)
+
+    def remove_command(self, command: Command) -> None:
+        """Removes a command from the internal register.
+
+        If the command is not registered, this is a no-op."""
+        if not self.get_command(command.name):
+            return
+
+        self.log.debug("Removed command %r from the register.", self._commands.pop(command.name, None))
+        for alias in command.aliases:
+            self.log.debug("Removed command %r from the register.", self._commands.pop(alias, None))
+
     def command(self, name: str = None, **kwargs):
         """Registers a command with the bot."""
+        cls = kwargs.pop("cls", Command)
+
         def decorator(func):
             nonlocal name
             name = name or func.__name__
-            command = Command(name, func, **kwargs)
-            if self.get_command(name):
-                raise ValueError(f"Command or alias {name} is already registered.")
-
-            self._commands[name] = command
-            for alias in command.aliases:
-                if self.get_command(alias):
-                    raise ValueError(f"Command or alias {alias} is already registered.")
-                self._commands[alias] = command
+            command = cls(name, func, **kwargs)
+            self.add_command(command)
             return func
         return decorator
 
