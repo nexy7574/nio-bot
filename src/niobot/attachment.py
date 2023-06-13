@@ -130,24 +130,31 @@ class MediaAttachment:
             self._file.seek(0)
             return size
         else:
-            return os.path.getsize(self._file)
+            return os.path.getsize(self.file)
 
     @property
     def url(self) -> str | None:
         """The current mxc URL of the attachment, if it has been uploaded."""
         return self._url
 
+    @property
+    def file(self) -> pathlib.Path | io.BytesIO:
+        if isinstance(self._file, str):
+            return pathlib.Path(self._file)
+        else:
+            return self._file
+
     async def upload(self, client: "NioBot", file_name: str = None):
         """Uploads the file to matrix."""
-        if isinstance(self._file, io.BytesIO):
+        if isinstance(self.file, io.BytesIO):
             if not file_name:
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
             self._file.seek(0)
 
         result = await client.upload(
-            self._file,
+            self.file,
             mime_type=self.mime,
-            filename=file_name or self._file.name,
+            filename=file_name or self.file.name,
             filesize=self.size
         )
         if isinstance(result, nio.UploadResponse):
