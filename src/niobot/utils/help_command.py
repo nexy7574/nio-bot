@@ -7,7 +7,7 @@ if typing.TYPE_CHECKING:
     from ..context import Context
 
 
-def help_command(ctx: "Context"):
+async def help_command(ctx: "Context"):
     """Displays help text"""
     lines = []
     if not ctx.args:
