@@ -1,4 +1,5 @@
 import logging
+import inspect
 
 import nio
 import typing
@@ -78,14 +79,21 @@ class Module:
 
     def __init__(self, bot: "NioBot"):
         self.bot = self.client = bot
+        self.log = logging.getLogger(__name__)
 
     def list_commands(self, mounted_only: bool = False):
-        for potential_command in self.__dict__.values():
-            if hasattr(potential_command, "__nio_command__"):
-                if mounted_only:
-                    if not self.bot.get_command(potential_command.__nio_command__.name):
-                        continue
-                yield potential_command.__nio_command__
+        for _, potential_command in inspect.getmembers(self):
+            self.log.debug("Found member: %r", potential_command)
+            if inspect.isfunction(potential_command):
+                self.log.debug("%r is a function", potential_command)
+                if hasattr(potential_command, "__nio_command__"):
+                    self.log.debug("%r is a command!", potential_command)
+                    if mounted_only:
+                        if not self.bot.get_command(potential_command.__nio_command__.name):
+                            continue
+                    yield potential_command.__nio_command__
+                else:
+                    self.log.debug("%r is not a command.", potential_command)
 
     def __setup__(self):
         """Setup function called once by NioBot.mount_module(). Mounts every command discovered."""
