@@ -18,7 +18,7 @@ def format_command_name(command: "Command") -> str:
         )
 
 
-def format_command_line(prefix: str, command: Command) -> str:
+def format_command_line(prefix: str, command: "Command") -> str:
     """Formats a command line, including name(s) & usage."""
     name = format_command_name(command)
     start = "{}{}".format(prefix, name)
