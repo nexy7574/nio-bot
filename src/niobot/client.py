@@ -106,7 +106,7 @@ class NioBot(nio.AsyncClient):
                     name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
                 )
                 self._event_tasks.append(task)
-                task.add_done_callback(lambda: self._event_tasks.remove(task))
+                task.add_done_callback(lambda *_, **__: self._event_tasks.remove(task))
         else:
             self.log.debug("%r is not in registered events: %s", event_name, self._events)
 
@@ -154,7 +154,9 @@ class NioBot(nio.AsyncClient):
                 self.dispatch("command", context)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
                 task = asyncio.create_task(command.invoke(context))
-                task.add_done_callback(lambda _: self.dispatch("command_complete", context, task.result()))
+                task.add_done_callback(
+                    lambda _res: self.dispatch("command_complete", context, _res)
+                )
             else:
                 self.log.debug(f"Command {original_command!r} not found.")
 
