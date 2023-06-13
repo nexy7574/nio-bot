@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 import nio
 import marko
@@ -26,7 +27,8 @@ class NioBot(nio.AsyncClient):
     :param command_prefix: The prefix to use for commands. e.g. !
     :param case_insensitive: Whether to ignore case when checking for commands. If True, this lower()s
      incoming messages for parsing.
-     :param global_message_type: The message type to default to. Defaults to m.notice
+    :param global_message_type: The message type to default to. Defaults to m.notice
+    :param ignore_old_events: Whether to simply discard events before the bot's login.
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     """
     def __init__(
@@ -55,12 +57,17 @@ class NioBot(nio.AsyncClient):
         self.case_insensitive = case_insensitive
         self.command_prefix = command_prefix
         self.owner_id = owner_id
-        self._commands = {}
 
+        if command_prefix == "/":
+            self.log.warning("The prefix '/' may interfere with client-side commands.")
+
+        self.start_time: float | None = None
+        self._commands = {}
         self.global_message_type = kwargs.pop(
             "global_message_type",
             "m.notice"
         )
+        self.ignore_old_events = kwargs.pop("ignore_old_events", True)
         # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
         # (In element at least).
 
@@ -72,6 +79,10 @@ class NioBot(nio.AsyncClient):
         if event.sender == self.user:
             self.log.debug("Ignoring message sent by self.")
             return
+        if self.ignore_old_events and self.start_time is not None:
+            if event.server_timestamp * 1000 < self.start_time:
+                age = self.start_time - event.server_timestamp * 1000
+                self.log.debug("Ignoring message sent {:.0f} seconds before startup.".format(age))
 
         if self.case_insensitive:
             content = event.body.lower()
@@ -312,9 +323,11 @@ class NioBot(nio.AsyncClient):
             else:
                 self.log.info("Logged in as %s", login_response.user_id)
                 self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
+                self.start_time = time.time()
         elif access_token:
             self.log.info("Logging in with existing access token.")
             self.access_token = access_token
+            self.start_time = time.time()
         else:
             raise LoginException("You must specify either a password/SSO token or an access token.")
 
