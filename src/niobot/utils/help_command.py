@@ -1,11 +1,18 @@
-import nio
 import textwrap
 import typing
 
 if typing.TYPE_CHECKING:
-    from ..client import NioBot
     from ..context import Context
     from ..commands import Command
+
+
+__all__ = (
+    "format_command_name",
+    "format_command_line",
+    "get_short_description",
+    "get_long_description",
+    "help_command"
+)
 
 
 def format_command_name(command: "Command") -> str:

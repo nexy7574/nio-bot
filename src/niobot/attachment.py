@@ -19,6 +19,14 @@ if typing.TYPE_CHECKING:
     from .client import NioBot
 
 
+__all__ = (
+    "detect_mime_type",
+    "get_metadata",
+    "Thumbnail",
+    "MediaAttachment"
+)
+
+
 def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
     """Detect the mime type of a file."""
     if isinstance(file, str):

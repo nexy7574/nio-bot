@@ -9,6 +9,13 @@ if typing.TYPE_CHECKING:
     from .client import NioBot
 
 
+__all__ = (
+    "Command",
+    "command",
+    "Module"
+)
+
+
 class Command:
     """Represents a command."""
     def __init__(
