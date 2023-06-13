@@ -201,7 +201,7 @@ class NioBot(nio.AsyncClient):
                     instance.__class__.__qualname__
                 )
             else:
-                self.log.debug("%r does not appear to be a niobot module", item.__qualname__)
+                self.log.debug("%r does not appear to be a niobot module", item)
         return added
 
     def get_command(self, name: str) -> Command | None:
