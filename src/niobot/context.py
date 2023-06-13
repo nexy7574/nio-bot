@@ -71,7 +71,7 @@ class Context:
 
     async def reply(self, content: str = None, file: "MediaAttachment" = None):
         """Replies to the invoking message."""
-        await self.client.send_message(
+        return await self.client.send_message(
             self.room,
             content,
             file,

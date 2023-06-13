@@ -107,6 +107,8 @@ class NioBot(nio.AsyncClient):
                 )
                 self._event_tasks.append(task)
                 task.add_done_callback(lambda: self._event_tasks.remove(task))
+        else:
+            self.log.debug("%r is not in registered events: %s", event_name, self._events)
 
     def is_old(self, event: nio.Event) -> bool:
         """Checks if an event was sent before the bot started. Always returns False when ignore_old_evens is False"""
@@ -270,6 +272,7 @@ class NioBot(nio.AsyncClient):
             event_type = event_type or func.__name__
             self._events.setdefault(event_type, [])
             self._events[event_type].append(func)
+            self.log.debug("Added event listener %r for %r", func, event_type)
             return func
         return wrapper
 
