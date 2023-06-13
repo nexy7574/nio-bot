@@ -258,12 +258,12 @@ class NioBot(nio.AsyncClient):
         is `m.notice` by default.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
-        :raises ValueError: You specified both file and content, or neither.
+        :raises ValueError: You specified neither file nor content.
         """
-        if all((content, file)):
-            raise ValueError("You cannot specify both content and file.")
-        elif not any((content, file)):
+        if not any((content, file)):
             raise ValueError("You must specify either content or file.")
+        elif file and not content:
+            raise ValueError("You must specify content (a textual description of the media) while using file.")
 
         body = {
             "msgtype": message_type or self.global_message_type,
