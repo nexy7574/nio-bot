@@ -188,7 +188,7 @@ class NioBot(nio.AsyncClient):
             if getattr(item, "__is_nio_module__", False):
                 if item in self._modules:
                     raise ValueError("%r is already loaded." % item.__class__.__name__)
-                instance = item.__init__(self)
+                instance = item(self)
                 if not isinstance(instance, Module):
                     raise TypeError("%r is not a subclass of Module." % instance.__class__.__name__)
                 item.__setup__()
