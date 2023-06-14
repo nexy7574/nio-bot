@@ -12,6 +12,19 @@ available, as with any client.
 ## Need help?
 look at [examples](/examples), open an issue, or [contact me on matrix](https://matrix.to/#/@nex:nexy7574.co.uk)
 
+## Examples
+You can see the [examples](/examples) directory, which contains a few examples of how to use Nio-Botlib.
+Note that these examples are not tested and will need some tweaking.
+
+---
+
+Alternatively, take a look at my [dev bot](https://github.com/EEKIM10/niobot-test), which is a bot that I use to test
+features of nio-bot before they're released.
+This bot is very advanced as, since I developed the library, I know exactly how it works, and will have bleeding-edge
+features built into it, which a lot of users may not use yet.
+
+It is, however, a great example of how an advanced, full feature bot can be created using this library.
+
 ## Installation
 ```bash
 pip install git+https://github.com/EEKIM10/nio-botlib
