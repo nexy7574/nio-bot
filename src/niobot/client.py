@@ -91,8 +91,10 @@ class NioBot(nio.AsyncClient):
             raise RuntimeError("Command prefix cannot contain spaces.")
 
         self.start_time: float | None = None
+        help_cmd = Command("help", help_command, aliases=["h"], description="Shows a list of commands for this bot")
         self._commands = {
-            "help": Command("help", help_command, aliases=["h"], description="Shows a list of commands for this bot")
+            "help": help_cmd,
+            "h": help_cmd
         }
         self._modules = {}
         self._events = {}
