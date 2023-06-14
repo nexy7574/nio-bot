@@ -8,6 +8,7 @@ import typing
 from collections import deque
 
 import nio
+from nio.crypto import ENCRYPTION_ENABLED
 import marko
 
 from .attachment import MediaAttachment
@@ -42,7 +43,7 @@ class NioBot(nio.AsyncClient):
             homeserver: str,
             user_id: str,
             device_id: str = "nio-bot",
-            store_path: str = "./store",
+            store_path: str = None,
             *,
             command_prefix: str,
             case_insensitive: bool = True,
@@ -50,11 +51,24 @@ class NioBot(nio.AsyncClient):
             **kwargs
     ):
         self.log = logging.getLogger(__name__)
-        if not os.path.exists(store_path):
-            self.log.warning("Store path %s does not exist, creating...", store_path)
-            os.makedirs(store_path, mode=0o755, exist_ok=True)
-        elif not os.path.isdir(store_path):
-            raise RuntimeError("Store path %s is not a directory!" % store_path)
+        if store_path:
+            if not os.path.exists(store_path):
+                self.log.warning("Store path %s does not exist, creating...", store_path)
+                os.makedirs(store_path, mode=0o755, exist_ok=True)
+            elif not os.path.isdir(store_path):
+                raise RuntimeError("Store path %s is not a directory!" % store_path)
+
+        if ENCRYPTION_ENABLED:
+            if not kwargs.get("config"):
+                kwargs.setdefault(
+                    "config",
+                    nio.AsyncClientConfig(
+                        encryption_enabled=True,
+                        store_sync_tokens=True
+                    )
+                )
+                self.log.info("Encryption support enabled automatically.")
+
         super().__init__(
             homeserver,
             user_id,
