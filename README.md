@@ -9,6 +9,9 @@ coming from a discord background.
 Please note that there *will* be teething problems as matrix is very confusing, and some advanced features may not be
 available, as with any client.
 
+## Need help?
+look at [examples](/examples), open an issue, or [contact me on matrix](https://matrix.to/#/@nex:nexy7574.co.uk)
+
 ## Installation
 ```bash
 pip install git+https://github.com/EEKIM10/nio-botlib
