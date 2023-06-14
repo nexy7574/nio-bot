@@ -547,6 +547,8 @@ class NioBot(nio.AsyncClient):
                     self.load_store()
                 except FileNotFoundError:
                     self.log.warning("Failed to load store.")
+                except nio.LocalProtocolError as e:
+                    self.log.warning("No store?? %r", e, exc_info=e)
             self.access_token = access_token
             self.start_time = time.time()
         else:
