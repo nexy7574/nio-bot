@@ -503,7 +503,7 @@ class NioBot(nio.AsyncClient):
 
         body = {
             "msgtype": "m.text",
-            "body": " * %s" % content,
+            "body": " * %s" % content["body"],
             "m.new_content": {
                 **content
             },
