@@ -64,9 +64,12 @@ async def help_command(ctx: "Context"):
     """Displays help text"""
     lines = []
     if not ctx.args:
+        added = []
         # Display global help.
         # noinspection PyProtectedMember
         for command in ctx.client._commands.values():
+            if command in added:
+                continue
             display = format_command_line(ctx.client.command_prefix, command)
             description = get_short_description(command)
             lines.append("* `{}`: {}".format(display, description))

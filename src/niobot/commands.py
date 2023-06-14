@@ -1,5 +1,6 @@
 import logging
 import inspect
+import os
 
 import nio
 import typing
@@ -29,6 +30,7 @@ class Command:
             disabled: bool = False,
             **kwargs
     ):
+        self.__runtime_id = os.urandom(16).hex()
         self.name = name
         self.callback = callback
         self.description = description
@@ -36,6 +38,15 @@ class Command:
         self.aliases = aliases or []
         self.usage = kwargs.pop("usage", None)
         self.module = kwargs.pop("module", None)
+
+    def __hash__(self):
+        return hash(self.__runtime_id)
+
+    def __eq__(self, other):
+        if isinstance(other, Command):
+            return self.__runtime_id == other.__runtime_id
+        else:
+            return False
 
     def __repr__(self):
         return "<Command name={0.name} aliases={0.aliases} disabled={0.disabled}>".format(self)
