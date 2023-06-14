@@ -49,6 +49,12 @@ class NioBot(nio.AsyncClient):
             owner_id: str = None,
             **kwargs
     ):
+        self.log = logging.getLogger(__name__)
+        if not os.path.exists(store_path):
+            self.log.warning("Store path %s does not exist, creating...", store_path)
+            os.makedirs(store_path, mode=0o755, exist_ok=True)
+        elif not os.path.isdir(store_path):
+            raise RuntimeError("Store path %s is not a directory!" % store_path)
         super().__init__(
             homeserver,
             user_id,
@@ -58,8 +64,9 @@ class NioBot(nio.AsyncClient):
             ssl=kwargs.pop("ssl", True),
             proxy=kwargs.pop("proxy", None),
         )
-
-        self.log = logging.getLogger(__name__)
+        self.user_id = user_id
+        self.device_id = device_id
+        self.store_path = store_path
         self.case_insensitive = case_insensitive
         self.command_prefix = command_prefix
         self.owner_id = owner_id
@@ -81,6 +88,7 @@ class NioBot(nio.AsyncClient):
             "m.notice"
         )
         self.ignore_old_events = kwargs.pop("ignore_old_events", True)
+        self.auto_join_rooms = kwargs.pop("auto_join_rooms", True)
         # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
         # (In element at least).
 
@@ -95,6 +103,24 @@ class NioBot(nio.AsyncClient):
             maxlen=kwargs.pop("max_message_cache", 1000)
         )
         self._waiting_events = {}
+
+        # noinspection PyTypeChecker
+        self.add_event_callback(self.auto_join_room_backlog_callback, nio.InviteMemberEvent)
+
+    async def auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
+        """Callback for auto-joining rooms"""
+        if self.auto_join_rooms:
+            self.log.info("Joining room %s", room.room_id)
+            result = await self.join(room.room_id)
+            if isinstance(result, nio.JoinError):
+                self.log.error("Failed to join room %s: %s", room.room_id, result.message)
+            else:
+                self.log.info("Joined room %s", room.room_id)
+
+    async def auto_join_room_backlog_callback(self, room: nio.MatrixRoom, event: nio.InviteMemberEvent):
+        """Callback for auto-joining rooms that are backlogged on startup"""
+        if event.state_key == self.user_id:
+            await self.auto_join_room_callback(room, event)
 
     @property
     def commands(self):
@@ -288,17 +314,6 @@ class NioBot(nio.AsyncClient):
             if function in functions:
                 self._events[event_type].remove(function)
                 self.log.debug("Removed %r from event %r", function, event_type)
-
-    async def wait_for(self, event_name: str, timeout: float = None, checks=None):
-        """
-        Waits for an event and returns its result
-
-        :param event_name: The name of the event to listen to
-        :param timeout: A timeout, in seconds. Defaults to None for no timeout
-        :param checks: A list of check functions to run. Each check function should take a single parameter, the event.
-        :return:
-        """
-        raise NotImplementedError
 
     async def room_send(
         self,
@@ -518,7 +533,7 @@ class NioBot(nio.AsyncClient):
         """Starts the bot, running the sync loop."""
         if password or sso_token:
             self.log.info("Logging in with a password or SSO token")
-            login_response = await self.login(password=password, token=sso_token)
+            login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
             if isinstance(login_response, nio.LoginError):
                 raise LoginException("Failed to log in.", login_response)
             else:
@@ -527,11 +542,22 @@ class NioBot(nio.AsyncClient):
                 self.start_time = time.time()
         elif access_token:
             self.log.info("Logging in with existing access token.")
+            if self.store_path:
+                try:
+                    self.load_store()
+                except FileNotFoundError:
+                    self.log.warning("Failed to load store.")
             self.access_token = access_token
             self.start_time = time.time()
         else:
             raise LoginException("You must specify either a password/SSO token or an access token.")
 
+        if self.should_upload_keys:
+            self.log.info("Uploading encryption keys...")
+            response = await self.keys_upload()
+            if isinstance(response, nio.KeysUploadError):
+                self.log.critical("Failed to upload encryption keys. Encryption may not work.")
+            self.log.info("Uploaded encryption keys.")
         self.log.info("Performing first sync...")
         result = await self.sync(timeout=30000, full_state=True, set_presence="unavailable")
         if not isinstance(result, nio.SyncResponse):
