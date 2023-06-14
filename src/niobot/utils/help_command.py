@@ -73,6 +73,7 @@ async def help_command(ctx: "Context"):
             display = format_command_line(ctx.client.command_prefix, command)
             description = get_short_description(command)
             lines.append("* `{}`: {}".format(display, description))
+            added.append(command)
         await ctx.reply("\n".join(lines))
     else:
         command = ctx.client.get_command(ctx.args[0])
