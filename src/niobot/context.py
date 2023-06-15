@@ -138,9 +138,10 @@ class Context:
         """Returns the current event's latency in milliseconds."""
         return self.client.latency(self.event, received_at=self._init_ts)
 
-    @deprecated
+    @deprecated("Context.respond")
     async def reply(self, *args) -> ContextualResponse:
         """<deprecated, use respond() instead>"""
+        return await self.respond(*args)
 
     async def respond(self, content: str = None, file: "MediaAttachment" = None) -> ContextualResponse:
         """Responds to the invoking message."""
