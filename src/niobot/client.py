@@ -146,7 +146,7 @@ class NioBot(nio.AsyncClient):
         :param received_at: The optional time the event was received at. If not given, uses the current time.
         :return: The latency in milliseconds"""
         now = received_at or time.time()
-        return (now - event.server_timestamp) / 1000
+        return (now - event.server_timestamp / 1000) * 1000
 
     @property
     def commands(self):
