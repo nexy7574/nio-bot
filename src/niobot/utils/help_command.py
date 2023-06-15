@@ -39,7 +39,12 @@ def get_short_description(command: "Command") -> str:
     """Generates a short (<100 characters) help description for a command."""
     if not command.description:
         # Get the docstring of the callback
-        description = command.callback.__doc__ or "No command description."
+        if command.callback.__doc__:
+            # De-indent
+            doc = textwrap.dedent(command.callback.__doc__)
+        else:
+            doc = "No command description."
+        description = doc
     else:
         description = command.description
 
