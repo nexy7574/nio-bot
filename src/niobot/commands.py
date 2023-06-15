@@ -14,6 +14,7 @@ if typing.TYPE_CHECKING:
 __all__ = (
     "Command",
     "command",
+    "event",
     "Module"
 )
 
@@ -92,6 +93,23 @@ def command(name: str = None, **kwargs) -> callable:
     return decorator
 
 
+def event(name: str) -> callable:
+    """
+    Allows you to register event listeners in modules.
+
+    :param name: the name of the event (no on_ prefix)
+    :return:
+    """
+    def decorator(func):
+        func.__nio_event__ = {
+            "function": func,
+            "name": name,
+            "_module_instance": None
+        }
+        return func
+    return decorator
+
+
 class Module:
     __is_nio_module__ = True
 
@@ -99,13 +117,21 @@ class Module:
         self.bot = self.client = bot
         self.log = logging.getLogger(__name__)
 
-    def list_commands(self, mounted_only: bool = False):
+    def list_commands(self):
         for _, potential_command in inspect.getmembers(self):
             if hasattr(potential_command, "__nio_command__"):
-                if mounted_only:
-                    if not self.bot.get_command(potential_command.__nio_command__.name):
-                        continue
                 yield potential_command.__nio_command__
+
+    def list_events(self):
+        for _, potential_event in inspect.getmembers(self):
+            if hasattr(potential_event, "__nio_event__"):
+                yield potential_event.__nio_event__
+
+    async def _event_handler_callback(self, function):
+        # Due to the fact events are less stateful than commands, we need to manually inject self for events
+        async def wrapper(*args, **kwargs):
+            return await function(self, *args, **kwargs)
+        return wrapper
 
     def __setup__(self):
         """Setup function called once by NioBot.mount_module(). Mounts every command discovered."""
@@ -114,7 +140,12 @@ class Module:
             logging.getLogger(__name__).info("Discovered command %r in %s.", cmd, self.__class__.__name__)
             self.bot.add_command(cmd)
 
+        for _event in self.list_events():
+            _event["_module_instance"] = self
+            self.bot.add_event(_event["name"], self._event_handler_callback(_event["function"]))
+
     def __teardown__(self):
         """Teardown function called once by NioBot.unmount_module(). Removes any command that was mounted."""
         for cmd in self.list_commands():
             self.bot.remove_command(cmd)
+        del self

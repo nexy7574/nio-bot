@@ -253,7 +253,7 @@ class NioBot(nio.AsyncClient):
             module.setup(self)
             return
 
-        self.log.debug("%r does not have its own setup() - auto-discovering commands", module)
+        self.log.debug("%r does not have its own setup() - auto-discovering commands and events", module)
         for _, item in inspect.getmembers(module):
             if inspect.isclass(item):
                 if getattr(item, "__is_nio_module__", False):
@@ -321,6 +321,11 @@ class NioBot(nio.AsyncClient):
             return func
         return decorator
 
+    def add_event(self, event_type: str, func):
+        self._events.setdefault(event_type, [])
+        self._events[event_type].append(func)
+        self.log.debug("Added event listener %r for %r", func, event_type)
+
     def on_event(self, event_type: str = None):
         if event_type.startswith("on_"):
             self.log.warning("No events start with 'on_' - stripping prefix")
@@ -329,9 +334,7 @@ class NioBot(nio.AsyncClient):
         def wrapper(func):
             nonlocal event_type
             event_type = event_type or func.__name__
-            self._events.setdefault(event_type, [])
-            self._events[event_type].append(func)
-            self.log.debug("Added event listener %r for %r", func, event_type)
+            self.add_event(event_type, func)
             return func
         return wrapper
 
