@@ -138,6 +138,16 @@ class NioBot(nio.AsyncClient):
         if event.state_key == self.user_id:
             await self.auto_join_room_callback(room, event)
 
+    @staticmethod
+    def latency(event: nio.Event, *, received_at: float = None) -> float:
+        """Returns the latency for a given event in milliseconds
+
+        :param event: The event to measure latency with
+        :param received_at: The optional time the event was received at. If not given, uses the current time.
+        :return: The latency in milliseconds"""
+        now = received_at or time.time()
+        return (now - event.server_timestamp) / 1000
+
     @property
     def commands(self):
         """A copy of the commands register"""
