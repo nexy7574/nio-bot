@@ -424,12 +424,22 @@ class NioBot(nio.AsyncClient):
             rendered = text
         return rendered
 
+    @staticmethod
+    def _get_id(obj) -> str:
+        if hasattr(obj, "room_id"):
+            return obj.room_id
+        if hasattr(obj, "event_id"):
+            return obj.event_id
+        if isinstance(obj, str):
+            return obj
+        raise ValueError("Unable to determine ID")
+
     async def send_message(
             self,
-            room: nio.MatrixRoom,
+            room: nio.MatrixRoom | str,
             content: str = None,
             file: MediaAttachment = None,
-            reply_to: nio.RoomMessageText = None,
+            reply_to: nio.RoomMessageText | str = None,
             message_type: str = None
     ) -> nio.RoomSendResponse:
         """
@@ -458,7 +468,7 @@ class NioBot(nio.AsyncClient):
         if reply_to:
             body["m.relates_to"] = {
                 "m.in_reply_to": {
-                    "event_id": reply_to.event_id
+                    "event_id": self._get_id(reply_to)
                 }
             }
 
@@ -479,7 +489,7 @@ class NioBot(nio.AsyncClient):
                 body["format"] = "org.matrix.custom.html"
         async with Typing(self, room.room_id):
             response = await self.room_send(
-                room.room_id,
+                self._get_id(room),
                 "m.room.message",
                 body,
             )
@@ -490,9 +500,11 @@ class NioBot(nio.AsyncClient):
 
     async def edit_message(
             self,
-            room: nio.MatrixRoom,
-            event_id: str,
-            content: str
+            room: nio.MatrixRoom | str,
+            event_id: nio.Event | str,
+            content: str,
+            *,
+            message_type: str = None,
     ) -> nio.RoomSendResponse:
         """
         Edit an existing message. You must be the sender of the message.
@@ -502,19 +514,21 @@ class NioBot(nio.AsyncClient):
         :param room: The room the message is in.
         :param event_id: The message to edit.
         :param content: The new content of the message.
+        :param message_type: The new type of the message (i.e. m.text, m.notice. Defaults to client.global_message_type)
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
-
+        event_id = self._get_id(event_id)
+        message_type = message_type or self.global_message_type
         content = {
-            "msgtype": self.global_message_type,
+            "msgtype": message_type,
             "body": content,
             "format": "org.matrix.custom.html",
             "formatted_body": await self._markdown_to_html(content),
         }
 
         body = {
-            "msgtype": "m.text",
+            "msgtype": message_type,
             "body": " * %s" % content["body"],
             "m.new_content": {
                 **content
@@ -528,16 +542,20 @@ class NioBot(nio.AsyncClient):
         }
         async with Typing(self, room.room_id):
             response = await self.room_send(
-                room.room_id,
+                self._get_id(room),
                 "m.room.message",
                 body,
             )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to edit message.", response)
-        self.log.debug("edit_message: %r" % response)
         return response
 
-    async def delete_message(self, room: nio.MatrixRoom, message_id: str, reason: str = None) -> nio.RoomRedactResponse:
+    async def delete_message(
+            self,
+            room: nio.MatrixRoom | str,
+            message_id: nio.RoomMessage | str,
+            reason: str = None
+    ) -> nio.RoomRedactResponse:
         """
         Delete an existing message. You must be the sender of the message.
 
@@ -546,10 +564,9 @@ class NioBot(nio.AsyncClient):
         :param reason: The reason for deleting the message.
         :raises RuntimeError: If you are not the sender of the message.
         """
-        # TODO: Check power level
-        # if message.sender != self.user_id:
-        #     raise RuntimeError("You cannot delete a message you did not send.")
-        response = await self.room_redact(room.room_id, message_id, reason=reason)
+        room = self._get_id(room)
+        message_id = self._get_id(message_id)
+        response = await self.room_redact(room, message_id, reason=reason)
         if isinstance(response, nio.RoomRedactError):
             raise MessageException("Failed to delete message.", response)
         self.log.debug("delete_message: %r", response)

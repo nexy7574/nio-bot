@@ -5,6 +5,7 @@ __all__ = (
     "Typing",
 )
 
+
 class Typing:
     """Context manager to manage typing notifications."""
     def __init__(self, client, room_id: str, *, timeout: float = 30, persistent: bool = True):
