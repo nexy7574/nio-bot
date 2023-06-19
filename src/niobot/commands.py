@@ -65,10 +65,10 @@ class Command:
             self,
             client: "NioBot",
             room: nio.MatrixRoom,
-            event: nio.RoomMessageText,
+            src_event: nio.RoomMessageText,
             meta: str
     ) -> Context:
-        return Context(client, room, event, self, invoking_string=meta)
+        return Context(client, room, src_event, self, invoking_string=meta)
 
 
 def command(name: str = None, **kwargs) -> callable:
