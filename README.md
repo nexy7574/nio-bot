@@ -1,6 +1,6 @@
 <details>
     <summary>Version information & warning</summary>
-This library does not currently have a "stable" version, as such all versions will be `0.1.0.dev<Commit Number>+g<Commit Hash>`.
+This library does not currently have a "stable" version, as such all versions will be <code>0.1.0.dev&lt;Commit Number&gt;+g&lt;Commit Hash&gt;</code>.
 In order to pin to a specific version you should use the following in a requirements.txt or equivelant:
     
 ```
