@@ -1,3 +1,15 @@
+<details>
+    <summary>Version information & warning</summary>
+This library does not currently have a "stable" version, as such all versions will be `0.1.0.dev<Commit Number>+g<Commit Hash>`.
+In order to pin to a specific version you should use the following in a requirements.txt or equivelant:
+    
+```
+matrix-nio @ git+https://github.com/EEKIM10/niobot.git@<commit number>
+# or for e2ee
+matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git@<commit number>
+```
+</details>
+
 # Nio-Botlib
 A simple, easy to use python Matrix bot library, based on the popular 
 [matrix-nio](https://pypi.org/project/matrix-nio/) library.
