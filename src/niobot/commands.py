@@ -6,6 +6,7 @@ import nio
 import typing
 
 from .context import Context
+from .exceptions import CommandArgumentsError
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -18,9 +19,78 @@ __all__ = (
     "Module"
 )
 
+_T = typing.TypeVar("_T")
+
+
+class Argument:
+    """
+    Represents a command argument.
+
+    Arguments:
+        name: The name of the argument. Will be used to know which argument to pass to the command callback.
+        arg_type: The type of the argument (e.g. str, int, etc. or a custom type)
+        description: The description of the argument. Will be shown in the auto-generated help command.
+        default: The default value of the argument
+        required: Whether the argument is required or not. Defaults to True if default is ..., False otherwise.
+
+    """
+    def __init__(
+            self,
+            name: str,
+            arg_type: _T,
+            *,
+            description: str = None,
+            default: typing.Any = ...,
+            required: bool = ...,
+            parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
+            **kwargs
+    ):
+        self.name = name
+        self.type = arg_type
+        self.description = description
+        self.default = default
+        self.required = required
+        if self.required is ...:
+            self.required = default is ...
+            self.default = None
+        self.extra = kwargs
+        self.parser = parser or self.internal_parser
+        # raise NotImplementedError
+
+    @staticmethod
+    def internal_parser(_: Context, arg: "Argument", value: str) -> typing.Optional[_T]:
+        """The default parser for the argument. Will try to convert the value to the argument type."""
+        try:
+            return arg.type(value)
+        except ValueError:
+            raise CommandArgumentsError(f"Invalid value for argument {arg.name}: {value!r}")
+
 
 class Command:
-    """Represents a command."""
+    """Represents a command.
+
+    Arguments:
+        name: The name of the command. Will be used to invoke the command.
+        callback: The callback to call when the command is invoked.
+        aliases: The aliases of the command. Will also be used to invoke the command.
+        description: The description of the command. Will be shown in the auto-generated help command.
+        disabled:
+            Whether the command is disabled or not. If disabled, the command will be hidden on the auto-generated
+            help command, and will not be able to be invoked.
+        arguments:
+            A list of :class:`Argument` instances. Will be used to parse the arguments given to the command.
+            `ctx` is always the first argument, regardless of what you put here.
+        usage:
+            A string representing how to use this command's arguments. Will be shown in the auto-generated help.
+            Do not include the command name or your bot's prefix here, only arguments.
+    """
+    CTX_ARG = Argument(
+        "ctx",
+        Context,
+        description="The context for the command",
+        parser=lambda ctx, *_: ctx
+    )
+
     def __init__(
             self,
             name: str,
@@ -39,6 +109,8 @@ class Command:
         self.aliases = aliases or []
         self.usage = kwargs.pop("usage", None)
         self.module = kwargs.pop("module", None)
+        self.arguments = kwargs.pop("arguments", None) or []
+        self.arguments.insert(0, self.CTX_ARG)
 
     def __hash__(self):
         return hash(self.__runtime_id)
@@ -50,16 +122,26 @@ class Command:
             return False
 
     def __repr__(self):
-        return "<Command name={0.name} aliases={0.aliases} disabled={0.disabled}>".format(self)
+        return "<Command name={0.name!r} aliases={0.aliases} disabled={0.disabled}>".format(self)
 
     def __str__(self):
         return self.name
 
     def invoke(self, ctx: Context):
+        """Invokes the current command with the given context"""
+        parsed_args = []
+        for index, argument in enumerate(self.arguments, 1):
+            try:
+                parsed_argument = argument.parser(ctx, argument, ctx.args[index])
+            except Exception as e:
+                error = f"Error while parsing argument {argument.name}: {e}"
+                raise CommandArgumentsError(error) from e
+            parsed_args.append(parsed_argument)
+
         if self.module:
-            return self.callback(self.module, ctx)
+            return self.callback(self.module, *parsed_args)
         else:
-            return self.callback(ctx)
+            return self.callback(*parsed_args)
 
     def construct_context(
             self,

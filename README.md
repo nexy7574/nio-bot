@@ -1,7 +1,7 @@
 <details>
     <summary>Version information & warning</summary>
 This library does not currently have a "stable" version, as such all versions will be <code>0.1.0.dev&lt;Commit Number&gt;+g&lt;Commit Hash&gt;</code>.
-In order to pin to a specific version you should use the following in a requirements.txt or equivelant:
+In order to pin to a specific version you should use the following in a requirements.txt or equivalent:
     
 ```
 matrix-nio @ git+https://github.com/EEKIM10/niobot.git@<commit number>
@@ -10,22 +10,22 @@ matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git@<commit number>
 ```
 </details>
 
-# Nio-Botlib
-A simple, easy to use python Matrix bot library, based on the popular 
+# NioBot
+A simple, easy to use python Matrix bot library, based on the excellent 
 [matrix-nio](https://pypi.org/project/matrix-nio/) library.
 
-NBL is designed to have a similar (as similar as reasonably possible) design and feel to the popular 
+NioBot is designed to have a similar (as similar as reasonably possible) design and feel to the
 [discord.py](https://pypi.org/project/discord.py) library, which should hopefully give it a familiar feel if you're
 coming from a discord background.
 
-Please note that there *will* be teething problems as matrix is very confusing, and some advanced features may not be
+Please note that there *will* be teething problems, and as such some advanced features may not be
 available, as with any client.
 
 ## Need help?
 look at [examples](/examples), open an issue, or [contact me on matrix](https://matrix.to/#/@nex:nexy7574.co.uk)
 
 ## Examples
-You can see the [examples](/examples) directory, which contains a few examples of how to use Nio-Botlib.
+You can see the [examples](/examples) directory, which contains a few examples of how to use NioBot.
 Note that these examples are not tested and will need some tweaking.
 
 ---
@@ -37,20 +37,25 @@ features built into it, which a lot of users may not use yet.
 
 It is, however, a great example of how an advanced, full feature bot can be created using this library.
 
+You can see it live [here](https://matrix.to/#/@jimmy-bot:nexy7574.co.uk)
+(DM it, the prefix is ?, and full end-to-end encryption is supported. Average response time is ~300-500ms)
+
 ## Installation
-```bash
-pip install git+https://github.com/EEKIM10/nio-botlib
+You should use requirements.txt:
+```python
+matrix-nio @ git+https://github.com/EEKIM10/niobot.git
+# Or with e2ee support (note you will need libolm)
+matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git
 ```
-Or with E2EE support (you have to have libolm installed):
-```bash
-pip install git+https://github.com/EEKIM10/nio-botlib#egg=nio-botlib[e2ee]
-```
+You can figure out how to install it in other ways. See the start of this README for more information on version
+pinning.
 
 ## Features
-Nio-bot aims to be as easy to use as possible, so form is preferred over function. This means that some features may be
-missing, such as full E2EE (it *is* supported, however is very hit or miss), and other newer features.
+NioBot aims to be as easy to use as possible, so form is preferred over function.
+Some features you'd normally expect may not be implemented (yet, feel free to open a pull request!) or may not work as 
+intended or how you'd expect, however as with any matrix client.
 
-However, like any good client, NB tries to adhere to the 
+However, like any good client, NioBot tries to adhere to the 
 [Matrix Spec](https://spec.matrix.org/v1.7/client-server-api) (in terms of design at least, all the hard work is 
 done by matrix-nio)
 
@@ -81,6 +86,8 @@ async def ping(ctx: Context):  # Commands can only have one argument, which is t
 @bot.command(name="echo", disabled=True)  # creates !echo, but disables the command (it won't show up in help, or run)
 def do_echo(ctx: Context):
     """Repeats what you say!"""
+    # DO NOT USE THIS COMMAND IN YOUR CODE, IF YOUR BOT HAS @ROOM PERMISSIONS
+    # AND SOMEONE SAYS '!ECHO @ROOM', THE BOT WILL JUST GLEEFULLY ECHO BACK '@ROOM'!
     await ctx.reply(f"You said: {' '.join(ctx.arguments)}")
 
 bot.run(password="password")  # starts the bot with a password. If you already have a login token, see:

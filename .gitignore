@@ -334,5 +334,5 @@ pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,venv,visualstudiocode,git,pycharm
 
-src/__version__.py
+src/niobot/__version__.py
 # Setuptools tells us to explicitly ignore this

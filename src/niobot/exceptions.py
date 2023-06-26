@@ -5,7 +5,10 @@ __all__ = (
     "NioBotException",
     "MessageException",
     "LoginException",
-    "MediaUploadException"
+    "MediaUploadException",
+    "CommandError",
+    "CommandDisabledError",
+    "CommandArgumentsError"
 )
 
 
@@ -39,4 +42,30 @@ class LoginException(NioBotException):
 class MediaUploadException(NioBotException):
     """
     Exception for media-uploading related errors
+    """
+
+
+class CommandError(NioBotException):
+    """
+    Exception subclass for all command invocation related errors.
+    """
+
+
+class CommandDisabledError(CommandError):
+    """
+    Exception raised when a command is disabled.
+    """
+    def __init__(self, command):
+        super().__init__(f"Command {command} is disabled")
+
+
+class CommandArgumentsError(CommandError):
+    """
+    Exception subclass for command argument related errors.
+    """
+
+
+class CommandParserError(CommandArgumentsError):
+    """
+    Exception raised when there is an error parsing arguments.
     """
