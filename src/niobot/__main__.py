@@ -103,7 +103,13 @@ def version(ctx, no_colour: bool):
 
     t = ctx.obj["version_tuple"]
     t3 = t[3] or 'gN/A.d%s' % (datetime.datetime.now().strftime("%Y%m%d"))
-    t3_commit, t3_date_raw = t3.split(".", 1)
+    try:
+        t3_commit, t3_date_raw = t3.split(".", 1)
+    except ValueError:
+        t3_commit = t3
+        logger.warning("Failed to parse commit date from %r, using current date instead.", t3)
+        t3_date = datetime.datetime.now()
+        t3_date_raw = t3_date.strftime("%Y%m%d")
     t3_date = datetime.datetime.strptime(t3_date_raw[1:], "%Y%m%d")
 
     bot_version_deep = {
