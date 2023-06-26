@@ -130,7 +130,13 @@ class Command:
     def invoke(self, ctx: Context):
         """Invokes the current command with the given context"""
         parsed_args = []
-        for index, argument in enumerate(self.arguments, 1):
+        for index, argument in enumerate(self.arguments[1:], 0):
+            if index >= len(ctx.args):
+                if argument.required:
+                    raise CommandArgumentsError(f"Missing required argument {argument.name}")
+                else:
+                    parsed_args.append(argument.default)
+                    continue
             try:
                 parsed_argument = argument.parser(ctx, argument, ctx.args[index])
             except Exception as e:

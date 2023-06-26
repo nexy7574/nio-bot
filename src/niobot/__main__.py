@@ -6,7 +6,7 @@ import click
 import subprocess
 # import pathlib
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cli")
 
 DEFAULT_BOT_TEMPLATE = """#!/usr/bin/env python3
 \"\"\"
