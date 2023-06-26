@@ -13,7 +13,10 @@ authors = [
     {name = "Nexus", email = "packages@nexy7574.co.uk"}
 ]
 dynamic = ["version", "dependencies"]
-optional-dependencies = { e2ee = ['matrix-nio[e2e]'], cli = ['click', 'httpx>', 'dnspython'] }
+optional-dependencies = { e2ee = ['matrix-nio[e2e]'], cli = ['click', 'httpx'] }
+
+[project.scripts]
+niocli = "niobot.__main__:cli_root [cli]"
 
 [tool.setuptools_scm]
 write_to = "src/niobot/__version__.py"
