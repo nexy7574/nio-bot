@@ -16,7 +16,8 @@ __all__ = (
     "Command",
     "command",
     "event",
-    "Module"
+    "Module",
+    "Argument"
 )
 
 _T = typing.TypeVar("_T")
