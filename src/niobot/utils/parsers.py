@@ -18,7 +18,7 @@ __all__ = (
 )
 
 
-def boolean_parser(_, __, value: str) -> bool:
+def boolean_parser(_: "Context", __, value: str) -> bool:
     """
     Converts a given string into a boolean. Value is lower-cased before being parsed.
 
@@ -43,7 +43,7 @@ def boolean_parser(_, __, value: str) -> bool:
     raise CommandArgumentsError(f'Invalid boolean value: {value}. Should be a sensible value, such as 1, yes, false.')
 
 
-def float_parser(_, __, value: str) -> float:
+def float_parser(_: "Context", __: "Argument", value: str) -> float:
     """
     Converts a given string into a floating point number.
 
@@ -84,7 +84,7 @@ def integer_parser(allow_floats: bool = False, base: int = 10) -> typing.Callabl
     return __parser
 
 
-def json_parser(_, __, value: str) -> typing.Union[list, dict, str, int, float, type(None), bool]:
+def json_parser(_: "Context", __: "Argument", value: str) -> typing.Union[list, dict, str, int, float, type(None), bool]:
     """
     Converts a given string into a JSON object.
 

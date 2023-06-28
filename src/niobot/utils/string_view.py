@@ -6,7 +6,7 @@ __all__ = (
     "ArgumentView"
 )
 
-QUOTES = ['"', "'"]
+QUOTES = ['"', "'", '`']
 
 log = logging.getLogger(__name__)
 
