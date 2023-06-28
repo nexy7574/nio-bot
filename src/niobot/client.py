@@ -12,7 +12,7 @@ from nio.crypto import ENCRYPTION_ENABLED
 import marko
 
 from .attachment import MediaAttachment
-from .exceptions import MessageException, LoginException, NioBotException
+from .exceptions import *
 from .utils import run_blocking, Typing, force_await
 from .utils.help_command import help_command
 from .commands import Command, Module
@@ -215,10 +215,15 @@ class NioBot(nio.AsyncClient):
                 context = command.construct_context(self, room, event, self.command_prefix + original_command)
                 self.dispatch("command", context)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
-                task = asyncio.create_task(command.invoke(context))
-                task.add_done_callback(
-                    lambda _res: self.dispatch("command_complete", context, _res)
-                )
+                try:
+                    task = asyncio.create_task(command.invoke(context))
+                except Exception as e:
+                    self.log.exception("Failed to invoke command %s", command.name)
+                    self.dispatch("command_error", context, CommandError(exception=e))
+                else:
+                    task.add_done_callback(
+                        lambda _res: self.dispatch("command_complete", context, _res)
+                    )
             else:
                 self.log.debug(f"Command {original_command!r} not found.")
 

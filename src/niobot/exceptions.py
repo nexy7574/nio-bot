@@ -1,3 +1,5 @@
+import typing
+
 import nio
 
 
@@ -15,9 +17,17 @@ __all__ = (
 class NioBotException(Exception):
     """
     Base exception for NioBot.
+
+    Attributes:
+        message: A simple humanised explanation of the issue, if available.
+        response: The response object from the server, if available.
+        exception: The exception that was raised, if available.
+        original: The original response, or exception if response was not available.
     """
-    def __init__(self, message: str = None, original: nio.ErrorResponse = None):
-        self.original = original
+    def __init__(self, message: str = None, response: nio.ErrorResponse = None, *, exception: Exception = None):
+        self.original = response or exception
+        self.response = response
+        self.exception: typing.Union[nio.ErrorResponse, Exception] = exception
         self.message = message
 
     def __str__(self):

@@ -103,6 +103,7 @@ class Command:
             **kwargs
     ):
         self.__runtime_id = os.urandom(16).hex()
+        self.log = logging.getLogger(__name__)
         self.name = name
         self.callback = callback
         self.description = description
@@ -138,6 +139,7 @@ class Command:
                 else:
                     parsed_args.append(argument.default)
                     continue
+            self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
             try:
                 parsed_argument = argument.parser(ctx, argument, ctx.args[index])
             except Exception as e:
@@ -145,7 +147,10 @@ class Command:
                 raise CommandArgumentsError(error) from e
             parsed_args.append(parsed_argument)
 
+        parsed_args = [ctx, *parsed_args]
+        self.log.debug("Arguments to pass: %r", parsed_args)
         if self.module:
+            self.log.debug("Will pass module instance")
             return self.callback(self.module, *parsed_args)
         else:
             return self.callback(*parsed_args)

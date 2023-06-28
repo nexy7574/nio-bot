@@ -1,10 +1,14 @@
 import datetime
+import sys
 import logging
-# import subprocess
+import importlib.metadata
 
-import click
+try:
+    import click
+except ImportError:
+    print("Missing CLI dependencies. Did you install CLI extras?", file=sys.stderr)
+    sys.exit(1)
 import subprocess
-# import pathlib
 
 logger = logging.getLogger("cli")
 
@@ -87,19 +91,27 @@ def version(ctx, no_colour: bool):
     import platform
     from nio.crypto import ENCRYPTION_ENABLED
 
-    logger.debug("Attempting to resolve matrix-nio version information via pip...")
-    command = [
-        "pip",
-        "show",
-        "matrix-nio"
-    ]
-    result = subprocess.run(command, capture_output=True, text=True)
-    if result.returncode != 0:
-        logger.critical("Failed to resolve nio version information via pip.")
-        nio_version = "0.0.0"
-    else:
-        logger.debug("Successfully resolved nio version information via pip.")
-        nio_version = result.stdout.splitlines()[1].split(": ")[1]
+    logger.debug("Attempting to resolve matrix-nio via importlib...")
+    nio_version = None
+    try:
+        nio_version = importlib.metadata.version("matrix-nio")
+    except importlib.metadata.PackageNotFoundError:
+        logger.critical("Failed to resolve nio version information via importlib.")
+
+    if not nio_version:
+        logger.debug("Attempting to resolve matrix-nio version information via pip...")
+        command = [
+            "pip",
+            "show",
+            "matrix-nio"
+        ]
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.critical("Failed to resolve nio version information via pip.")
+            nio_version = "0.0.0"
+        else:
+            logger.debug("Successfully resolved nio version information via pip.")
+            nio_version = result.stdout.splitlines()[1].split(": ")[1]
 
     t = ctx.obj["version_tuple"]
     t3 = t[3] or 'gN/A.d%s' % (datetime.datetime.now().strftime("%Y%m%d"))
@@ -124,15 +136,15 @@ def version(ctx, no_colour: bool):
         bot_version_deep["version"],
         bot_version_deep["build"],
         bot_version_deep["commit"][1:],
-        bot_version_deep["date"].strftime("%x %X")
+        bot_version_deep["date"].strftime("%d/%m/%Y")
     )
 
     lines = [
         ["NioBot version", bot_version, lambda x: True],
-        ["matrix-nio version", nio_version, lambda x: x != "0.0.0"],
-        ["Python version", platform.python_version(), lambda x: x.startswith("3")],
+        ["matrix-nio version", nio_version, lambda x: x.startswith("0.20")],
+        ["Python version", platform.python_version(), lambda x: x.split(".")[0] == "3" and int(x.split(".")[1]) >= 9],
         ["Python implementation", platform.python_implementation(), lambda x: x == "CPython"],
-        ["Operating System", platform.platform(), lambda _: True],
+        ["Operating System", platform.platform(), lambda val: val.startswith(("Windows", "Linux"))],
         ["Architecture", platform.machine(), lambda x: x == "x86_64"],
         ["OLM Installed", "Yes" if ENCRYPTION_ENABLED else "No", lambda x: x != "No"],
     ]
@@ -237,6 +249,15 @@ def test_homeserver(homeserver: str):
         click.secho("%s -> %s" % (click.style(parsed.netloc, dim=True), click.style(base_url, fg="green")))
 
 
+@cli_root.command(name="get-access-token")
+@click.option("--username", "-U", default=None, help="The username part (without @)")
+@click.option("--password", "-P", default=None, help="The password to use (will be prompted if not given)")
+@click.option("--homeserver", "-H", default=None, help="The homeserver to use (will be prompted if not given)")
+@click.pass_context
+def get_access_token():
+    pass
+
+
 @cli_root.group()
 def new():
     """Create a new file from a template."""
@@ -245,7 +266,6 @@ def new():
 @new.command()
 @click.argument("path", type=click.Path())
 @click.option("--password", "-p", prompt=True, hide_input=True)
-@click.option("--homeserver", "-H", prompt=True)
 @click.option("--user-id", "-U", prompt=True)
 @click.option("--device-id", "-D", prompt=True)
 @click.option("--store-path", "-S", prompt=True)
