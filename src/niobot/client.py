@@ -189,7 +189,9 @@ class NioBot(nio.AsyncClient):
             self.log.debug("Ignoring event %s, sent before bot started.", event.event_id)
             return
         self.log.debug("Updating read receipts for %s", room.room_id)
-        await self.room_read_markers(room, event.event_id, event.event_id)
+        result = await self.room_read_markers(room, event.event_id, event.event_id)
+        if not isinstance(result, nio.RoomReadMarkersResponse):
+            self.log.warning("Failed to update read receipts for %s: %s", room.room_id, result.message)
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
         """Processes a message and runs the command it is trying to invoke if any."""
