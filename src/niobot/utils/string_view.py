@@ -13,8 +13,6 @@ log = logging.getLogger(__name__)
 
 class ArgumentView:
     def __init__(self, string: str):
-        # if not string:
-        #     raise ValueError("Cannot create an empty view")
         self.source = string
         self.index = 0
 
@@ -34,6 +32,7 @@ class ArgumentView:
         """Parses arguments"""
         reconstructed = ""
         quote_started = False
+        quote_char = None
         while not self.eof:
             char = self.source[self.index]
             if char in QUOTES:
@@ -41,17 +40,20 @@ class ArgumentView:
                 # If it is escaped, add it to the string.
                 # If it isn't, we can end the quote.
                 if quote_started:
-                    if self.index > 0 and self.source[self.index - 1] == "\\":
+                    if self.index > 0 and (self.source[self.index - 1] == "\\" or quote_char != char):
                         reconstructed += char
                     else:
                         quote_started = False
                         self.add_arg(reconstructed)
                         reconstructed = ""
+                        quote_char = None
                 else:
                     if self.index == 0:  # cannot be an escaped string
                         quote_started = True
+                        quote_char = char
                     elif self.index > 0 and self.source[self.index - 1] != "\\":
                         quote_started = True
+                        quote_char = char
                     # If it is an escaped quote, we can add it to the string.
                     else:
                         reconstructed += char
@@ -62,6 +64,7 @@ class ArgumentView:
                 else:
                     self.add_arg(reconstructed)
                     reconstructed = ""
+                    quote_char = None
             # Any other character can be added to the current string
             elif char:  # elif ensures the character isn't null
                 reconstructed += char
