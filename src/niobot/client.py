@@ -209,7 +209,7 @@ class NioBot(nio.AsyncClient):
             content = event.body
 
         if content.startswith(self.command_prefix):
-            command = original_command = content[len(self.command_prefix):].split(" ")[0]
+            command = original_command = content[len(self.command_prefix):].splitlines()[0].split(" ")[0]
             command = self.get_command(command)
             if command:
                 context = command.construct_context(self, room, event, self.command_prefix + original_command)
