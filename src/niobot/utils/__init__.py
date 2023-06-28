@@ -2,6 +2,7 @@ from .typing import *
 from .string_view import *
 from .unblocking import *
 from .help_command import *
+from .parsers import *
 
 
 def deprecated(use_instead: str = None):
