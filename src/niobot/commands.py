@@ -55,8 +55,9 @@ class Argument:
             self.required = default is ...
             self.default = None
         self.extra = kwargs
-        self.parser = parser or self.internal_parser
-        # raise NotImplementedError
+        self.parser = parser
+        if self.parser is ...:
+            self.parser = self.internal_parser
 
     @staticmethod
     def internal_parser(_: Context, arg: "Argument", value: str) -> typing.Optional[_T]:
@@ -133,6 +134,7 @@ class Command:
         """Invokes the current command with the given context"""
         parsed_args = []
         for index, argument in enumerate(self.arguments[1:], 0):
+            argument: Argument
             if index >= len(ctx.args):
                 if argument.required:
                     raise CommandArgumentsError(f"Missing required argument {argument.name}")
