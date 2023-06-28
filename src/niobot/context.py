@@ -1,3 +1,4 @@
+import logging
 import time
 
 import nio
@@ -16,6 +17,8 @@ __all__ = (
     "Context",
 )
 
+logger = logging.getLogger(__name__)
+
 
 class ContextualResponse:
     """Context class for managing replies.
@@ -31,6 +34,8 @@ class ContextualResponse:
         result = self.ctx.client.get_cached_message(self._response.event_id)
         if result:
             return result[1]
+        else:
+            logger.warning("Original response for context %r was not found in cache, unable to modify.", self.ctx)
 
     async def reply(self, *args) -> "ContextualResponse":
         """
@@ -56,7 +61,7 @@ class ContextualResponse:
         """
         await self.ctx.client.edit_message(
             self.ctx.room,
-            self.ctx.message.event_id,
+            self._response.event_id,
             content,
             **kwargs
         )
@@ -68,6 +73,11 @@ class ContextualResponse:
         :param reason: An optional reason for the redaction
         :return: None, as there will be no more response.
         """
+        await self.ctx.client.delete_message(
+            self.ctx.room,
+            self._response.event_id,
+            reason=reason
+        )
 
 
 class Context:

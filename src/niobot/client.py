@@ -495,6 +495,28 @@ class NioBot(nio.AsyncClient):
                 rendered = await run_blocking(marko.render, parsed)
                 body["formatted_body"] = rendered
                 body["format"] = "org.matrix.custom.html"
+
+            if reply_to and isinstance(reply_to, nio.RoomMessageText) and isinstance(room, nio.MatrixRoom):
+                body["formatted_body"] = "<mx-reply>" \
+                       "<blockquote>" \
+                       "<a href=\"{reply_url}\">{reply}</a> " \
+                       "<a href=\"{user_url}\">{user}</a><br/>" \
+                       "</blockquote>" \
+                       "</mx-reply>" \
+                       "{body}".format(
+                            reply_url="https://matrix.to/#/{}:{}/{}".format(
+                                room.room_id,
+                                room.machine_name.split(":")[1],
+                                reply_to.event_id
+                            ),
+                            reply=reply_to.body,
+                            user_url="https://matrix.to/#/{}".format(
+                                reply_to.sender
+                            ),
+                            user=reply_to.sender,
+                            body=body.get("formatted_body", body.get("body"))
+                       )
+                body["format"] = "org.matrix.custom.html"
         async with Typing(self, room.room_id):
             response = await self.room_send(
                 self._get_id(room),
