@@ -5,13 +5,14 @@ from .commands import *
 from .context import *
 from .exceptions import *
 
-try:
-    import __version__
-    from .__version__ import *
-except ImportError:
-    __version__ = "0.0.0"
-    __version_tuple__ = (0, 0, "dev0", "gFFFFFF")
 
+try:
+    import __version__ as version_meta
+except ImportError:
+    class __VersionMeta:
+        __version__ = "0.0.dev0+gFFFFFF"
+        __version_tuple__ = (0, 0, "dev0", "gFFFFFF")
+    version_meta = __VersionMeta
 
 __author__ = "Nexus <pip@nexy7574.co.uk>"
 __license__ = "GNU GPLv3"
