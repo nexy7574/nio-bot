@@ -1,10 +1,16 @@
+import asyncio
 import datetime
+import os
+import re
 import sys
 import logging
+
+import niobot
 import importlib.metadata
 
 try:
     import click
+    import httpx
 except ImportError:
     print("Missing CLI dependencies. Did you install CLI extras?", file=sys.stderr)
     sys.exit(1)
@@ -253,9 +259,72 @@ def test_homeserver(homeserver: str):
 @click.option("--username", "-U", default=None, help="The username part (without @)")
 @click.option("--password", "-P", default=None, help="The password to use (will be prompted if not given)")
 @click.option("--homeserver", "-H", default=None, help="The homeserver to use (will be prompted if not given)")
+@click.option(
+    "--device-id", "-D", "--session", "--session-id",
+    default=None,
+    help="The device ID to use (will be prompted if not given)"
+)
 @click.pass_context
-def get_access_token():
-    pass
+def get_access_token(ctx, username: str, password: str, homeserver: str, device_id: str):
+    """Fetches your access token from your homeserver."""
+    if not username:
+        username = ""
+
+    while not re.match(r"@[\w\-.]{1,235}:[0-9A-Za-z\-_.]{3,253}", username):
+        username = click.prompt("User ID (@username:homeserver.tld)")
+        _, homeserver = username.split(":", 1)
+
+    if not homeserver:
+        _, homeserver = username.split(":", 1)
+
+    if not password:
+        password = click.prompt("Password (will not echo)", hide_input=True)
+
+    if not homeserver:
+        homeserver = click.prompt("Homeserver URL")
+
+    if not device_id:
+        device_id = click.prompt(
+            "Device ID (a memorable display name for this login, such as 'bot-production')",
+            default=os.uname().nodename
+        )
+
+    click.secho("Resolving homeserver... ", fg="cyan", nl=False)
+    try:
+        homeserver = asyncio.run(niobot.resolve_homeserver(homeserver))
+    except ConnectionError:
+        click.secho("Failed!", fg="red")
+    else:
+        click.secho("OK", fg="green")
+
+    click.secho("Getting access token... ", fg="cyan", nl=False)
+    status_code = None
+    try:
+        response = httpx.post(
+            homeserver + "/_matrix/client/r0/login",
+            json={
+                "type": "m.login.password",
+                "identifier": {
+                    "type": "m.id.user",
+                    "user": username
+                },
+                "password": password,
+                "device_id": device_id,
+                "initial_device_display_name": device_id
+            }
+        )
+        status_code = response.status_code
+        if status_code == 429:
+            click.secho("Failed!", fg="red", nl=False)
+            click.secho(" (Rate limited for {:.0f} seconds)".format(response.json()["retry_after_ms"] / 1000), bg="red")
+            return
+        response.raise_for_status()
+    except httpx.HTTPError as e:
+        click.secho("Failed!", fg="red", nl=False)
+        click.secho(" (%s)" % status_code or str(e), bg="red")
+    else:
+        click.secho("OK", fg="green")
+        click.secho("Access token: %s" % response.json()["access_token"], fg="green")
 
 
 @cli_root.group()

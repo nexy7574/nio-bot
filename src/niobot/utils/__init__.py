@@ -3,6 +3,7 @@ from .string_view import *
 from .unblocking import *
 from .help_command import *
 from .parsers import *
+from .federation import *
 
 
 def deprecated(use_instead: str = None):

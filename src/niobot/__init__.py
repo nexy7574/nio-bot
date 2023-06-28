@@ -19,3 +19,8 @@ __license__ = "GNU GPLv3"
 __url__ = "https://github.com/EEKIM10/niobot"
 __title__ = "niobot"
 __description__ = "A Matrix bot framework written in Python built on matrix-nio."
+
+
+def __user_agent__() -> str:
+    """Returns the user agent for the bot"""
+    return f"Mozilla/5.0 {__title__}/{version_meta.__version__} ({__url__})"
