@@ -23,7 +23,8 @@ __all__ = (
     "detect_mime_type",
     "get_metadata",
     "Thumbnail",
-    "MediaAttachment"
+    "MediaAttachment",
+    "FileAttachment",
 )
 
 
@@ -88,14 +89,22 @@ class Thumbnail:
 
 
 class MediaAttachment:
-    """Represents an image or video to be sent to a room."""
+    """Represents an image, audio or video to be sent to a room.
+
+    .. info::
+        The :meth:`from_file` method is the best way to create a MediaAttachment from just a file.
+
+    .. warning::
+        Do not use this attachment type for anything other than video, image, or audio content. Use
+        :class:`FileAttachment` for other types of files.
+    """
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
             *,
             mime: str = None,
-            height: int,
-            width: int,
+            height: typing.Union[int, None],
+            width: typing.Union[int, None],
             thumbnail: Thumbnail = None
     ):
         self._file = file
@@ -129,7 +138,7 @@ class MediaAttachment:
     @property
     def media_type(self) -> str:
         """The media type of the attachment, be it m.video or m.image."""
-        return "m.video" if self.mime.startswith("video/") else "m.image"
+        return "m." + self.mime.split("/")[0]
 
     @property
     def size(self) -> int:
@@ -177,16 +186,51 @@ class MediaAttachment:
                 filesize=self.size
             )
         if isinstance(result, nio.UploadError):
-            raise MediaUploadException(original=result)
+            raise MediaUploadException(response=result)
         self._url = result.content_uri
         return result
 
     def to_dict(self) -> dict:
         """Convert the attachment to a dictionary."""
-        return {
+        payload = {
             "mimetype": self.mime,
             "h": self.height,
             "w": self.width,
             "size": self.size,
             "thumbnail_info": self.thumbnail.to_dict() if self.thumbnail else None
+        }
+        if self.media_type == "m.audio":
+            payload = {"mimetype": self.mime, "size": self.size}
+        else:
+            if self.height is None:
+                raise ValueError("height must be specified for non-audio media attachments.")
+            if self.width is None:
+                raise ValueError("width must be specified for non-audio media attachments.")
+        return payload
+
+
+class FileAttachment(MediaAttachment):
+    """Represents a generic file type, such as PDF or TXT.
+
+    Parameters:
+        file: The file to upload.
+        mime_type: The mime type of the file. If not specified, it will be detected automatically.
+
+    .. warning::
+        Do not use this class for images, audio or video. Use :class:`MediaAttachment` instead.
+        Furthermore, you should initialise this class manually - the :meth:`from_file` method does so much
+        unnecessary work that it's not worth using for this attachment type.
+    """
+    def __init__(
+            self,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            mime_type: str = None,
+    ):
+        super().__init__(file, mime=mime_type or detect_mime_type(file), height=None, width=None, thumbnail=None)
+
+    def to_dict(self) -> dict:
+        """Convert the attachment to a dictionary."""
+        return {
+            "mimetype": self.mime,
+            "size": self.size
         }
