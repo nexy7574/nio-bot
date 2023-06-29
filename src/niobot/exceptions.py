@@ -1,4 +1,5 @@
 import typing
+import warnings
 
 import nio
 
@@ -24,8 +25,17 @@ class NioBotException(Exception):
         exception: The exception that was raised, if available.
         original: The original response, or exception if response was not available.
     """
-    def __init__(self, message: str = None, response: nio.ErrorResponse = None, *, exception: Exception = None):
-        self.original = response or exception
+    def __init__(
+            self,
+            message: str = None,
+            response: nio.ErrorResponse = None,
+            *,
+            exception: Exception = None,
+            original: typing.Union[nio.ErrorResponse, Exception] = None,
+    ):
+        if original:
+            warnings.warn(DeprecationWarning("original is deprecated, use response or exception instead"))
+        self.original = original or response or exception
         self.response = response
         self.exception: typing.Union[nio.ErrorResponse, Exception] = exception
         self.message = message
