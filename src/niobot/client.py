@@ -224,6 +224,8 @@ class NioBot(nio.AsyncClient):
                 self.log.debug(f"Running command {command.name} with context {context!r}")
                 try:
                     task = asyncio.create_task(command.invoke(context))
+                except CommandArgumentsError as e:
+                    self.dispatch("command_error", context, e)
                 except Exception as e:
                     self.log.exception("Failed to invoke command %s", command.name)
                     self.dispatch("command_error", context, CommandError(exception=e))
