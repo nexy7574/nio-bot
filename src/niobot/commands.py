@@ -223,7 +223,7 @@ class Module:
             if hasattr(potential_event, "__nio_event__"):
                 yield potential_event.__nio_event__
 
-    async def _event_handler_callback(self, function):
+    def _event_handler_callback(self, function):
         # Due to the fact events are less stateful than commands, we need to manually inject self for events
         async def wrapper(*args, **kwargs):
             return await function(self, *args, **kwargs)
