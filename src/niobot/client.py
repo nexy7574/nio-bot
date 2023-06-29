@@ -219,6 +219,8 @@ class NioBot(nio.AsyncClient):
             command = original_command = content[len(self.command_prefix):].splitlines()[0].split(" ")[0]
             command = self.get_command(command)
             if command:
+                if command.disabled is True:
+                    raise CommandDisabledError(command)
                 context = command.construct_context(self, room, event, self.command_prefix + original_command)
                 self.dispatch("command", context)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
