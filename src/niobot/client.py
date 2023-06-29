@@ -166,6 +166,9 @@ class NioBot(nio.AsyncClient):
                 try:
                     if not inspect.iscoroutine(handler):
                         handler = await run_blocking(handler, *args, **kwargs)
+                    if inspect.iscoroutinefunction(handler) or inspect.isasyncgenfunction(handler):
+                        handler = handler(*args, **kwargs)
+
                     if inspect.iscoroutine(handler):
                         task = asyncio.create_task(
                             handler,
