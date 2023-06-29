@@ -1,6 +1,6 @@
 <details>
     <summary>Version information & warning</summary>
-This library does not currently have a "stable" version, as such all versions will be <code>0.1.0.dev&lt;Commit Number&gt;+g&lt;Commit Hash&gt;</code>.
+This library does not currently have a "stable" version, as such all versions will be <code>0.1.dev&lt;Commit Number&gt;+g&lt;Commit Hash&gt;</code>.
 In order to pin to a specific version you should use the following in a requirements.txt or equivalent:
     
 ```
@@ -8,6 +8,9 @@ matrix-nio @ git+https://github.com/EEKIM10/niobot.git@<commit number>
 # or for e2ee
 matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git@<commit number>
 ```
+
+Please remember, until there is a "stable" version, all commits will be pushed to main! Version pinning is highly
+recommended.
 </details>
 
 # NioBot

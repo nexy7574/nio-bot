@@ -173,7 +173,9 @@ class NioBot(nio.AsyncClient):
                             name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
                         )
                         self._event_tasks.append(task)
-                        task.add_done_callback(lambda *_, **__: self._event_tasks.remove(task))
+                        task.add_done_callback(
+                            lambda *_, **__: self._event_tasks.remove(task) if task in self._event_tasks else None
+                        )
                     else:
                         self.log.warning("%r is not a coroutine, ignoring", handler)
                 except Exception as e:
