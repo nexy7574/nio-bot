@@ -238,7 +238,7 @@ class Module:
 
         for _event in self.list_events():
             _event["_module_instance"] = self
-            self.bot.add_event(_event["name"], self._event_handler_callback(_event["function"]))
+            self.bot.add_event_listener(_event["name"], self._event_handler_callback(_event["function"]))
 
     def __teardown__(self):
         """Teardown function called once by NioBot.unmount_module(). Removes any command that was mounted."""
