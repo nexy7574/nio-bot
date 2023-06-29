@@ -130,8 +130,8 @@ class MediaAttachment:
         return cls(
             file,
             mime=mime_type,
-            height=stream["height"],
-            width=stream["width"],
+            height=stream.get("height"),
+            width=stream.get("width"),
             thumbnail=thumbnail
         )
 
