@@ -164,20 +164,14 @@ class NioBot(nio.AsyncClient):
             for handler in self._events[event_name]:
                 self.log.debug("Dispatching %s to %r" % (event_name, handler))
                 try:
-                    if not inspect.iscoroutine(handler):
-                        handler = handler(*args, **kwargs)
-
-                    if inspect.iscoroutine(handler):
-                        task = asyncio.create_task(
-                            handler,
-                            name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
-                        )
-                        self._event_tasks.append(task)
-                        task.add_done_callback(
-                            lambda *_, **__: self._event_tasks.remove(task) if task in self._event_tasks else None
-                        )
-                    else:
-                        self.log.warning("%r is not a coroutine, ignoring", handler)
+                    task = asyncio.create_task(
+                        handler(*args, **kwargs),
+                        name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
+                    )
+                    self._event_tasks.append(task)
+                    task.add_done_callback(
+                        lambda *_, **__: self._event_tasks.remove(task) if task in self._event_tasks else None
+                    )
                 except Exception as e:
                     self.log.exception("Error dispatching %s to %r", event_name, handler, exc_info=e)
         else:
