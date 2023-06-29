@@ -163,12 +163,15 @@ class NioBot(nio.AsyncClient):
         if event_name in self._events:
             for handler in self._events[event_name]:
                 self.log.debug("Dispatching %s to %r" % (event_name, handler))
-                task = asyncio.create_task(
-                    handler(*args, **kwargs),
-                    name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
-                )
-                self._event_tasks.append(task)
-                task.add_done_callback(lambda *_, **__: self._event_tasks.remove(task))
+                try:
+                    task = asyncio.create_task(
+                        handler(*args, **kwargs),
+                        name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
+                    )
+                    self._event_tasks.append(task)
+                    task.add_done_callback(lambda *_, **__: self._event_tasks.remove(task))
+                except Exception as e:
+                    self.log.exception("Error dispatching %s to %r", event_name, handler, exc_info=e)
         else:
             self.log.debug("%r is not in registered events: %s", event_name, self._events)
 
