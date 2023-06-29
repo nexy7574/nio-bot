@@ -164,12 +164,17 @@ class NioBot(nio.AsyncClient):
             for handler in self._events[event_name]:
                 self.log.debug("Dispatching %s to %r" % (event_name, handler))
                 try:
-                    task = asyncio.create_task(
-                        handler(*args, **kwargs),
-                        name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
-                    )
-                    self._event_tasks.append(task)
-                    task.add_done_callback(lambda *_, **__: self._event_tasks.remove(task))
+                    if not inspect.iscoroutine(handler):
+                        handler = await run_blocking(handler, *args, **kwargs)
+                    if inspect.iscoroutine(handler):
+                        task = asyncio.create_task(
+                            handler,
+                            name="DISPATCH_%s_%s" % (handler.__qualname__, os.urandom(3).hex())
+                        )
+                        self._event_tasks.append(task)
+                        task.add_done_callback(lambda *_, **__: self._event_tasks.remove(task))
+                    else:
+                        self.log.warning("%r is not a coroutine, ignoring", handler)
                 except Exception as e:
                     self.log.exception("Error dispatching %s to %r", event_name, handler, exc_info=e)
         else:
@@ -331,12 +336,13 @@ class NioBot(nio.AsyncClient):
             return func
         return decorator
 
-    def add_event(self, event_type: str, func):
+    def add_event_listener(self, event_type: str, func):
         self._events.setdefault(event_type, [])
         self._events[event_type].append(func)
         self.log.debug("Added event listener %r for %r", func, event_type)
 
     def on_event(self, event_type: str = None):
+        """Wrapper that allows you to register an event handler"""
         if event_type.startswith("on_"):
             self.log.warning("No events start with 'on_' - stripping prefix")
             event_type = event_type[3:]
@@ -344,7 +350,7 @@ class NioBot(nio.AsyncClient):
         def wrapper(func):
             nonlocal event_type
             event_type = event_type or func.__name__
-            self.add_event(event_type, func)
+            self.add_event_listener(event_type, func)
             return func
         return wrapper
 
