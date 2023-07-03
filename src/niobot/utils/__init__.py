@@ -21,5 +21,6 @@ def deprecated(use_instead: str = None):
             warn = DeprecationWarning(value)
             warnings.warn(warn)
             return func(*args, **kwargs)
+        caller.__doc__ = func.__doc__
         return caller
     return wrapper

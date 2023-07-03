@@ -17,8 +17,7 @@ dynamic = ["version", "dependencies"]
 [project.optional-dependencies]
 e2ee = ['matrix-nio[e2e]']
 cli = ['httpx', 'click']
-speedup = ["orjson"]
-all = ["matrix-nio[e2e]", "httpx", "click", "orjson"]
+dev = ['mkdocs', 'mkdocs-material', 'black', 'mkdocs-autorefs']
 
 [project.scripts]
 niocli = "niobot.__main__:cli_root [cli]"

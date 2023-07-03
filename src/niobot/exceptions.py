@@ -19,12 +19,22 @@ class NioBotException(Exception):
     """
     Base exception for NioBot.
 
-    Attributes:
-        message: A simple humanised explanation of the issue, if available.
-        response: The response object from the server, if available.
-        exception: The exception that was raised, if available.
-        original: The original response, or exception if response was not available.
+    !!! warning
+        In some rare cases, all of `exception`, `response` and `original` may be None.
+
+    All other exceptions raised by this library will subclass this exception, so at least all the below are
+    always available:
+
+    :var message: A simple humanised explanation of the issue, if available.
+    :var response: The response object from the server, if available.
+    :var exception: The exception that was raised, if available.
+    :var original: The original response, or exception if response was not available.
     """
+    message: str | None
+    response: nio.ErrorResponse | None
+    exception: Exception | None
+    original: nio.ErrorResponse | Exception | None
+
     def __init__(
             self,
             message: str = None,
@@ -40,10 +50,15 @@ class NioBotException(Exception):
         self.exception: typing.Union[nio.ErrorResponse, Exception] = exception
         self.message = message
 
-    def __str__(self):
+        if self.original is None and self.message is None:
+            raise ValueError("If there is no error history, at least a human readable message should be provided.")
+
+    def __str__(self) -> str:
+        """Returns a human-readable version of the exception."""
         return self.message or str(self.original)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Returns a developer-readable version of the exception."""
         return f"<{self.__class__.__name__} message={self.message!r} original={self.original!r}>"
 
 

@@ -27,13 +27,24 @@ class Argument:
     """
     Represents a command argument.
 
-    Arguments:
-        name: The name of the argument. Will be used to know which argument to pass to the command callback.
-        arg_type: The type of the argument (e.g. str, int, etc. or a custom type)
-        description: The description of the argument. Will be shown in the auto-generated help command.
-        default: The default value of the argument
-        required: Whether the argument is required or not. Defaults to True if default is ..., False otherwise.
+    ??? example
+        ```py
+        from niobot import NioBot, command, Argument
 
+        bot = NioBot(...)
+
+        @bot.command("echo", arguments=[Argument("message", str)])
+        def echo(ctx: niobot.Context, message: str):
+            await ctx.respond(message)
+
+        bot.run(...)
+        ```
+
+    :param name: The name of the argument. Will be used to know which argument to pass to the command callback.
+    :param arg_type: The type of the argument (e.g. str, int, etc. or a custom type)
+    :param description: The description of the argument. Will be shown in the auto-generated help command.
+    :param default: The default value of the argument
+    :param required: Whether the argument is required or not. Defaults to True if default is ..., False otherwise.
     """
     def __init__(
             self,
@@ -71,20 +82,40 @@ class Argument:
 class Command:
     """Represents a command.
 
-    Arguments:
-        name: The name of the command. Will be used to invoke the command.
-        callback: The callback to call when the command is invoked.
-        aliases: The aliases of the command. Will also be used to invoke the command.
-        description: The description of the command. Will be shown in the auto-generated help command.
-        disabled:
-            Whether the command is disabled or not. If disabled, the command will be hidden on the auto-generated
-            help command, and will not be able to be invoked.
-        arguments:
-            A list of :class:`Argument` instances. Will be used to parse the arguments given to the command.
-            `ctx` is always the first argument, regardless of what you put here.
-        usage:
-            A string representing how to use this command's arguments. Will be shown in the auto-generated help.
-            Do not include the command name or your bot's prefix here, only arguments.
+    ??? example
+        !!! note
+            This example uses the `command` decorator, but you can also use the `Command` class directly, but you
+            likely won't need to, unless you want to pass a custom command class.
+
+            All that the `@command` decorator does is create a `Command` instance and add it to the bot's commands,
+            while wrapping the function its decorating.
+
+        ```py
+        from niobot import NioBot, command
+
+        bot = NioBot(...)
+
+        @bot.command("hello")
+        def hello(ctx: niobot.Context):
+            await ctx.respond("Hello, %s!" % ctx.message.sender)
+
+        bot.run(...)
+        ```
+
+    :param name: The name of the command. Will be used to invoke the command.
+    :param callback: The callback to call when the command is invoked.
+    :param aliases: The aliases of the command. Will also be used to invoke the command.
+    :param description: The description of the command. Will be shown in the auto-generated help command.
+    :param disabled:
+        Whether the command is disabled or not. If disabled, the command will be hidden on the auto-generated
+        help command, and will not be able to be invoked.
+    :param arguments:
+        A list of [`Argument`](#Argument) instances. Will be used to parse the arguments given to the command.
+        `ctx` is always the first argument, regardless of what you put here.
+    :param usage:
+        A string representing how to use this command's arguments. Will be shown in the auto-generated help.
+        Do not include the command name or your bot's prefix here, only arguments.
+
     """
     CTX_ARG = Argument(
         "ctx",
@@ -119,6 +150,7 @@ class Command:
         return hash(self.__runtime_id)
 
     def __eq__(self, other):
+        """Checks if another command's runtime ID is the same as this one's"""
         if isinstance(other, Command):
             return self.__runtime_id == other.__runtime_id
         else:
@@ -193,7 +225,7 @@ def event(name: str) -> callable:
     """
     Allows you to register event listeners in modules.
 
-    :param name: the name of the event (no on_ prefix)
+    :param name: the name of the event (no ``on_`` prefix)
     :return:
     """
     def decorator(func):

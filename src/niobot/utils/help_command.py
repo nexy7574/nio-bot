@@ -1,5 +1,6 @@
 import textwrap
 import typing
+import re
 
 if typing.TYPE_CHECKING:
     from ..context import Context
@@ -11,8 +12,57 @@ __all__ = (
     "format_command_line",
     "get_short_description",
     "get_long_description",
-    "help_command"
+    "help_command_callback",
+    "clean_output"
 )
+
+
+def clean_output(
+        text: str,
+        *,
+        escape_user_mentions: bool = True,
+        escape_room_mentions: bool = True,
+        escape_room_references: bool = False,
+        escape_all_periods: bool = False,
+        escape_all_at_signs: bool = False,
+        escape_method: typing.Callable[[str], str] = None
+) -> str:
+    """
+    Escapes given text and sanitises it, ready for outputting to the user.
+
+    This should always be used when echoing any sort of user-provided content, as we all know there will be some
+    annoying troll who will just go `@room` for no apparent reason every 30 seconds.
+
+    !!! danger "Do not rely on this!"
+        This function is not guaranteed to escape all possible mentions, and should not be relied upon to do so.
+        It is only meant to be used as a convenience function for simple commands.
+
+    :param text: The text to sanitise
+    :param escape_user_mentions: Escape all @user:homeserver.tld mentions
+    :param escape_room_mentions: Escape all @room mentions
+    :param escape_room_references: Escape all #room:homeserver.tld references
+    :param escape_all_periods: Escape all literal `.` characters (can be used to escape all links)
+    :param escape_all_at_signs: Escape all literal `@` characters (can be used to escape all mentions)
+    :param escape_method: A custom escape method to use instead of the built-in one
+    (which just wraps characters in `\\u200b`)
+    :return: The cleaned text
+    """
+    if escape_method is None:
+        def escape_method(x: str) -> str:
+            return "\u200b".join(x.split())
+
+    if escape_user_mentions:
+        text = re.sub(r"@([A-Za-z0-9\-_=+./]+):([A-Za-z0-9\-_=+./]+)", escape_method("@\\1:\\2"), text)
+    if escape_room_mentions:
+        text = text.replace("@room", escape_method("@room"))
+    if escape_room_references:
+        text = re.sub(r"#([A-Za-z0-9\-_=+./]+):([A-Za-z0-9\-_=+./]+)", escape_method("#\\1:\\2"), text)
+    if escape_all_periods:
+        text = text.replace(".", escape_method("."))
+    if escape_all_at_signs:
+        text = text.replace("@", escape_method("@"))
+
+    return text
 
 
 def format_command_name(command: "Command") -> str:
@@ -65,7 +115,7 @@ def get_long_description(command: "Command") -> str:
     )
 
 
-async def help_command(ctx: "Context"):
+async def help_command_callback(ctx: "Context"):
     """Displays help text"""
     lines = []
     if not ctx.args:
@@ -79,11 +129,11 @@ async def help_command(ctx: "Context"):
             description = get_short_description(command)
             lines.append("* `{}`: {}".format(display, description))
             added.append(command)
-        await ctx.reply("\n".join(lines))
+        await ctx.respond("\n".join(lines))
     else:
         command = ctx.client.get_command(ctx.args[0])
         if not command:
-            return await ctx.reply("No command with that name found!")
+            return await ctx.respond("No command with that name found!")
 
         display = format_command_line(ctx.client.command_prefix, command)
         description = get_long_description(command)
@@ -91,4 +141,4 @@ async def help_command(ctx: "Context"):
             "* {}:".format(display),
             *description.splitlines()
         ]
-        await ctx.reply("\n".join(lines))
+        await ctx.respond(clean_output("\n".join(lines)))

@@ -15,6 +15,7 @@ if typing.TYPE_CHECKING:
 
 __all__ = (
     "Context",
+    "ContextualResponse"
 )
 
 logger = logging.getLogger(__name__)
@@ -148,13 +149,14 @@ class Context:
         """Returns the current event's latency in milliseconds."""
         return self.client.latency(self.event, received_at=self._init_ts)
 
-    @deprecated("Context.respond")
-    async def reply(self, *args) -> ContextualResponse:
-        """<deprecated, use respond() instead>"""
-        return await self.respond(*args)
-
     async def respond(self, content: str = None, file: "MediaAttachment" = None) -> ContextualResponse:
-        """Responds to the invoking message."""
+        """
+        Responds to the current event.
+
+        :param content: The text to reply with
+        :param file: A file to reply with
+        :return:
+        """
         result = await self.client.send_message(
             self.room,
             content,

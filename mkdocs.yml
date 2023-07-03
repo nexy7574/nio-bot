@@ -1,0 +1,46 @@
+site_name: Nio-Bot Docs
+theme:
+  name: "material"
+  palette:
+    scheme: slate
+markdown_extensions:
+  - admonition
+  - def_list
+  - abbr
+  - toc:
+      permalink: true
+
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+repo_url: https://github.com/EEKIM10/niobot
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            annotations_path: brief
+            docstring_style: sphinx
+            show_source: false
+            load_external_modules: true
+            members_order: source
+            show_submodules: true
+            signature_crossrefs: true
+            show_signature_annotations: true
+            heading_level: 4
+            line_length: 60
+            separate_signature: true
+            allow_inspection: true
+            show_signature: true
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://matrix-nio.readthedocs.io/en/latest/objects.inv
+            - https://docs.aiohttp.org/en/stable/objects.inv

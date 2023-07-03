@@ -91,7 +91,7 @@ class Thumbnail:
 class MediaAttachment:
     """Represents an image, audio or video to be sent to a room.
 
-    .. info::
+    .. note::
         The :meth:`from_file` method is the best way to create a MediaAttachment from just a file.
 
     .. warning::

@@ -14,7 +14,7 @@ import marko
 from .attachment import MediaAttachment
 from .exceptions import *
 from .utils import run_blocking, Typing, force_await
-from .utils.help_command import help_command
+from .utils.help_command import help_command_callback
 from .commands import Command, Module
 
 
@@ -48,6 +48,8 @@ class NioBot(nio.AsyncClient):
             command_prefix: str,
             case_insensitive: bool = True,
             owner_id: str = None,
+            global_message_type: str = "m.notice",
+            ignore_old_events: bool = True,
             **kwargs
     ):
         self.log = logging.getLogger(__name__)
@@ -91,7 +93,12 @@ class NioBot(nio.AsyncClient):
             raise RuntimeError("Command prefix cannot contain spaces.")
 
         self.start_time: float | None = None
-        help_cmd = Command("help", help_command, aliases=["h"], description="Shows a list of commands for this bot")
+        help_cmd = Command(
+            "help",
+            help_command_callback,
+            aliases=["h"],
+            description="Shows a list of commands for this bot"
+        )
         self._commands = {
             "help": help_cmd,
             "h": help_cmd
@@ -121,9 +128,9 @@ class NioBot(nio.AsyncClient):
         self._waiting_events = {}
 
         # noinspection PyTypeChecker
-        self.add_event_callback(self.auto_join_room_backlog_callback, nio.InviteMemberEvent)
+        self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
 
-    async def auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
+    async def _auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
         """Callback for auto-joining rooms"""
         if self.auto_join_rooms:
             self.log.info("Joining room %s", room.room_id)
@@ -133,10 +140,10 @@ class NioBot(nio.AsyncClient):
             else:
                 self.log.info("Joined room %s", room.room_id)
 
-    async def auto_join_room_backlog_callback(self, room: nio.MatrixRoom, event: nio.InviteMemberEvent):
+    async def _auto_join_room_backlog_callback(self, room: nio.MatrixRoom, event: nio.InviteMemberEvent):
         """Callback for auto-joining rooms that are backlogged on startup"""
         if event.state_key == self.user_id:
-            await self.auto_join_room_callback(room, event)
+            await self._auto_join_room_callback(room, event)
 
     @staticmethod
     def latency(event: nio.Event, *, received_at: float = None) -> float:
@@ -147,16 +154,6 @@ class NioBot(nio.AsyncClient):
         :return: The latency in milliseconds"""
         now = received_at or time.time()
         return (now - event.server_timestamp / 1000) * 1000
-
-    @property
-    def commands(self):
-        """A copy of the commands register"""
-        return self._commands.copy()
-
-    @property
-    def modules(self):
-        """A copy of the modules register"""
-        return self._modules.copy()
 
     def dispatch(self, event_name: str, *args, **kwargs):
         """Dispatches an event to listeners"""
@@ -257,9 +254,9 @@ class NioBot(nio.AsyncClient):
 
         :param import_path: The import path (such as modules.file), which would be ./modules/file.py in a file tree.
         :returns: Optional[List[Command]] - A list of commands mounted. None if the module's setup() was called.
-        :raises: ImportError - The module path is incorrect of there was another error while importing
-        :raises: TypeError - The module was not a subclass of Module.
-        :raises: ValueError - There was an error registering a command (e.g. name conflict)
+        :raise ImportError: The module path is incorrect of there was another error while importing
+        :raise TypeError: The module was not a subclass of Module.
+        :raise ValueError: There was an error registering a command (e.g. name conflict)
         """
         added = []
         module = importlib.import_module(import_path)
@@ -289,6 +286,28 @@ class NioBot(nio.AsyncClient):
                 else:
                     self.log.debug("%r does not appear to be a niobot module", item)
         return added
+
+    @property
+    def commands(self) -> typing.Dict[str, Command]:
+        """Returns the internal command register.
+
+        !!! warning
+            Modifying any values here will update the internal register too.
+
+        !!! note
+            Aliases of commands are treated as their own command instance. You will see the same command show up as a
+            value multiple times if it has aliases.
+        """
+        return self._commands
+
+    @property
+    def modules(self) -> typing.Dict[typing.Type[Module], Module]:
+        """Returns the internal module register.
+
+        !!! warning
+            Modifying any values here will update the internal register too.
+        """
+        return self._modules
 
     def get_command(self, name: str) -> Command | None:
         """Attempts to retrieve an internal command
@@ -370,7 +389,7 @@ class NioBot(nio.AsyncClient):
         ignore_unverified_devices: bool = True,
     ) -> nio.RoomSendResponse | nio.RoomSendError:
         """
-        Send a message to a room.
+        Send a message to a room. Wrapper. See :meth:`nio.AsyncClient.room_send` for more information.
         """
         return await super().room_send(
             room_id,
@@ -391,6 +410,18 @@ class NioBot(nio.AsyncClient):
         for room, event in self.message_cache:
             if event_id == event.event_id:
                 return room, event
+
+    async def fetch_message(self, room_id: str, event_id: str):
+        """Fetches a message from the server."""
+        cached = self.get_cached_message(event_id)
+        if cached:
+            return cached
+
+        result: typing.Union[nio.RoomGetEventError, nio.RoomGetEventResponse]
+        result = await self.room_get_event(room_id, event_id)
+        if isinstance(result, nio.RoomGetEventError):
+            raise NioBotException(f"Failed to fetch message {event_id} from {room_id}: {result}", original=result)
+        return result
 
     async def wait_for_message(
             self,
@@ -469,11 +500,11 @@ class NioBot(nio.AsyncClient):
         :param content: The content to send. Cannot be used with file.
         :param file: A file to send, if any. Cannot be used with content.
         :param reply_to: A message to reply to.
-        :param message_type: The message type to send. If none, defaults to NioBot.global_message_type, which itself
-        is `m.notice` by default.
+        :param message_type: The message type to send. If none, defaults to NioBot.global_message_type, which itself is `m.notice` by default.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
+
         """
         if not any((content, file)):
             raise ValueError("You must specify either content or file.")
