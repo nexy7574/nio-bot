@@ -158,7 +158,7 @@ def version(ctx, no_colour: bool):
     click.echo()
     for line in lines:
         if no_colour:
-            click.echo("%s: %s" % tuple(line)[:1])
+            click.echo("%s: %s" % tuple(line)[:2])
         else:
             click.echo(
                 click.style(line[0], fg="cyan") + ": " +

@@ -1,3 +1,5 @@
+import json
+
 import aiohttp
 from urllib.parse import urlparse
 
@@ -19,7 +21,18 @@ async def resolve_homeserver(domain: str) -> str:
     async with aiohttp.ClientSession(headers={"User-Agent": __user_agent__()}) as session:
         async with session.get(f"https://{domain}/.well-known/matrix/client") as resp:
             if resp.status == 200:
-                data = await resp.json()
+                if resp.content_type != "application/json":
+                    try:
+                        data = await resp.text("utf-8")
+                    except UnicodeDecodeError:
+                        raise ValueError("Invalid homeserver response for well-known")
+                    else:
+                        try:
+                            data = json.loads(data)
+                        except json.JSONDecodeError:
+                            raise ValueError("Invalid homeserver response for well-known")
+                else:
+                    data = await resp.json()
                 if data["m.homeserver"]["base_url"]:
                     parsed = data["m.homeserver"]["base_url"]
                     if parsed.endswith("/"):
