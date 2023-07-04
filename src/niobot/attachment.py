@@ -1,22 +1,28 @@
+import tempfile
+import warnings
+
 import nio
-import asyncio
 import subprocess
 import json
-import logging
 import io
 import os
 import pathlib
-import typing
+import shutil
 import magic
 import typing
-import tempfile
 import aiofiles
+import blurhash
 
 from .utils import run_blocking
 from .exceptions import MediaUploadException
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
+
+if not shutil.which("ffmpeg"):
+    raise RuntimeError(
+        "ffmpeg is not installed. You must install it to use this library. If its installed, is it in PATH?"
+    )
 
 
 __all__ = (
@@ -62,8 +68,38 @@ def get_metadata(file: typing.Union[str, io.BytesIO, pathlib.Path]):
     return json.loads(result.stdout)
 
 
+def first_frame(file: pathlib.Path, file_format: str = "jpeg") -> bytes:
+    """Gets the first frame of a video file."""
+    with tempfile.NamedTemporaryFile(suffix=f".{file_format}") as f:
+        command = [
+            "ffmpeg",
+            "-i",
+            str(file),
+            "-vframes",
+            "1",
+            f.name
+        ]
+        subprocess.run(command, capture_output=True, text=False, check=True)
+        f.seek(0)
+        return f.read()
+
+
+def generate_blur_hash(file: pathlib.Path) -> str:
+    """Creates a blurhash"""
+    with file.open("rb") as fd:
+        return blurhash.encode(fd, 4, 3)
+
+
 class Thumbnail:
-    """Represents a thumbnail for a media attachment."""
+    """
+    Represents a thumbnail for a media attachment.
+
+    :param url: The URL of the thumbnail.
+    :param mime: The mime type of the thumbnail.
+    :param height: The height of the thumbnail.
+    :param width: The width of the thumbnail.
+    :param size: The size of the thumbnail.
+    """
     def __init__(
             self,
             url: str,
@@ -79,6 +115,30 @@ class Thumbnail:
         self._width = width
         self.size = size
 
+    @classmethod
+    def from_attachment(cls, attachment: "MediaAttachment"):
+        """
+        Creates a thumbnail from a MediaAttachment.
+
+        You should make sure you've `upload()`ed the attachment first.
+
+        :param attachment: The attachment to create the thumbnail from.
+        :return: A Thumbnail object.
+        """
+        if not attachment.url:
+            raise ValueError("You must upload the attachment first.")
+
+        if attachment.media_type.split(".")[1] not in ("video", "image"):
+            raise ValueError("You can only create a thumbnail from a video or image.")
+
+        return cls(
+            url=attachment.url,
+            mime=attachment.mime,
+            height=attachment.height,
+            width=attachment.width,
+            size=attachment.size
+        )
+
     def to_dict(self):
         return {
             "w": self._width,
@@ -91,12 +151,33 @@ class Thumbnail:
 class MediaAttachment:
     """Represents an image, audio or video to be sent to a room.
 
-    .. note::
-        The :meth:`from_file` method is the best way to create a MediaAttachment from just a file.
+    ??? tip "You probably want to skip to [from_file](niobot.attachment.MediaAttachment.from_file)"
+        The `MediaAttachment.from_file` method is the best way to create a MediaAttachment from just a file.
+        You should (and realistically, only can) create an instance of this manually if you have the file,
+        mime type, height, width, and optionally thumbnail already.
 
-    .. warning::
+        The `MediaAttachment.from_file` method will automatically do this for you.
+
+    ??? warning "You can only use video/image/audio content with this class"
         Do not use this attachment type for anything other than video, image, or audio content. Use
-        :class:`FileAttachment` for other types of files.
+        `FileAttachment` for other types of files.
+
+    ???+ danger "BytesIO support is experimental"
+        It is advised to write BytesIO objects to a temporary file if you experience any issues with them. This is
+        because some methods, such as `MediaAttachment.upload`, re-open the file descriptor in an
+        asynchronous context, which may cause issues with BytesIO.
+
+        Initially, the library did this automatically, however to prevent compatibility issues, this is now just the
+        responsibility of the developer.
+
+        Using a BytesIO() will yield a warning in the logs, however may still work.
+
+    :param file: The file to send (either a path, BytesIO, or `pathlib.Path` object)
+    :param mime: The mime type of the file
+    :param height: The height of the file, if applicable
+    :param width: The width of the file, if applicable
+    :param thumbnail: The thumbnail of the file, if applicable
+    :param blur_hash: The blurhash of the file, if applicable
     """
     def __init__(
             self,
@@ -105,21 +186,37 @@ class MediaAttachment:
             mime: str = None,
             height: typing.Union[int, None],
             width: typing.Union[int, None],
-            thumbnail: Thumbnail = None
+            thumbnail: Thumbnail = None,
+            blur_hash: str = None
     ):
+        if isinstance(file, io.BytesIO):
+            warnings.warn(RuntimeWarning("Using BytesIO with MediaAttachment is experimental."))
         self._file = file
         self._url = None
         self.mime = mime
         self.height = height
         self.width = width
         self.thumbnail = thumbnail
+        self.blur_hash = blur_hash
 
         if self.mime is None:
             self.mime = detect_mime_type(self._file)
 
     @classmethod
-    async def from_file(cls, file: pathlib.Path | str, thumbnail: Thumbnail = None) -> "MediaAttachment":
-        """Creates a MediaAttachment from a file."""
+    async def from_file(
+            cls,
+            file: pathlib.Path | str,
+            thumbnail: Thumbnail = None,
+            gen_blur_hash: bool = True
+    ) -> "MediaAttachment":
+        """Creates a MediaAttachment from a file.
+
+        :param file: The file to create the attachment from
+        (Must be a path or pathlib.Path object, cannot be BytesIO)
+        :param thumbnail: The thumbnail of the file, if applicable
+        :param gen_blur_hash: Whether to generate a blurhash for the file
+        :return: A MediaAttachment object
+        """
         # TODO: Add thumbnail (discovery? generation?)
         metadata = await run_blocking(get_metadata, file)
         if "streams" not in metadata:
@@ -127,12 +224,24 @@ class MediaAttachment:
 
         stream = metadata["streams"][0]
         mime_type = await run_blocking(detect_mime_type, file)
+        if mime_type.startswith(("image", "video")) and gen_blur_hash:
+            if mime_type.startswith("video"):
+                frame = await run_blocking(first_frame, file, "jpeg")
+                with tempfile.NamedTemporaryFile(suffix=".jpeg") as fd:
+                    fd.write(frame)
+                    fd.flush()
+                    blur_hash = await run_blocking(generate_blur_hash, fd.name)
+            else:
+                blur_hash = await run_blocking(generate_blur_hash, file)
+        else:
+            blur_hash = None
         return cls(
             file,
             mime=mime_type,
             height=stream.get("height"),
             width=stream.get("width"),
-            thumbnail=thumbnail
+            thumbnail=thumbnail,
+            blur_hash=blur_hash
         )
 
     @property
@@ -192,13 +301,6 @@ class MediaAttachment:
 
     def to_dict(self) -> dict:
         """Convert the attachment to a dictionary."""
-        payload = {
-            "mimetype": self.mime,
-            "h": self.height,
-            "w": self.width,
-            "size": self.size,
-            "thumbnail_info": self.thumbnail.to_dict() if self.thumbnail else None
-        }
         if self.media_type == "m.audio":
             payload = {"mimetype": self.mime, "size": self.size}
         else:
@@ -206,20 +308,29 @@ class MediaAttachment:
                 raise ValueError("height must be specified for non-audio media attachments.")
             if self.width is None:
                 raise ValueError("width must be specified for non-audio media attachments.")
+
+            payload = {
+                "mimetype": self.mime,
+                "h": self.height,
+                "w": self.width,
+                "size": self.size,
+                "thumbnail_info": self.thumbnail.to_dict() if self.thumbnail else None
+            }
+            if self.blur_hash:
+                payload["xyz.amorgan.blurhash"] = self.blur_hash
         return payload
 
 
 class FileAttachment(MediaAttachment):
     """Represents a generic file type, such as PDF or TXT.
 
-    Parameters:
-        file: The file to upload.
-        mime_type: The mime type of the file. If not specified, it will be detected automatically.
-
-    .. warning::
-        Do not use this class for images, audio or video. Use :class:`MediaAttachment` instead.
-        Furthermore, you should initialise this class manually - the :meth:`from_file` method does so much
+    !!! warning "Do not use this class for images, audio or video."
+        Do not use this class for images, audio or video. Use `MediaAttachment` instead.
+        Furthermore, you should initialise this class manually - the `from_file` method does so much
         unnecessary work that it's not worth using for this attachment type.
+
+    :param file: The file to upload.
+    :param mime_type: The mime type of the file. If not specified, it will be detected automatically.
     """
     def __init__(
             self,
@@ -234,3 +345,6 @@ class FileAttachment(MediaAttachment):
             "mimetype": self.mime,
             "size": self.size
         }
+
+
+# class VideoAttachment:

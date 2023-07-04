@@ -2,3 +2,4 @@ matrix-nio==0.20.*
 marko==2.*
 python-magic>=0.4.27
 aiofiles>=23.1.0
+blurhash-python>=1.2.0
