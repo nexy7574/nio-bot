@@ -100,14 +100,15 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
             "ffmpeg",
             "-i",
             str(file),
-            "-vframes",
+            "-frames:v",
             "1",
+            '-y',
             f.name
         ]
         log.debug("Extracting first frame of %r: %s", file, ' '.join(command))
         log.debug(
-            "Extraction response code: %d",
-            subprocess.run(command, capture_output=True, text=False, check=True).returncode
+            "Extraction return code: %d",
+            subprocess.run(command, check=True).returncode
         )
         f.seek(0)
         return f.read()
