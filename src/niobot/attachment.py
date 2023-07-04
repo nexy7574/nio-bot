@@ -98,6 +98,8 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
     with tempfile.NamedTemporaryFile(suffix=f".{file_format}") as f:
         command = [
             "ffmpeg",
+            "-loglevel",
+            "9",
             "-i",
             str(file),
             "-frames:v",
@@ -108,7 +110,7 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
         log.debug("Extracting first frame of %r: %s", file, ' '.join(command))
         log.debug(
             "Extraction return code: %d",
-            subprocess.run(command, check=True).returncode
+            subprocess.run(command, capture_output=True, check=True).returncode
         )
         f.seek(0)
         return f.read()
