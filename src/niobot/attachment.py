@@ -45,7 +45,12 @@ __all__ = (
 
 
 def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
-    """Detect the mime type of a file."""
+    """
+    Detect the mime type of a file.
+
+    :param file: The file to detect the mime type of. Can be a BytesIO.
+    :return: The mime type of the file (e.g. `text/plain`, `image/png`, `application/pdf`, `video/webp` etc.)
+    """
     if isinstance(file, str):
         file = pathlib.Path(file)
 
@@ -61,8 +66,38 @@ def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
         raise TypeError("File must be a string, BytesIO, or Path object.")
 
 
-def get_metadata(file: typing.Union[str, io.BytesIO, pathlib.Path]):
-    """Gets metadata for a file via ffprobe."""
+def get_metadata(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typing.Any]:
+    """
+    Gets metadata for a file via ffprobe.
+
+    ??? note "Example result"
+        ```json
+        {
+            "streams": [
+                {
+                    "index": 0,
+                    "codec_name": "h264",
+                    "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+                    "profile": "High",
+                    "codec_type": "video",
+                    ...
+                }
+            ],
+            "format": {
+                "filename": "./assets/peek.mp4",
+                "format_long_name": "QuickTime / MOV",
+                "start_time": "0.000000",
+                "duration": "16.283333",
+                "size": "4380760",
+                "bit_rate": "2152266",
+                ...
+            }
+        }
+        ```
+
+    :param file: The file to get metadata for. **Must be a path-like object**
+    :return: A dictionary containing the metadata.
+    """
     command = [
         "ffprobe",
         "-of",
@@ -125,6 +160,8 @@ def generate_blur_hash(file: str | pathlib.Path) -> str:
         process pool.
 
         You should also scale any images down in order to increase performance.
+
+        See: [woltapp/blurhash](https://github.com/woltapp/blurhash)
     """
     if isinstance(file, str):
         file = pathlib.Path(file)
@@ -194,7 +231,7 @@ class Thumbnail:
 class MediaAttachment:
     """Represents an image, audio or video to be sent to a room.
 
-    ??? tip "You probably want to skip to [from_file](niobot.attachment.MediaAttachment.from_file)"
+    ??? tip "You probably want to skip to [from_file](#niobot.attachment.MediaAttachment.from_file)"
         The `MediaAttachment.from_file` method is the best way to create a MediaAttachment from just a file.
         You should (and realistically, only can) create an instance of this manually if you have the file,
         mime type, height, width, and optionally thumbnail already.

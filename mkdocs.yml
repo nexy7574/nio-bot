@@ -35,7 +35,7 @@ plugins:
             show_submodules: true
             signature_crossrefs: true
             show_signature_annotations: true
-            heading_level: 4
+            heading_level: 3
             line_length: 60
             separate_signature: true
             allow_inspection: true
