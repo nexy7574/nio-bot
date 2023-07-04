@@ -6,6 +6,8 @@ theme:
 markdown_extensions:
   - admonition
   - def_list
+  - attr_list
+  - md_in_html
   - abbr
   - toc:
       permalink: true
@@ -23,6 +25,7 @@ repo_url: https://github.com/EEKIM10/niobot
 plugins:
   - search
   - autorefs
+  - glightbox
   - mkdocstrings:
       handlers:
         python:
