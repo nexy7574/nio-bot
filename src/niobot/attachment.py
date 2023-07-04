@@ -11,6 +11,7 @@ import shutil
 import magic
 import typing
 import aiofiles
+import logging
 import blurhash
 
 from .utils import run_blocking
@@ -27,6 +28,9 @@ if not shutil.which("ffprobe"):
     raise RuntimeError(
         "ffprobe is not installed. You must install it to use this library. If its installed, is it in PATH?"
     )
+
+
+log = logging.getLogger(__name__)
 
 
 __all__ = (
@@ -71,6 +75,7 @@ def get_metadata(file: typing.Union[str, io.BytesIO, pathlib.Path]):
         str(file)
     ]
     result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
+    log.debug("ffprobe output (%d): %s", result.returncode, result.stdout)
     return json.loads(result.stdout)
 
 
@@ -99,7 +104,11 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
             "1",
             f.name
         ]
-        subprocess.run(command, capture_output=True, text=False, check=True)
+        log.debug("Extracting first frame of %r: %s", file, ' '.join(command))
+        log.debug(
+            "Extraction response code: %d",
+            subprocess.run(command, capture_output=True, text=False, check=True).returncode
+        )
         f.seek(0)
         return f.read()
 
@@ -117,6 +126,7 @@ def generate_blur_hash(file: str | pathlib.Path) -> str:
     if isinstance(file, str):
         file = pathlib.Path(file)
     with file.open("rb") as fd:
+        log.info("Generating blurhash for %s", file)
         return blurhash.encode(fd, 4, 3)
 
 
@@ -256,10 +266,13 @@ class MediaAttachment:
         mime_type = await run_blocking(detect_mime_type, file)
         if mime_type.startswith(("image", "video")) and gen_blur_hash:
             if mime_type.startswith("video"):
+                log.debug("Extracting first frame from video in order to generate blurhash")
                 frame = await run_blocking(first_frame, file, "jpeg")
+                log.debug("Generated first frame, generating blurhash")
                 with tempfile.NamedTemporaryFile(suffix=".jpeg") as fd:
                     fd.write(frame)
                     fd.flush()
+                    log.debug("Wrote first frame to temporary file, generating blurhash")
                     blur_hash = await run_blocking(generate_blur_hash, fd.name)
             else:
                 blur_hash = await run_blocking(generate_blur_hash, file)
