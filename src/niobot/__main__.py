@@ -336,6 +336,7 @@ def new():
 @click.argument("path", type=click.Path())
 @click.option("--password", "-p", prompt=True, hide_input=True)
 @click.option("--user-id", "-U", prompt=True)
+@click.option("--homeserver", "-H", prompt=True)
 @click.option("--device-id", "-D", prompt=True)
 @click.option("--store-path", "-S", prompt=True)
 @click.option("--prefix", "-P", prompt=True)
