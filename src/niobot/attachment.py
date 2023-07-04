@@ -84,8 +84,10 @@ def first_frame(file: pathlib.Path, file_format: str = "jpeg") -> bytes:
         return f.read()
 
 
-def generate_blur_hash(file: pathlib.Path) -> str:
+def generate_blur_hash(file: str | pathlib.Path) -> str:
     """Creates a blurhash"""
+    if isinstance(file, str):
+        file = pathlib.Path(file)
     with file.open("rb") as fd:
         return blurhash.encode(fd, 4, 3)
 
