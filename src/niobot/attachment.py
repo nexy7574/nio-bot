@@ -23,11 +23,17 @@ if not shutil.which("ffmpeg"):
     raise RuntimeError(
         "ffmpeg is not installed. You must install it to use this library. If its installed, is it in PATH?"
     )
+if not shutil.which("ffprobe"):
+    raise RuntimeError(
+        "ffprobe is not installed. You must install it to use this library. If its installed, is it in PATH?"
+    )
 
 
 __all__ = (
     "detect_mime_type",
     "get_metadata",
+    "generate_blur_hash",
+    "first_frame",
     "Thumbnail",
     "MediaAttachment",
     "FileAttachment",
@@ -68,8 +74,22 @@ def get_metadata(file: typing.Union[str, io.BytesIO, pathlib.Path]):
     return json.loads(result.stdout)
 
 
-def first_frame(file: pathlib.Path, file_format: str = "jpeg") -> bytes:
-    """Gets the first frame of a video file."""
+def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
+    """
+    Gets the first frame of a video file.
+
+    !!! Danger "This function creates a file on disk"
+        In order to extract the frame, this function creates a temporary file on disk (or memdisk depending on where
+        your tempdir is). While this file is deleted after the function is done, it is still something to be aware of.
+        For example, if you're (worryingly) low on space, this function may fail to extract the frame due to a lack of
+        space. Or, someone could temporarily access and read the file before it is deleted.
+
+        This also means that this function may be slow.
+
+    :param file: The file to get the first frame of. **Must be a path-like object**
+    :param file_format: The format to save the frame as. Defaults to webp.
+    :return: The first frame of the video in bytes.
+    """
     with tempfile.NamedTemporaryFile(suffix=f".{file_format}") as f:
         command = [
             "ffmpeg",
@@ -85,7 +105,15 @@ def first_frame(file: pathlib.Path, file_format: str = "jpeg") -> bytes:
 
 
 def generate_blur_hash(file: str | pathlib.Path) -> str:
-    """Creates a blurhash"""
+    """
+    Creates a blurhash
+
+    !!! warning "This function may be resource intensive"
+        This function may be resource intensive, especially for large images. You should run this in a thread or
+        process pool.
+
+        You should also scale any images down in order to increase performance.
+    """
     if isinstance(file, str):
         file = pathlib.Path(file)
     with file.open("rb") as fd:
@@ -248,7 +276,11 @@ class MediaAttachment:
 
     @property
     def media_type(self) -> str:
-        """The media type of the attachment, be it m.video or m.image."""
+        """
+        The media type of the attachment, be it m.video, m.image, or m.audio.
+
+        :returns: `m.audio`, `m.image`, or `m.video`
+        """
         return "m." + self.mime.split("/")[0]
 
     @property
