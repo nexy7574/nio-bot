@@ -5,7 +5,6 @@ import nio
 import typing
 
 from .utils.string_view import ArgumentView
-from .utils import deprecated
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -49,7 +48,7 @@ class ContextualResponse:
         """
 
         return ContextualResponse(
-            self.ctx, self.ctx.client.send_message(self.ctx.room, *args, reply_to=self._response.event_id)
+            self.ctx, await self.ctx.client.send_message(self.ctx.room, *args, reply_to=self._response.event_id)
         )
 
     async def edit(self, content: str, **kwargs) -> "ContextualResponse":
@@ -66,6 +65,7 @@ class ContextualResponse:
             content,
             **kwargs
         )
+        return self
 
     async def delete(self, reason: str = None) -> None:
         """

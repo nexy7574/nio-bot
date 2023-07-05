@@ -84,10 +84,12 @@ class Command:
 
     ??? example
         !!! note
-            This example uses the `command` decorator, but you can also use the `Command` class directly, but you
+            This example uses the `command` decorator, but you can also use the [`Command`][niobot.commands.Command]
+            class directly, but you
             likely won't need to, unless you want to pass a custom command class.
 
-            All that the `@command` decorator does is create a `Command` instance and add it to the bot's commands,
+            All that the `@command` decorator does is create a [`Command`][niobot.commands.Command] instance and
+            add it to the bot's commands,
             while wrapping the function its decorating.
 
         ```py
@@ -110,7 +112,8 @@ class Command:
         Whether the command is disabled or not. If disabled, the command will be hidden on the auto-generated
         help command, and will not be able to be invoked.
     :param arguments:
-        A list of [`Argument`](#Argument) instances. Will be used to parse the arguments given to the command.
+        A list of [`Argument`][niobot.commands.Argument] instances. Will be used to parse the arguments given to the
+        command.
         `ctx` is always the first argument, regardless of what you put here.
     :param usage:
         A string representing how to use this command's arguments. Will be shown in the auto-generated help.

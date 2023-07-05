@@ -405,6 +405,8 @@ class MediaAttachment:
             }
             if self.blur_hash:
                 payload["xyz.amorgan.blurhash"] = self.blur_hash
+            if self.thumbnail:
+                payload["thumbnail_info"] = self.thumbnail.url
         return payload
 
 
