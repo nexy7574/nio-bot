@@ -287,3 +287,60 @@ nio-bot has a handy dandy auto-join feature - if you just invite your bot's user
 within a couple seconds, your bot will automatically join your room!
 
 Then, you can run `!help` to get a list of commands, and `!help <command>` to get help on a specific command.
+
+### Final product
+??? abstract "config.py"
+
+    ```python
+    HOMESERVER = "https://matrix.org"  # or your homeserver
+    USER_ID = "@my-bot:matrix.org"  # your bot account's user ID
+    ACCESS_TOKEN = "syt_<...>"  # your bot account's access token
+    ```
+
+??? abstract "main.py"
+
+    ```python
+    import niobot
+    import logging
+    import config
+
+    logging.basicConfig(level=logging.INFO, filename="bot.log")
+    
+    bot = niobot.NioBot(
+        homeserver=config.HOMESERVER,
+        user_id=config.USER_ID,
+        device_id='my-device-id',
+        store_path='./store',
+        command_prefix="!",
+        owner_id="@my-matrix-username:matrix.org"
+    )
+    # We also want to load `fun.py`'s commands before starting:
+    bot.mount_module("fun")
+    
+    @bot.on_event("ready")
+    async def on_ready(_):
+        # That first argument is needed as the first result of the sync loop is passed to ready. Without it, this event
+        # will fail to fire, and will cause a potentially catasrophic failure.
+        print("Bot is ready!")
+    
+    
+    @bot.command()
+    async def ping(ctx):  # can be invoked with "!ping"
+        await ctx.reply("Pong!")
+    
+    bot.run(access_token=config.ACCESS_TOKEN)
+    ```
+
+??? abstract "fun.py"
+    ```python
+    import niobot
+
+
+    class MyFunModule(niobot.Module):  # subclassing niobot.Module is mandatory for auto-detection.
+        def __init__(self, bot):
+            self.bot = bot  # bot is the NioBot instance you made in main.py!
+    
+        @niobot.command()
+        async def hello(self, ctx):
+            await ctx.reply("Hello %s!" % ctx.event.sender)
+    ```
