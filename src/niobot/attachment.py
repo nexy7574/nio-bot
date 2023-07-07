@@ -592,7 +592,7 @@ class VideoAttachment(SupportXYZAmorganBlurHash):
                 stream = metadata["streams"][0]
                 height = stream["height"]
                 width = stream["width"]
-                duration = round(metadata["format"]["duration"] * 1000)
+                duration = round(float(metadata["format"]["duration"]) * 1000)
 
         mime_type = detect_mime_type(file)
         size = _size(file)
@@ -661,7 +661,7 @@ class AudioAttachment(BaseAttachment):
                 file_name = file.name
             if duration is None:
                 metadata = await run_blocking(get_metadata, file)
-                duration = round(metadata["format"]["duration"] * 1000)
+                duration = round(float(metadata["format"]["duration"]) * 1000)
 
         mime_type = detect_mime_type(file)
         size = _size(file)
