@@ -352,7 +352,7 @@ class BaseAttachment(abc.ABC):
                     f,
                     content_type=self.mime_type,
                     filename=self.file_name,
-                    encrypted=encrypted,
+                    encrypt=encrypted,
                     filesize=size,
                 )
         else:
@@ -360,7 +360,7 @@ class BaseAttachment(abc.ABC):
                 self.file,
                 content_type=self.mime_type,
                 filename=self.file_name,
-                encrypted=encrypted,
+                encrypt=encrypted,
                 filesize=size,
             )
         if not isinstance(result, nio.UploadResponse):
