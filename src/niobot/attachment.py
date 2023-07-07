@@ -600,8 +600,7 @@ class VideoAttachment(BaseAttachment):
                 await self.thumbnail.get_blurhash()
             elif isinstance(file, pathlib.Path):
                 thumbnail = await run_blocking(first_frame, file)
-                self.thumbnail = await ImageAttachment.from_file(thumbnail, generate_blurhash=False)
-                await self.thumbnail.get_blurhash()
+                self.thumbnail = await ImageAttachment.from_file(io.BytesIO(thumbnail))
         return self
 
     @staticmethod
@@ -620,7 +619,7 @@ class VideoAttachment(BaseAttachment):
             video = video.file
         video = _to_path(video)
         x = await run_blocking(first_frame, video)
-        return await ImageAttachment.from_file(x)
+        return await ImageAttachment.from_file(io.BytesIO(x))
 
     def as_body(self, body: str = None) -> dict:
         body = super().as_body(body)
