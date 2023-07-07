@@ -9,6 +9,7 @@ __all__ = (
     "MessageException",
     "LoginException",
     "MediaUploadException",
+    "MetadataDetectionException",
     "CommandError",
     "CommandDisabledError",
     "CommandArgumentsError"
@@ -77,6 +78,12 @@ class LoginException(NioBotException):
 class MediaUploadException(NioBotException):
     """
     Exception for media-uploading related errors
+    """
+
+
+class MetadataDetectionException(MediaUploadException):
+    """
+    Exception raised when metadata detection fails. Most of the time, this is an ffmpeg-related error
     """
 
 

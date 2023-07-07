@@ -11,7 +11,7 @@ import nio
 from nio.crypto import ENCRYPTION_ENABLED
 import marko
 
-from .attachment import MediaAttachment
+from .attachment import *
 from .exceptions import *
 from .utils import run_blocking, Typing, force_await
 from .utils.help_command import help_command_callback
@@ -485,11 +485,34 @@ class NioBot(nio.AsyncClient):
             return obj
         raise ValueError("Unable to determine ID")
 
+    @staticmethod
+    def generate_mx_reply(room: nio.MatrixRoom, event: nio.RoomMessageText) -> str:
+        """Generates a reply string for a given event."""
+        return (
+            "<mx-reply>"
+            "<blockquote>"
+            "<a href=\"{reply_url}\">{reply}</a> "
+            "<a href=\"{user_url}\">{user}</a><br/>"
+            "</blockquote>"
+            "</mx-reply>".format(
+                reply_url="https://matrix.to/#/{}:{}/{}".format(
+                    room.room_id,
+                    room.machine_name.split(":")[1],
+                    event.event_id
+                ),
+                reply=event.body,
+                user_url="https://matrix.to/#/{}".format(
+                    event.sender
+                ),
+                user=event.sender,
+            )
+        )
+
     async def send_message(
             self,
             room: nio.MatrixRoom | str,
             content: str = None,
-            file: MediaAttachment = None,
+            file: BaseAttachment = None,
             reply_to: nio.RoomMessageText | str = None,
             message_type: str = None
     ) -> nio.RoomSendResponse:
@@ -500,38 +523,27 @@ class NioBot(nio.AsyncClient):
         :param content: The content to send. Cannot be used with file.
         :param file: A file to send, if any. Cannot be used with content.
         :param reply_to: A message to reply to.
-        :param message_type: The message type to send. If none, defaults to NioBot.global_message_type, which itself is `m.notice` by default.
+        :param message_type: The message type to send. If none, defaults to NioBot.global_message_type,
+        which itself is `m.notice` by default.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
-
         """
         if not any((content, file)):
             raise ValueError("You must specify either content or file.")
-        elif file and not content:
-            raise ValueError("You must specify content (a textual description of the media) while using file.")
 
         body = {
             "msgtype": message_type or self.global_message_type,
             "body": content,
         }
 
-        if reply_to:
-            body["m.relates_to"] = {
-                "m.in_reply_to": {
-                    "event_id": self._get_id(reply_to)
-                }
-            }
-
         if file:
             # We need to upload the file first.
-            response = await file.upload(self)
+            response = await file.upload(self, encrypted=getattr(room, 'encrypted', False))
             if isinstance(response, nio.UploadError):
                 raise MessageException("Failed to upload media.", response)
 
-            body["msgtype"] = file.media_type
-            body["info"] = file.to_dict()
-            body["url"] = file.url
+            body = file.as_body(content)
         else:
             parsed = await run_blocking(marko.parse, content)
             if parsed.children:
@@ -540,27 +552,19 @@ class NioBot(nio.AsyncClient):
                 body["format"] = "org.matrix.custom.html"
 
             if reply_to and isinstance(reply_to, nio.RoomMessageText) and isinstance(room, nio.MatrixRoom):
-                body["formatted_body"] = "<mx-reply>" \
-                       "<blockquote>" \
-                       "<a href=\"{reply_url}\">{reply}</a> " \
-                       "<a href=\"{user_url}\">{user}</a><br/>" \
-                       "</blockquote>" \
-                       "</mx-reply>" \
-                       "{body}".format(
-                            reply_url="https://matrix.to/#/{}:{}/{}".format(
-                                room.room_id,
-                                room.machine_name.split(":")[1],
-                                reply_to.event_id
-                            ),
-                            reply=reply_to.body,
-                            user_url="https://matrix.to/#/{}".format(
-                                reply_to.sender
-                            ),
-                            user=reply_to.sender,
-                            body=body.get("formatted_body", body.get("body"))
-                       )
+                body["formatted_body"] = "{}{}".format(
+                    self.generate_mx_reply(room, reply_to),
+                    body.get("formatted_body", body["body"])
+                )
                 body["format"] = "org.matrix.custom.html"
-        async with Typing(self, room.room_id):
+
+        if reply_to:
+            body["m.relates_to"] = {
+                "m.in_reply_to": {
+                    "event_id": self._get_id(reply_to)
+                }
+            }
+        async with Typing(self, self._get_id(room)):
             response = await self.room_send(
                 self._get_id(room),
                 "m.room.message",
@@ -568,7 +572,6 @@ class NioBot(nio.AsyncClient):
             )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to send message.", response)
-        await self.room_typing(room.room_id, False)
         return response
 
     async def edit_message(
@@ -642,7 +645,6 @@ class NioBot(nio.AsyncClient):
         response = await self.room_redact(room, message_id, reason=reason)
         if isinstance(response, nio.RoomRedactError):
             raise MessageException("Failed to delete message.", response)
-        self.log.debug("delete_message: %r", response)
         return response
 
     async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:

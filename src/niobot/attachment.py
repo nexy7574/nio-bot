@@ -1,3 +1,14 @@
+"""
+Matrix file attachments. Full e2ee support is implemented.
+
+Implemented media types:
+
+[X] Generic file
+[X] Image
+[X] Audio
+[X] Video
+"""
+import abc
 import tempfile
 import warnings
 
@@ -10,12 +21,13 @@ import pathlib
 import shutil
 import magic
 import typing
+import enum
 import aiofiles
 import logging
 import blurhash
 
 from .utils import run_blocking
-from .exceptions import MediaUploadException
+from .exceptions import MediaUploadException, MetadataDetectionException
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -38,9 +50,11 @@ __all__ = (
     "get_metadata",
     "generate_blur_hash",
     "first_frame",
-    "Thumbnail",
-    "MediaAttachment",
+    "BaseAttachment",
     "FileAttachment",
+    "ImageAttachment",
+    "VideoAttachment",
+    "AudioAttachment",
 )
 
 
@@ -109,9 +123,12 @@ def get_metadata(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typi
         "-i",
         str(file)
     ]
-    result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
+    try:
+        result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
+    except subprocess.SubprocessError as e:
+        raise MetadataDetectionException("Failed to get metadata for file.", exception=e)
     log.debug("ffprobe output (%d): %s", result.returncode, result.stdout)
-    return json.loads(result.stdout)
+    return json.loads(result.stdout or '{}')
 
 
 def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
@@ -143,15 +160,18 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
             f.name
         ]
         log.debug("Extracting first frame of %r: %s", file, ' '.join(command))
-        log.debug(
-            "Extraction return code: %d",
-            subprocess.run(command, capture_output=True, check=True).returncode
-        )
+        try:
+            log.debug(
+                "Extraction return code: %d",
+                subprocess.run(command, capture_output=True, check=True).returncode
+            )
+        except subprocess.SubprocessError as e:
+            raise MediaUploadException("Failed to extract first frame of video.", exception=e)
         f.seek(0)
         return f.read()
 
 
-def generate_blur_hash(file: str | pathlib.Path) -> str:
+def generate_blur_hash(file: str | pathlib.Path | io.BytesIO) -> str:
     """
     Creates a blurhash
 
@@ -163,277 +183,492 @@ def generate_blur_hash(file: str | pathlib.Path) -> str:
 
         See: [woltapp/blurhash](https://github.com/woltapp/blurhash)
     """
+    file = _to_path(file)
+    if not isinstance(file, io.BytesIO):
+        with file.open("rb") as fd:
+            log.info("Generating blurhash for %s", file)
+            return blurhash.encode(fd, 4, 3)
+    else:
+        log.info("Generating blurhash for BytesIO object")
+        return blurhash.encode(file, 4, 3)
+
+
+def _file_okay(file: pathlib.Path | io.BytesIO) -> typing.Literal[True]:
+    """Checks if a file exists, is a file, and can be read."""
+    if isinstance(file, io.BytesIO):
+        if file.closed:
+            raise ValueError("BytesIO object is closed.")
+        if len(file.getbuffer()) == 0:
+            w = ResourceWarning("BytesIO object is empty, this may cause issues. Did you mean to seek(0) first?")
+            warnings.warn(w)
+        return True
+
+    if not file.exists():
+        raise FileNotFoundError(f"File {file} does not exist.")
+    if not file.is_file():
+        raise ValueError(f"{file} is not a file.")
+    if not os.access(file, os.R_OK):
+        raise PermissionError(f"Cannot read {file}.")
+    # Check it can have a stat() value
+    file.stat()
+    return True
+
+
+def _to_path(file: str | pathlib.Path | io.BytesIO) -> typing.Union[pathlib.Path, io.BytesIO]:
+    """Converts a string to a Path object."""
+    if not isinstance(file, (str, pathlib.PurePath, io.BytesIO)):
+        raise TypeError("File must be a string, BytesIO, or Path object.")
+
+    if isinstance(file, io.BytesIO):
+        return file
+
     if isinstance(file, str):
         file = pathlib.Path(file)
-    with file.open("rb") as fd:
-        log.info("Generating blurhash for %s", file)
-        return blurhash.encode(fd, 4, 3)
+    file = file.resolve()
+    return file
 
 
-class Thumbnail:
+def _size(file: pathlib.Path | io.BytesIO) -> int:
+    """Gets the size of a file."""
+    if isinstance(file, io.BytesIO):
+        return len(file.getbuffer())
+    return file.stat().st_size
+
+
+class AttachmentType(enum.Enum):
     """
-    Represents a thumbnail for a media attachment.
-
-    :param url: The URL of the thumbnail.
-    :param mime: The mime type of the thumbnail.
-    :param height: The height of the thumbnail.
-    :param width: The width of the thumbnail.
-    :param size: The size of the thumbnail.
+    Enumeration containing the different types of media.
     """
-    def __init__(
-            self,
-            url: str,
-            *,
-            mime: str,
-            height: int,
-            width: int,
-            size: int
-    ):
-        self.url = url
-        self._mime = mime
-        self._height = height
-        self._width = width
-        self.size = size
-
-    @classmethod
-    def from_attachment(cls, attachment: "MediaAttachment"):
-        """
-        Creates a thumbnail from a MediaAttachment.
-
-        You should make sure you've `upload()`ed the attachment first.
-
-        :param attachment: The attachment to create the thumbnail from.
-        :return: A Thumbnail object.
-        """
-        if not attachment.url:
-            raise ValueError("You must upload the attachment first.")
-
-        if attachment.media_type.split(".")[1] not in ("video", "image"):
-            raise ValueError("You can only create a thumbnail from a video or image.")
-
-        return cls(
-            url=attachment.url,
-            mime=attachment.mime,
-            height=attachment.height,
-            width=attachment.width,
-            size=attachment.size
-        )
-
-    def to_dict(self):
-        return {
-            "w": self._width,
-            "h": self._height,
-            "mimetype": self._mime,
-            "size": self.size,
-        }
+    FILE = "m.file"
+    AUDIO = "m.audio"
+    VIDEO = "m.video"
+    IMAGE = "m.image"
 
 
-class MediaAttachment:
-    """Represents an image, audio or video to be sent to a room.
-
-    ??? tip "You probably want to skip to [from_file](#niobot.attachment.MediaAttachment.from_file)"
-        The `MediaAttachment.from_file` method is the best way to create a MediaAttachment from just a file.
-        You should (and realistically, only can) create an instance of this manually if you have the file,
-        mime type, height, width, and optionally thumbnail already.
-
-        The `MediaAttachment.from_file` method will automatically do this for you.
-
-    ??? warning "You can only use video/image/audio content with this class"
-        Do not use this attachment type for anything other than video, image, or audio content. Use
-        `FileAttachment` for other types of files.
-
-    ???+ danger "BytesIO support is experimental"
-        It is advised to write BytesIO objects to a temporary file if you experience any issues with them. This is
-        because some methods, such as `MediaAttachment.upload`, re-open the file descriptor in an
-        asynchronous context, which may cause issues with BytesIO.
-
-        Initially, the library did this automatically, however to prevent compatibility issues, this is now just the
-        responsibility of the developer.
-
-        Using a BytesIO() will yield a warning in the logs, however may still work.
-
-    :param file: The file to send (either a path, BytesIO, or `pathlib.Path` object)
-    :param mime: The mime type of the file
-    :param height: The height of the file, if applicable
-    :param width: The width of the file, if applicable
-    :param thumbnail: The thumbnail of the file, if applicable
-    :param blur_hash: The blurhash of the file, if applicable
-    """
+class BaseAttachment(abc.ABC):
+    """Base class for attachments"""
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = None,
+            mime_type: str = ...,
+            size_bytes: int = ...,
             *,
-            mime: str = None,
-            height: typing.Union[int, None],
-            width: typing.Union[int, None],
-            thumbnail: Thumbnail = None,
-            blur_hash: str = None
+            attachment_type: AttachmentType = AttachmentType.FILE
     ):
-        if isinstance(file, io.BytesIO):
-            warnings.warn(RuntimeWarning("Using BytesIO with MediaAttachment is experimental."))
-        self._file = file
-        self._url = None
-        self.mime = mime
-        self.height = height
-        self.width = width
-        self.thumbnail = thumbnail
-        self.blur_hash = blur_hash
+        self.file = _to_path(file)
+        self.file_name = file.name if isinstance(file, pathlib.Path) else file_name
+        if not file_name:
+            raise ValueError("file_name must be specified when uploading a BytesIO object.")
+        self.mime_type = mime_type or detect_mime_type(file)
+        self.size = size_bytes or os.path.getsize(file)
 
-        if self.mime is None:
-            self.mime = detect_mime_type(self._file)
+        self.type = attachment_type
+        self.url = None
+        self.keys = None
+
+    def __repr__(self):
+        return "<{0.__class__.__name__} file={0.file!r} file_name={0.file_name!r} " \
+               "mime_type={0.mime_type!r} size={0.size!r} type={0.type!r}>".format(self)
+
+    def as_body(self, body: str = None) -> dict:
+        """
+        Generates the body for the attachment for sending. The attachment must've been uploaded first.
+
+        :param body: The body to use (should be a textual description). Defaults to the file name.
+        :return:
+        """
+        body = {
+            "body": body or self.file_name,
+            "info": {
+                "mimetype": self.mime_type,
+                "size": self.size,
+            },
+            "msgtype": self.type.value,
+            "filename": self.file_name,
+            "url": self.url,
+        }
+        if self.keys:
+            body["file"] = self.keys
+        return body
 
     @classmethod
     async def from_file(
             cls,
-            file: pathlib.Path | str,
-            thumbnail: Thumbnail = None,
-            gen_blur_hash: bool = True
-    ) -> "MediaAttachment":
-        """Creates a MediaAttachment from a file.
-
-        :param file: The file to create the attachment from
-        (Must be a path or pathlib.Path object, cannot be BytesIO)
-        :param thumbnail: The thumbnail of the file, if applicable
-        :param gen_blur_hash: Whether to generate a blurhash for the file
-        :return: A MediaAttachment object
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = None,
+    ) -> "BaseAttachment":
         """
-        # TODO: Add thumbnail (discovery? generation?)
-        metadata = await run_blocking(get_metadata, file)
-        if "streams" not in metadata:
-            raise ValueError("Invalid file.")
+        Creates an attachment from a file.
 
-        stream = metadata["streams"][0]
-        mime_type = await run_blocking(detect_mime_type, file)
-        if mime_type.startswith(("image", "video")) and gen_blur_hash:
-            if mime_type.startswith("video"):
-                log.debug("Extracting first frame from video in order to generate blurhash")
-                frame = await run_blocking(first_frame, file, "jpeg")
-                log.debug("Generated first frame, generating blurhash")
-                with tempfile.NamedTemporaryFile(suffix=".jpeg") as fd:
-                    fd.write(frame)
-                    fd.flush()
-                    log.debug("Wrote first frame to temporary file, generating blurhash")
-                    blur_hash = await run_blocking(generate_blur_hash, fd.name)
-            else:
-                blur_hash = await run_blocking(generate_blur_hash, file)
-        else:
-            blur_hash = None
-        return cls(
-            file,
-            mime=mime_type,
-            height=stream.get("height"),
-            width=stream.get("width"),
-            thumbnail=thumbnail,
-            blur_hash=blur_hash
-        )
+        You should use this method instead of the constructor, as it will automatically detect all other values
 
-    @property
-    def media_type(self) -> str:
+        :param file: The file or BytesIO to attach
+        :param file_name: The name of the BytesIO file, if applicable
+        :return: Loaded attachment.
         """
-        The media type of the attachment, be it m.video, m.image, or m.audio.
-
-        :returns: `m.audio`, `m.image`, or `m.video`
-        """
-        return "m." + self.mime.split("/")[0]
-
-    @property
-    def size(self) -> int:
-        """Returns the size of the thumbnail in bytes."""
-        if isinstance(self._file, io.BytesIO):
-            self._file.seek(0, io.SEEK_END)
-            size = self._file.tell()
-            self._file.seek(0)
-            return size
-        else:
-            return os.path.getsize(self.file)
-
-    @property
-    def url(self) -> str | None:
-        """The current mxc URL of the attachment, if it has been uploaded."""
-        return self._url
-
-    @property
-    def file(self) -> pathlib.Path | io.BytesIO:
-        if isinstance(self._file, str):
-            return pathlib.Path(self._file)
-        else:
-            return self._file
-
-    async def upload(self, client: "NioBot", file_name: str = None):
-        """Uploads the file to matrix."""
-        if isinstance(self.file, io.BytesIO):
+        file = _to_path(file)
+        if isinstance(file, io.BytesIO):
             if not file_name:
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
-            self._file.seek(0)
+        else:
+            if not file_name:
+                file_name = file.name
 
+        mime_type = detect_mime_type(file)
+        size = _size(file)
+        return cls(file, file_name, mime_type, size)
+
+    @classmethod
+    def convert_from(cls, other: "BaseAttachment") -> "BaseAttachment":
+        """
+        Converts another attachment into this type.
+
+        !!! warning "This discards upload progress"
+            If you've uploaded the other attachment, you'll lose keys and mxc url by doing this!
+
+        :param other: The other attachment
+        :return: This attachment
+        """
+        return cls(other.file, other.file_name, other.mime_type, other.size)
+
+    @property
+    def size_bytes(self) -> int:
+        """Returns the size of this attachment in bytes."""
+        return self.size
+
+    async def upload(self, client: "NioBot", encrypted: bool = False) -> "BaseAttachment":
+        """
+        Uploads the file to matrix.
+
+        :param client: The client to upload
+        :param encrypted: Whether to encrypt the thumbnail or not
+        :return: The attachment
+        """
+        size = self.size or _size(self.file)
         if not isinstance(self.file, io.BytesIO):
-            async with aiofiles.open(self.file, "r+b") as file:
-                result, _ = await client.upload(
-                    file,
-                    content_type=self.mime,
-                    filename=file_name or self.file.name,
-                    filesize=self.size
+            async with aiofiles.open(self.file, "rb") as f:
+                result, keys = await client.upload(
+                    f,
+                    content_type=self.mime_type,
+                    filename=self.file_name,
+                    encrypted=encrypted,
+                    filesize=size,
                 )
         else:
-            result, _ = await client.upload(
+            result, keys = await client.upload(
                 self.file,
-                content_type=self.mime,
-                filename=file_name or self.file.name,
-                filesize=self.size
+                content_type=self.mime_type,
+                filename=self.file_name,
+                encrypted=encrypted,
+                filesize=size,
             )
-        if isinstance(result, nio.UploadError):
-            raise MediaUploadException(response=result)
-        self._url = result.content_uri
-        return result
+        if not isinstance(result, nio.UploadResponse):
+            raise MediaUploadException("Upload failed: %r" % result, result)
 
-    def to_dict(self) -> dict:
-        """Convert the attachment to a dictionary."""
-        if self.media_type == "m.audio":
-            payload = {"mimetype": self.mime, "size": self.size}
+        if keys:
+            self.keys = keys
+
+        self.url = result.content_uri
+        return self
+
+
+class SupportXYZAmorganBlurHash(BaseAttachment):
+    """Represents an attachment that supports blurhashes."""
+    def __init__(self, *args, xyz_amorgan_blurhash: str = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.xyz_amorgan_blurhash = xyz_amorgan_blurhash
+
+    @classmethod
+    async def from_file(
+            cls,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = None,
+            xyz_amorgan_blurhash: str | bool = None,
+    ):
+        file = _to_path(file)
+        if isinstance(file, io.BytesIO):
+            if not file_name:
+                raise ValueError("file_name must be specified when uploading a BytesIO object.")
         else:
-            if self.height is None:
-                raise ValueError("height must be specified for non-audio media attachments.")
-            if self.width is None:
-                raise ValueError("width must be specified for non-audio media attachments.")
+            if not file_name:
+                file_name = file.name
 
-            payload = {
-                "mimetype": self.mime,
-                "h": self.height,
-                "w": self.width,
-                "size": self.size,
-                "thumbnail_info": self.thumbnail.to_dict() if self.thumbnail else None
-            }
-            if self.blur_hash:
-                payload["xyz.amorgan.blurhash"] = self.blur_hash
-            if self.thumbnail:
-                payload["thumbnail_url"] = self.thumbnail.url
-        return payload
+        mime_type = detect_mime_type(file)
+        size = _size(file)
+        self = cls(file, file_name, mime_type, size, xyz_amorgan_blurhash=xyz_amorgan_blurhash)
+        if xyz_amorgan_blurhash is not False:
+            await self.get_blurhash()
+        return self
+
+    async def get_blurhash(self):
+        """
+        Gets the blurhash of the attachment.
+
+        :return: The blurhash
+        """
+        if isinstance(self.xyz_amorgan_blurhash, str):
+            return self.xyz_amorgan_blurhash
+        x = await run_blocking(generate_blur_hash, self.file)
+        self.xyz_amorgan_blurhash = x
+        return x
+
+    def as_body(self, body: str = None) -> dict:
+        body = super().as_body(body)
+        if isinstance(self.xyz_amorgan_blurhash, str):
+            body["info"]["xyz.amorgan.blurhash"] = self.xyz_amorgan_blurhash
+        return body
 
 
-class FileAttachment(MediaAttachment):
-    """Represents a generic file type, such as PDF or TXT.
+class FileAttachment(BaseAttachment):
+    """
+    Represents a generic file attachment.
 
-    !!! warning "Do not use this class for images, audio or video."
-        Do not use this class for images, audio or video. Use `MediaAttachment` instead.
-        Furthermore, you should initialise this class manually - the `from_file` method does so much
-        unnecessary work that it's not worth using for this attachment type.
-
-    :param file: The file to upload.
-    :param mime_type: The mime type of the file. If not specified, it will be detected automatically.
+    You should use [VideoAttachment][niobot.attachment.VideoAttachment] for videos,
+    [AudioAttachment][niobot.attachment.AudioAttachment] for audio,
+    and [ImageAttachment][niobot.attachment.ImageAttachment] for images.
+    This is for everything else.
     """
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            mime_type: str = None,
+            file_name: str = ...,
+            mime_type: str = ...,
+            size_bytes: int = ...,
     ):
-        super().__init__(file, mime=mime_type or detect_mime_type(file), height=None, width=None, thumbnail=None)
+        super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.FILE)
 
-    def to_dict(self) -> dict:
-        """Convert the attachment to a dictionary."""
-        return {
-            "mimetype": self.mime,
-            "size": self.size
+
+class ImageAttachment(SupportXYZAmorganBlurHash):
+    """
+    Represents an image attachment.
+    """
+    def __init__(
+            self,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = ...,
+            mime_type: str = ...,
+            size_bytes: int = ...,
+            height: int = None,
+            width: int = None,
+            thumbnail: "ImageAttachment" = None,
+            xyz_amorgan_blurhash: str = None,
+    ):
+        super().__init__(
+            file,
+            file_name,
+            mime_type,
+            size_bytes,
+            xyz_amorgan_blurhash=xyz_amorgan_blurhash,
+            attachment_type=AttachmentType.IMAGE
+        )
+        self.info = {
+            "h": height,
+            "w": width,
+            "mimetype": mime_type,
+            "size": size_bytes,
+        }
+        self.thumbnail = thumbnail
+
+    @classmethod
+    async def from_file(
+            cls,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = ...,
+            height: int = None,
+            width: int = None,
+            thumbnail: "ImageAttachment" = None,
+            generate_blurhash: bool = True,
+    ) -> "ImageAttachment":
+        """
+        Generates an image attachment
+
+        :param file: The file to upload
+        :param file_name: The name of the file (only used if file is a `BytesIO`)
+        :param height: The height, in pixels, of this image
+        :param width: The width, in pixels, of this image
+        :param thumbnail: A thumbnail for this image
+        :param generate_blurhash: Whether to generate a blurhash for this image
+        :return: An image attachment
+        """
+        file = _to_path(file)
+        if isinstance(file, io.BytesIO):
+            if not file_name:
+                raise ValueError("file_name must be specified when uploading a BytesIO object.")
+        else:
+            if not file_name:
+                file_name = file.name
+
+            if height is None or width is None:
+                metadata = await run_blocking(get_metadata, file)
+                stream = metadata["streams"][0]
+                height = stream["height"]
+                width = stream["width"]
+
+        mime_type = detect_mime_type(file)
+        size = _size(file)
+        self = cls(file, file_name, mime_type, size, height, width, thumbnail)
+        if generate_blurhash:
+            await self.get_blurhash()
+        return self
+
+    def as_body(self, body: str = None) -> dict:
+        body = super().as_body(body)
+        body["info"] = {**body["info"], **self.info}
+        if self.thumbnail:
+            if self.thumbnail.keys:
+                body["info"]["thumbnail_file"] = self.thumbnail.keys
+            body["info"]["thumbnail_info"] = self.thumbnail.info
+            body["info"]["thumbnail_url"] = self.thumbnail.url
+        return body
+
+
+class VideoAttachment(SupportXYZAmorganBlurHash):
+    """
+    Represents a video attachment.
+    """
+    def __init__(
+            self,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = ...,
+            mime_type: str = ...,
+            size_bytes: int = ...,
+            duration: int = None,
+            height: int = None,
+            width: int = None,
+            thumbnail: "ImageAttachment" = None,
+            xyz_amorgan_blurhash: str = None,
+    ):
+        super().__init__(
+            file,
+            file_name,
+            mime_type,
+            size_bytes,
+            xyz_amorgan_blurhash=xyz_amorgan_blurhash,
+            attachment_type=AttachmentType.VIDEO
+        )
+        self.info = {
+            "duration": round(duration * 1000) if duration else None,
+            "h": height,
+            "w": width,
+            "mimetype": mime_type,
+            "size": size_bytes,
+        }
+        self.thumbnail = thumbnail
+
+    @classmethod
+    async def from_file(
+            cls,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = ...,
+            duration: int = None,
+            height: int = None,
+            width: int = None,
+            thumbnail: "ImageAttachment" = None,
+            generate_blurhash: bool = True,
+    ) -> "VideoAttachment":
+        """
+        Generates a video attachment
+
+        :param file: The file to upload
+        :param file_name: The name of the file (only used if file is a `BytesIO`)
+        :param duration: The duration of the video, in seconds
+        :param height: The height, in pixels, of this video
+        :param width: The width, in pixels, of this video
+        :param thumbnail: A thumbnail for this image
+        :param generate_blurhash: Whether to generate a blurhash for this image
+        :return: An image attachment
+        """
+        file = _to_path(file)
+        if isinstance(file, io.BytesIO):
+            if not file_name:
+                raise ValueError("file_name must be specified when uploading a BytesIO object.")
+        else:
+            if not file_name:
+                file_name = file.name
+
+            if height is None or width is None or duration is None:
+                metadata = await run_blocking(get_metadata, file)
+                stream = metadata["streams"][0]
+                height = stream["height"]
+                width = stream["width"]
+                duration = round(metadata["format"]["duration"] * 1000)
+
+        mime_type = detect_mime_type(file)
+        size = _size(file)
+        self = cls(file, file_name, mime_type, size, duration, height, width, thumbnail)
+        if generate_blurhash:
+            await self.get_blurhash()
+        return self
+
+    def as_body(self, body: str = None) -> dict:
+        body = super().as_body(body)
+        body["info"] = {**body["info"], **self.info}
+        if self.thumbnail:
+            if self.thumbnail.keys:
+                body["info"]["thumbnail_file"] = self.thumbnail.keys
+            body["info"]["thumbnail_info"] = self.thumbnail.info
+            body["info"]["thumbnail_url"] = self.thumbnail.url
+        return body
+
+
+class AudioAttachment(BaseAttachment):
+    """
+    Represents an audio attachment.
+    """
+    def __init__(
+            self,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = ...,
+            mime_type: str = ...,
+            size_bytes: int = ...,
+            duration: int = None,
+    ):
+        super().__init__(
+            file,
+            file_name,
+            mime_type,
+            size_bytes,
+            attachment_type=AttachmentType.AUDIO
+        )
+        self.info = {
+            "duration": round(duration * 1000) if duration else None,
+            "mimetype": mime_type,
+            "size": size_bytes,
         }
 
+    @classmethod
+    async def from_file(
+            cls,
+            file: typing.Union[str, io.BytesIO, pathlib.Path],
+            file_name: str = ...,
+            duration: int = None,
+    ) -> "AudioAttachment":
+        """
+        Generates an audio attachment
 
-# class VideoAttachment:
+        :param file: The file to upload
+        :param file_name: The name of the file (only used if file is a `BytesIO`)
+        :param duration: The duration of the audio, in seconds
+        :return: An audio attachment
+        """
+        file = _to_path(file)
+        if isinstance(file, io.BytesIO):
+            if not file_name:
+                raise ValueError("file_name must be specified when uploading a BytesIO object.")
+        else:
+            if not file_name:
+                file_name = file.name
+            if duration is None:
+                metadata = await run_blocking(get_metadata, file)
+                duration = round(metadata["format"]["duration"] * 1000)
+
+        mime_type = detect_mime_type(file)
+        size = _size(file)
+        self = cls(file, file_name, mime_type, size, duration)
+        return self
+
+    def as_body(self, body: str = None) -> dict:
+        body = super().as_body(body)
+        body["info"] = {**body["info"], **self.info}
+        return body

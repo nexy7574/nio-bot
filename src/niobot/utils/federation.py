@@ -18,7 +18,7 @@ async def resolve_homeserver(domain: str) -> str:
     if not domain.startswith("https://"):
         domain = f"https://{domain}"
     domain = urlparse(domain).netloc
-    async with aiohttp.ClientSession(headers={"User-Agent": __user_agent__()}) as session:
+    async with aiohttp.ClientSession(headers={"User-Agent": __user_agent__}) as session:
         async with session.get(f"https://{domain}/.well-known/matrix/client") as resp:
             if resp.status == 200:
                 if resp.content_type != "application/json":
