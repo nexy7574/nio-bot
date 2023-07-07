@@ -624,6 +624,8 @@ class NioBot(nio.AsyncClient):
             )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to edit message.", response)
+        # Forcefully clear typing
+        await self.room_typing(room.room_id, False)
         return response
 
     async def delete_message(
