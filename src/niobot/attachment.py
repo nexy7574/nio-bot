@@ -523,7 +523,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
         return body
 
 
-class VideoAttachment(SupportXYZAmorganBlurHash):
+class VideoAttachment(BaseAttachment):
     """
     Represents a video attachment.
     """
@@ -537,14 +537,12 @@ class VideoAttachment(SupportXYZAmorganBlurHash):
             height: int = None,
             width: int = None,
             thumbnail: "ImageAttachment" = None,
-            xyz_amorgan_blurhash: str = None,
     ):
         super().__init__(
             file,
             file_name,
             mime_type,
             size_bytes,
-            xyz_amorgan_blurhash=xyz_amorgan_blurhash,
             attachment_type=AttachmentType.VIDEO
         )
         self.info = {
@@ -598,8 +596,31 @@ class VideoAttachment(SupportXYZAmorganBlurHash):
         size = _size(file)
         self = cls(file, file_name, mime_type, size, duration, height, width, thumbnail)
         if generate_blurhash:
-            await self.get_blurhash()
+            if self.thumbnail is not None:
+                await self.thumbnail.get_blurhash()
+            elif isinstance(file, pathlib.Path):
+                thumbnail = await run_blocking(first_frame, file)
+                self.thumbnail = await ImageAttachment.from_file(thumbnail, generate_blurhash=False)
+                await self.thumbnail.get_blurhash()
         return self
+
+    @staticmethod
+    async def generate_thumbnail(video: typing.Union[str, pathlib.Path, "VideoAttachment"]) -> ImageAttachment:
+        """
+        Generates a thumbnail for a video.
+
+        :param video: The video to generate a thumbnail for
+        :return: The path to the generated thumbnail
+        """
+        if isinstance(video, VideoAttachment):
+            if not isinstance(video.file, pathlib.Path):
+                raise ValueError(
+                    "VideoAttachment.file must be a pathlib.Path, BytesIOs are not supported for thumbnail generation"
+                )
+            video = video.file
+        video = _to_path(video)
+        x = await run_blocking(first_frame, video)
+        return await ImageAttachment.from_file(x)
 
     def as_body(self, body: str = None) -> dict:
         body = super().as_body(body)
