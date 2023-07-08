@@ -9,7 +9,7 @@ from .utils.string_view import ArgumentView
 if typing.TYPE_CHECKING:
     from .client import NioBot
     from .commands import Command
-    from .attachment import MediaAttachment
+    from .attachment import BaseAttachment
 
 
 __all__ = (
@@ -164,7 +164,7 @@ class Context:
         """Returns the current event's latency in milliseconds."""
         return self.client.latency(self.event, received_at=self._init_ts)
 
-    async def respond(self, content: str = None, file: "MediaAttachment" = None) -> ContextualResponse:
+    async def respond(self, content: str = None, file: "BaseAttachment" = None) -> ContextualResponse:
         """
         Responds to the current event.
 
