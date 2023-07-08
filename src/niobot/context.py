@@ -28,6 +28,9 @@ class ContextualResponse:
         self.ctx = ctx
         self._response = response
 
+    def __repr__(self):
+        return "<ContextualResponse ctx={0.ctx!r} response={0.response!r}>".format(self)
+
     @property
     def message(self) -> nio.RoomMessageText | None:
         """Fetches the current message for this response"""
@@ -107,6 +110,18 @@ class Context:
         self._args = ArgumentView(to_parse)
         self._args.parse_arguments()
         self._original_response = None
+
+    def __repr__(self):
+        return "<Context room={0.room!r} event={0.event!r} command={0.command!r}>".format(self)
+
+    def __eq__(self, other):
+        if not isinstance(other, Context):
+            return False
+        return (
+            self.room == other.room and
+            self.event == other.event and
+            self.command == other.command
+        )
 
     @property
     def room(self) -> nio.MatrixRoom:
