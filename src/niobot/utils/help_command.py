@@ -80,7 +80,7 @@ def format_command_line(prefix: str, command: "Command") -> str:
     name = format_command_name(command)
     start = "{}{}".format(prefix, name)
     if command.usage:
-        start += " " + command.usage.strip().replace("\n", "")
+        start += " " + command.display_usage.strip().replace("\n", "")
 
     return start
 

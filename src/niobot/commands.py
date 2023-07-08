@@ -207,6 +207,22 @@ class Command:
     def __str__(self):
         return self.name
 
+    @property
+    def display_usage(self) -> str:
+        """Returns the usage string for this command, auto-resolved if not pre-defined"""
+        if self.usage:
+            return self.usage
+        else:
+            usage = []
+            req = "<{!s}>"
+            opt = "[{!s}]"
+            for arg in self.arguments[1:]:
+                if arg.required:
+                    usage.append(req.format(arg.name))
+                else:
+                    usage.append(opt.format(arg.name))
+            return " ".join(usage)
+
     def invoke(self, ctx: Context):
         """Invokes the current command with the given context"""
         parsed_args = []
