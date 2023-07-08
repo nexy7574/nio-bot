@@ -151,7 +151,7 @@ class Command:
         self.aliases = aliases or []
         self.usage = kwargs.pop("usage", None)
         self.module = kwargs.pop("module", None)
-        self.arguments = kwargs.pop("arguments", False)
+        self.arguments = kwargs.pop("arguments", None)
         if not self.arguments:
             if self.arguments is False:  # do not autodetect arguments
                 self.arguments = []
