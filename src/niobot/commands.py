@@ -70,6 +70,10 @@ class Argument:
         if self.parser is ...:
             self.parser = self.internal_parser
 
+    def __repr__(self):
+        return "<Argument name={0.name!r} type={0.type!r} default={0.default!r} required={0.required!r} " \
+               "parser={0.parser!r}>".format(self)
+
     @staticmethod
     def internal_parser(_: Context, arg: "Argument", value: str) -> typing.Optional[_T]:
         """The default parser for the argument. Will try to convert the value to the argument type."""
@@ -154,6 +158,7 @@ class Command:
             else:
                 self.arguments = self.autodetect_args(self.callback)
         self.arguments.insert(0, self._CTX_ARG)
+        self.arguments: list[Argument]
 
     @staticmethod
     def autodetect_args(callback) -> list[Argument]:
