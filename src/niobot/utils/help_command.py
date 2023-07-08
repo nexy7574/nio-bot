@@ -79,8 +79,7 @@ def format_command_line(prefix: str, command: "Command") -> str:
     """Formats a command line, including name(s) & usage."""
     name = format_command_name(command)
     start = "{}{}".format(prefix, name)
-    if command.usage:
-        start += " " + command.display_usage.strip().replace("\n", "")
+    start += " " + command.display_usage.strip().replace("\n", "")
 
     return start
 
