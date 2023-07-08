@@ -118,9 +118,10 @@ class Command:
     :param usage:
         A string representing how to use this command's arguments. Will be shown in the auto-generated help.
         Do not include the command name or your bot's prefix here, only arguments.
+        For example: `usage="<message> [times]"` will show up as `[p][command] <message> [times]` in the help command.
 
     """
-    CTX_ARG = Argument(
+    _CTX_ARG = Argument(
         "ctx",
         Context,
         description="The context for the command",
@@ -146,8 +147,49 @@ class Command:
         self.aliases = aliases or []
         self.usage = kwargs.pop("usage", None)
         self.module = kwargs.pop("module", None)
-        self.arguments = kwargs.pop("arguments", None) or []
-        self.arguments.insert(0, self.CTX_ARG)
+        self.arguments = kwargs.pop("arguments", False)
+        if not self.arguments:
+            if self.arguments is False:  # do not autodetect arguments
+                self.arguments = []
+            else:
+                self.arguments = self.autodetect_args(self.callback)
+        self.arguments.insert(0, self._CTX_ARG)
+
+    @staticmethod
+    def autodetect_args(callback) -> list[Argument]:
+        """
+        Attempts to auto-detect the arguments for the command, based on the callback's signature
+
+        :param callback: The function to inspect
+        :return: A list of arguments. `self`, and `ctx` are skipped.
+        """
+        # We need to get each parameter's type annotation, and create an Argument for it.
+        # If it has a default value, assign that default value to the Argument.
+        # If the parameter is `self`, ignore it.
+        # If the parameter is `ctx`, use the `Context` type.
+        args = []
+        for n, parameter in enumerate(inspect.signature(callback).parameters.values()):
+            # If it has a parent class and this is the first parameter, skip it.
+            if n == 0 and parameter.name == "self":
+                continue
+
+            if parameter.name in ["ctx", "context"] or parameter.annotation is Context:
+                continue
+
+            # Disallow *args and **kwargs
+            if parameter.kind in [inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD]:
+                raise CommandArgumentsError("Cannot use *args or **kwargs in command callback (argument No. %d)" % n)
+
+            if parameter.annotation is inspect.Parameter.empty:
+                a = Argument(parameter.name, str, default=parameter.default)
+            else:
+                a = Argument(parameter.name, parameter.annotation)
+
+            if parameter.default is not inspect.Parameter.empty:
+                a.default = parameter.default
+                a.required = False
+            args.append(a)
+        return args
 
     def __hash__(self):
         return hash(self.__runtime_id)

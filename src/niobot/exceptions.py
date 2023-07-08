@@ -12,7 +12,7 @@ __all__ = (
     "MetadataDetectionException",
     "CommandError",
     "CommandDisabledError",
-    "CommandArgumentsError"
+    "CommandArgumentsError",
 )
 
 
