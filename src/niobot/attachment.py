@@ -315,27 +315,56 @@ class BaseAttachment(abc.ABC):
             if not file_name:
                 file_name = file.name
 
-        mime_type = detect_mime_type(file)
+        mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
         return cls(file, file_name, mime_type, size)
-
-    @classmethod
-    def convert_from(cls, other: "BaseAttachment") -> "BaseAttachment":
-        """
-        Converts another attachment into this type.
-
-        !!! warning "This discards upload progress"
-            If you've uploaded the other attachment, you'll lose keys and mxc url by doing this!
-
-        :param other: The other attachment
-        :return: This attachment
-        """
-        return cls(other.file, other.file_name, other.mime_type, other.size)
 
     @property
     def size_bytes(self) -> int:
         """Returns the size of this attachment in bytes."""
         return self.size
+
+    def size_as(
+            self,
+            unit: typing.Literal[
+                'b',
+                'kb',
+                'kib',
+                'mb',
+                'mib',
+                'gb',
+                'gib',
+            ]
+    ) -> typing.Union[int, float]:
+        """
+        Helper function to convert the size of this attachment into a different unit.
+
+        ??? note "Example"
+            ```python
+            >>> import niobot
+            >>> attachment = niobot.FileAttachment("test.txt", "text/plain")
+            >>> attachment.size_bytes
+            1024
+            >>> attachment.size_as("kb")
+            1.024
+            >>> attachment.size_as("mb")
+            0.001024
+            ```
+            *Note that due to the nature of floats, precision may be lost, especially the larger in units you go.*
+
+        :param unit: The unit to convert into
+        :return: The converted size
+        """
+        multi = {
+            'b': 1,
+            'kb': 1000,
+            'kib': 1024,
+            'mb': 1000 ** 2,
+            'mib': 1024 ** 2,
+            'gb': 1000 ** 3,
+            'gib': 1024 ** 3,
+        }
+        return self.size_bytes / multi[unit]
 
     async def upload(self, client: "NioBot", encrypted: bool = False) -> "BaseAttachment":
         """
@@ -351,7 +380,9 @@ class BaseAttachment(abc.ABC):
             else:
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
         size = self.size or _size(self.file)
+
         if not isinstance(self.file, io.BytesIO):
+            # We can open the file async here, as this will avoid blocking the loop
             async with aiofiles.open(self.file, "rb") as f:
                 result, keys = await client.upload(
                     f,
@@ -361,6 +392,12 @@ class BaseAttachment(abc.ABC):
                     filesize=size,
                 )
         else:
+            # Usually, BytesIO objects are small enough to be uploaded synchronously. Plus, they're literally just
+            # in-memory.
+            # For scale, here is a 1GiB BytesIO with urandom() content, seek(0)ed and read() in its entirety, with
+            # timeit:
+            # 47.2 ns ± 0.367 ns per loop (mean ± std. dev. of 7 runs, 10,000,000 loops each)
+            # So in reality, it's not going to be a massive problem.
             result, keys = await client.upload(
                 self.file,
                 content_type=self.mime_type,
@@ -399,7 +436,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
             if not file_name:
                 file_name = file.name
 
-        mime_type = detect_mime_type(file)
+        mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
         self = cls(file, file_name, mime_type, size, xyz_amorgan_blurhash=xyz_amorgan_blurhash)
         if xyz_amorgan_blurhash is not False:
@@ -510,7 +547,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
                 height = stream["height"]
                 width = stream["width"]
 
-        mime_type = detect_mime_type(file)
+        mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
         self = cls(file, file_name, mime_type, size, height, width, thumbnail)
         if generate_blurhash:
@@ -567,11 +604,19 @@ class VideoAttachment(BaseAttachment):
             duration: int = None,
             height: int = None,
             width: int = None,
-            thumbnail: "ImageAttachment" = None,
+            thumbnail: ImageAttachment | typing.Literal[False] = None,
             generate_blurhash: bool = True,
     ) -> "VideoAttachment":
         """
         Generates a video attachment
+
+        !!! warning "This function auto-generates a thumbnail!
+            As thumbnails greatly improve user experience, even with blurhashes enabled, this function will by default
+            create a thumbnail of the first frame of the given video if you do not provide one yourself.
+            **This may increase your initialisation time by a couple seconds, give or take!**
+
+            If this is undesirable, pass `thumbnail=False` to disable generating a thumbnail.
+            This is independent of `generate_blurhash`.
 
         :param file: The file to upload
         :param file_name: The name of the file (only used if file is a `BytesIO`)
@@ -597,15 +642,18 @@ class VideoAttachment(BaseAttachment):
                 width = stream["width"]
                 duration = round(float(metadata["format"]["duration"]) * 1000)
 
-        mime_type = detect_mime_type(file)
+        mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
+        original_thumbnail = thumbnail
+        if thumbnail is False:
+            thumbnail = None
         self = cls(file, file_name, mime_type, size, duration, height, width, thumbnail)
         if generate_blurhash:
-            if self.thumbnail is not None:
+            if isinstance(self.thumbnail, ImageAttachment):
                 await self.thumbnail.get_blurhash()
-            elif isinstance(file, pathlib.Path):
+            elif isinstance(file, pathlib.Path) and original_thumbnail is not False:
                 thumbnail = await run_blocking(first_frame, file)
-                self.thumbnail = await ImageAttachment.from_file(io.BytesIO(thumbnail))
+                self.thumbnail = await ImageAttachment.from_file(io.BytesIO(thumbnail), file_name="thumbnail.webp")
         return self
 
     @staticmethod
@@ -623,8 +671,8 @@ class VideoAttachment(BaseAttachment):
                 )
             video = video.file
         video = _to_path(video)
-        x = await run_blocking(first_frame, video)
-        return await ImageAttachment.from_file(io.BytesIO(x))
+        x = await run_blocking(first_frame, video, "webp")
+        return await ImageAttachment.from_file(io.BytesIO(x), file_name="thumbnail.webp")
 
     def as_body(self, body: str = None) -> dict:
         body = super().as_body(body)
@@ -688,7 +736,7 @@ class AudioAttachment(BaseAttachment):
                 metadata = await run_blocking(get_metadata, file)
                 duration = round(float(metadata["format"]["duration"]) * 1000)
 
-        mime_type = detect_mime_type(file)
+        mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
         self = cls(file, file_name, mime_type, size, duration)
         return self
