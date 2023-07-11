@@ -94,7 +94,7 @@ def get_metadata(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typi
                     "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
                     "profile": "High",
                     "codec_type": "video",
-                    ...
+                    None
                 }
             ],
             "format": {
@@ -104,7 +104,7 @@ def get_metadata(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typi
                 "duration": "16.283333",
                 "size": "4380760",
                 "bit_rate": "2152266",
-                ...
+                None
             }
         }
         ```
@@ -251,8 +251,8 @@ class BaseAttachment(abc.ABC):
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
             file_name: str = None,
-            mime_type: str = ...,
-            size_bytes: int = ...,
+            mime_type: str = None,
+            size_bytes: int = None,
             *,
             attachment_type: AttachmentType = AttachmentType.FILE
     ):
@@ -345,6 +345,11 @@ class BaseAttachment(abc.ABC):
         :param encrypted: Whether to encrypt the thumbnail or not
         :return: The attachment
         """
+        if self.file_name is None:
+            if hasattr(self.file, "name"):
+                self.file_name = self.file.name
+            else:
+                raise ValueError("file_name must be specified when uploading a BytesIO object.")
         size = self.size or _size(self.file)
         if not isinstance(self.file, io.BytesIO):
             async with aiofiles.open(self.file, "rb") as f:
@@ -432,9 +437,9 @@ class FileAttachment(BaseAttachment):
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = ...,
-            mime_type: str = ...,
-            size_bytes: int = ...,
+            file_name: str = None,
+            mime_type: str = None,
+            size_bytes: int = None,
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.FILE)
 
@@ -446,9 +451,9 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = ...,
-            mime_type: str = ...,
-            size_bytes: int = ...,
+            file_name: str = None,
+            mime_type: str = None,
+            size_bytes: int = None,
             height: int = None,
             width: int = None,
             thumbnail: "ImageAttachment" = None,
@@ -474,7 +479,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
     async def from_file(
             cls,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = ...,
+            file_name: str = None,
             height: int = None,
             width: int = None,
             thumbnail: "ImageAttachment" = None,
@@ -530,9 +535,9 @@ class VideoAttachment(BaseAttachment):
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = ...,
-            mime_type: str = ...,
-            size_bytes: int = ...,
+            file_name: str = None,
+            mime_type: str = None,
+            size_bytes: int = None,
             duration: int = None,
             height: int = None,
             width: int = None,
@@ -558,7 +563,7 @@ class VideoAttachment(BaseAttachment):
     async def from_file(
             cls,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = ...,
+            file_name: str = None,
             duration: int = None,
             height: int = None,
             width: int = None,
@@ -639,9 +644,9 @@ class AudioAttachment(BaseAttachment):
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = ...,
-            mime_type: str = ...,
-            size_bytes: int = ...,
+            file_name: str = None,
+            mime_type: str = None,
+            size_bytes: int = None,
             duration: int = None,
     ):
         super().__init__(
@@ -661,7 +666,7 @@ class AudioAttachment(BaseAttachment):
     async def from_file(
             cls,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = ...,
+            file_name: str = None,
             duration: int = None,
     ) -> "AudioAttachment":
         """
