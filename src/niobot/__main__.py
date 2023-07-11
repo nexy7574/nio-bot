@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import os
+import pathlib
 import re
 import sys
 import logging
@@ -120,15 +121,20 @@ def version(ctx, no_colour: bool):
             nio_version = result.stdout.splitlines()[1].split(": ")[1]
 
     t = ctx.obj["version_tuple"]
-    t3 = t[3] or 'gN/A.d%s' % (datetime.datetime.now().strftime("%Y%m%d"))
-    try:
-        t3_commit, t3_date_raw = t3.split(".", 1)
-    except ValueError:
-        t3_commit = t3
-        logger.warning("Failed to parse commit date from %r, using current date instead.", t3)
-        t3_date = datetime.datetime.now()
-        t3_date_raw = t3_date.strftime("%Y%m%d")
-    t3_date = datetime.datetime.strptime(t3_date_raw[1:], "%Y%m%d")
+    if len(t) > 3:
+        t3 = t[3] or 'gN/A.d%s' % (datetime.datetime.now().strftime("%Y%m%d"))
+        try:
+            t3_commit, t3_date_raw = t3.split(".", 1)
+        except ValueError:
+            t3_commit = t3
+            logger.warning("Failed to parse commit date from %r, using current date instead.", t3)
+            t3_date = datetime.datetime.now()
+            t3_date_raw = t3_date.strftime("%Y%m%d")
+        t3_date = datetime.datetime.strptime(t3_date_raw[1:], "%Y%m%d")
+    else:
+        t3_commit = "<release>"
+        mtime = pathlib.Path(__file__).stat().st_mtime
+        t3_date = datetime.datetime.fromtimestamp(mtime)
 
     bot_version_deep = {
         "version": "%d.%d" % (t[0], t[1]),
