@@ -297,6 +297,8 @@ class NioBot(nio.AsyncClient):
         !!! note
             Aliases of commands are treated as their own command instance. You will see the same command show up as a
             value multiple times if it has aliases.
+
+            You can check if two commands are identical by comparing them (`command1instance == command2instance`)
         """
         return self._commands
 
@@ -577,7 +579,7 @@ class NioBot(nio.AsyncClient):
     async def edit_message(
             self,
             room: nio.MatrixRoom | str,
-            event_id: nio.Event | str,
+            message: nio.Event | str,
             content: str,
             *,
             message_type: str = None,
@@ -588,13 +590,13 @@ class NioBot(nio.AsyncClient):
         You also cannot edit messages that are attachments.
 
         :param room: The room the message is in.
-        :param event_id: The message to edit.
+        :param message: The message to edit.
         :param content: The new content of the message.
         :param message_type: The new type of the message (i.e. m.text, m.notice. Defaults to client.global_message_type)
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
-        event_id = self._get_id(event_id)
+        event_id = self._get_id(message)
         message_type = message_type or self.global_message_type
         content = {
             "msgtype": message_type,
@@ -641,12 +643,54 @@ class NioBot(nio.AsyncClient):
         :param message_id: The message to delete.
         :param reason: The reason for deleting the message.
         :raises RuntimeError: If you are not the sender of the message.
+        :raises MessageException: If the message fails to delete.
         """
         room = self._get_id(room)
         message_id = self._get_id(message_id)
         response = await self.room_redact(room, message_id, reason=reason)
         if isinstance(response, nio.RoomRedactError):
             raise MessageException("Failed to delete message.", response)
+        return response
+
+    async def add_reaction(
+            self,
+            room: nio.MatrixRoom | str,
+            message: nio.RoomMessage | str,
+            emoji: str
+    ) -> nio.RoomSendResponse:
+        """
+        Adds an emoji "reaction" to a message.
+
+        :param room: The room the message is in.
+        :param message: The event ID or message object to react to.
+        :param emoji: The emoji to react with (e.g. `\N{cross mark}` = ❌)
+        :return: The response from the server.
+        :raises MessageException: If the message fails to react.
+        """
+        body = {
+            "m.relates_to": {
+                "event_id": self._get_id(message),
+                "rel_type": "m.annotation",
+                "key": emoji,
+            }
+        }
+        response = await self.room_send(
+            self._get_id(room),
+            "m.reaction",
+            body,
+        )
+        if isinstance(response, nio.RoomSendError):
+            raise MessageException("Failed to add reaction.", response)
+        return response
+
+    async def redact_reaction(self, room: nio.MatrixRoom | str, reaction: nio.RoomSendResponse | str):
+        """Alias for NioBot.delete_message, but more appropriately named for reactions."""
+        response = await self.room_redact(
+            self._get_id(room),
+            self._get_id(reaction),
+        )
+        if isinstance(response, nio.RoomRedactError):
+            raise MessageException("Failed to delete reaction.", response)
         return response
 
     async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:
