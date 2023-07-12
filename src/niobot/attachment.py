@@ -158,7 +158,9 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     """The same as `get_metadata_ffmpeg` but for ImageMagick.
 
     Only returns a limited subset of the data, such as one stream, which contains the format, and size,
-    and the format, which contains the filename, format, and size."""
+    and the format, which contains the filename, format, and size.
+
+    [example output (JSON)]("""
     file = file.resolve(True)
     command = [
         "identify",
@@ -249,6 +251,8 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
             "-frames:v",
             "1",
             '-y',
+            '-strict',
+            '-2',
             f.name
         ]
         log.debug("Extracting first frame of %r: %s", file, ' '.join(command))
