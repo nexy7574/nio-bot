@@ -450,6 +450,8 @@ class BaseAttachment(abc.ABC):
         :param encrypted: Whether to encrypt the thumbnail or not
         :return: The attachment
         """
+        if self.keys or self.url:
+            raise RuntimeError("This attachment has already been uploaded.")
         if self.file_name is None:
             if hasattr(self.file, "name"):
                 self.file_name = self.file.name
@@ -658,7 +660,6 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
                 # ffmpeg doesn't have an image type
                 height = stream["height"]
                 width = stream["width"]
-
 
         mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
