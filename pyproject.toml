@@ -13,6 +13,7 @@ authors = [
     {name = "Nexus", email = "packages@nexy7574.co.uk"}
 ]
 dynamic = ["version", "dependencies"]
+keywords = ["nio", "matrix-nio", "matrix", "bot", "botlib", "niobot", "framework", "library", "python"]
 
 [project.optional-dependencies]
 e2ee = ['matrix-nio[e2e]']
@@ -20,7 +21,15 @@ cli = ['httpx', 'click']
 dev = ['mkdocs', 'mkdocs-material', 'black', 'mkdocs-autorefs', 'mkdocs-glightbox']
 
 [project.scripts]
-niocli = "niobot.__main__:cli_root [cli]"
+niocli = "niobot.__main__:cli_root"
+
+[project.urls]
+homepage = "https://github.com/EEKIM10/niobot"
+repository = "https://github.com/EEKIM10/niobot"
+documentation = "https://eekim10.github.io/niobot/"
+changelog = "https://github.com/EEKIM10/niobot/releases"
+tracker = "https://github.com/EEKIM10/niobot/issues"
+support = "https://matrix.to/#/#niobot:nexy7574.co.uk"
 
 [tool.setuptools_scm]
 write_to = "src/niobot/__version__.py"
