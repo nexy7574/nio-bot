@@ -105,30 +105,7 @@ def get_metadata_ffmpeg(file: typing.Union[str, pathlib.Path]) -> typing.Dict[st
     """
     Gets metadata for a file via ffprobe.
 
-    ??? note "Example result"
-        ```json
-        {
-            "streams": [
-                {
-                    "index": 0,
-                    "codec_name": "h264",
-                    "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
-                    "profile": "High",
-                    "codec_type": "video",
-                    None
-                }
-            ],
-            "format": {
-                "filename": "./assets/peek.mp4",
-                "format_long_name": "QuickTime / MOV",
-                "start_time": "0.000000",
-                "duration": "16.283333",
-                "size": "4380760",
-                "bit_rate": "2152266",
-                None
-            }
-        }
-        ```
+    [example output (JSON)](https://github.com/EEKIM10/niobot/raw/master/docs/assets/guides/text/example_ffprobe.json)
 
     :param file: The file to get metadata for. **Must be a path-like object**
     :return: A dictionary containing the metadata.
@@ -160,7 +137,11 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     Only returns a limited subset of the data, such as one stream, which contains the format, and size,
     and the format, which contains the filename, format, and size.
 
-    [example output (JSON)]("""
+    [example output (JSON)](https://github.com/EEKIM10/niobot/raw/master/docs/assets/guides/text/example_identify.json)
+
+    :param file: The file to get metadata for. **Must be a path object**
+    :return: A slimmed-down dictionary containing the metadata.
+    """
     file = file.resolve(True)
     command = [
         "identify",
