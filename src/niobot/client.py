@@ -224,18 +224,27 @@ class NioBot(nio.AsyncClient):
                     raise CommandDisabledError(command)
                 context = command.construct_context(self, room, event, self.command_prefix + original_command)
                 self.dispatch("command", context)
+
+                def _task_callback(t: asyncio.Task):
+                    try:
+                        exc = t.exception()
+                    except asyncio.CancelledError:
+                        self.dispatch('command_cancelled', context, t)
+                    if exc:
+                        self.dispatch('command_error', context, CommandError(exception=e))
+                    else:
+                        self.dispatch('command_complete', context, t)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
                 try:
                     task = asyncio.create_task(command.invoke(context))
+                    context._task = task
                 except CommandArgumentsError as e:
                     self.dispatch("command_error", context, e)
                 except Exception as e:
                     self.log.exception("Failed to invoke command %s", command.name)
                     self.dispatch("command_error", context, CommandError(exception=e))
                 else:
-                    task.add_done_callback(
-                        lambda _res: self.dispatch("command_complete", context, _res)
-                    )
+                    task.add_done_callback(_task_callback)
             else:
                 self.log.debug(f"Command {original_command!r} not found.")
 
