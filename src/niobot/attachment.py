@@ -712,7 +712,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
                 metadata = await run_blocking(get_metadata, file)
                 for stream in metadata["streams"]:
                     if stream["codec_type"] == "video":
-                        if stream["codec_name"] not in SUPPORTED_IMAGE_CODECS and unsafe is False:
+                        if stream["codec_name"].lower() not in SUPPORTED_IMAGE_CODECS and unsafe is False:
                             continue
                         else:
                             break
@@ -827,7 +827,7 @@ class VideoAttachment(BaseAttachment):
                 metadata = await run_blocking(get_metadata, file)
                 for stream in metadata["streams"]:
                     if stream["codec_type"] == "video":
-                        if stream["codec_name"] not in SUPPORTED_VIDEO_CODECS \
+                        if stream["codec_name"].lower() not in SUPPORTED_VIDEO_CODECS \
                                 or not stream["codec_name"].startswith("pcm_"):  # usually, pcm is supported.
                             warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_VIDEO_CODECS)
                             warnings.warn(warning)
