@@ -333,11 +333,11 @@ class BaseAttachment(abc.ABC):
             attachment_type: AttachmentType = AttachmentType.FILE
     ):
         self.file = _to_path(file)
-        self.file_name = file.name if isinstance(file, pathlib.Path) else file_name
+        self.file_name = self.file.name if isinstance(self.file, pathlib.Path) else file_name
         if not file_name:
             raise ValueError("file_name must be specified when uploading a BytesIO object.")
-        self.mime_type = mime_type or detect_mime_type(file)
-        self.size = size_bytes or os.path.getsize(file)
+        self.mime_type = mime_type or detect_mime_type(self.file)
+        self.size = size_bytes or os.path.getsize(self.file)
 
         self.type = attachment_type
         self.url = None
