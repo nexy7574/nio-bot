@@ -2,12 +2,15 @@ from nio import *
 from . import utils
 from .utils import *
 from .client import *
-from .attachment import *
 from .commands import *
 from .context import *
 from .exceptions import *
-
-
+try:
+    from .attachment import *
+    ATTACHMENTS_AVAILABLE = True
+except ImportError:
+    pass
+    ATTACHMENTS_AVAILABLE = False
 
 try:
     import __version__ as version_meta

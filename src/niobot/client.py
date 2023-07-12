@@ -11,7 +11,10 @@ import nio
 from nio.crypto import ENCRYPTION_ENABLED
 import marko
 
-from .attachment import *
+try:
+    from .attachment import BaseAttachment
+except ImportError:
+    BaseAttachment = None
 from .exceptions import *
 from .utils import run_blocking, Typing, force_await
 from .utils.help_command import help_command_callback
@@ -36,6 +39,8 @@ class NioBot(nio.AsyncClient):
      incoming messages for parsing.
     :param global_message_type: The message type to default to. Defaults to m.notice
     :param ignore_old_events: Whether to simply discard events before the bot's login.
+    :param auto_join_rooms: Whether to automatically join rooms the bot is invited to.
+    :param automatic_markdown_renderer: Whether to automatically render markdown in messages when sending/editing.
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     """
     def __init__(
@@ -48,15 +53,13 @@ class NioBot(nio.AsyncClient):
             command_prefix: str,
             case_insensitive: bool = True,
             owner_id: str = None,
-            global_message_type: str = "m.notice",
-            ignore_old_events: bool = True,
             **kwargs
     ):
         self.log = logging.getLogger(__name__)
         if store_path:
             if not os.path.exists(store_path):
                 self.log.warning("Store path %s does not exist, creating...", store_path)
-                os.makedirs(store_path, mode=0o755, exist_ok=True)
+                os.makedirs(store_path, mode=0o751, exist_ok=True)
             elif not os.path.isdir(store_path):
                 raise RuntimeError("Store path %s is not a directory!" % store_path)
 
@@ -88,7 +91,7 @@ class NioBot(nio.AsyncClient):
         self.owner_id = owner_id
 
         if command_prefix == "/":
-            self.log.warning("The prefix '/' may interfere with client-side commands.")
+            self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
         if " " in command_prefix:
             raise RuntimeError("Command prefix cannot contain spaces.")
 
@@ -112,6 +115,7 @@ class NioBot(nio.AsyncClient):
         )
         self.ignore_old_events = kwargs.pop("ignore_old_events", True)
         self.auto_join_rooms = kwargs.pop("auto_join_rooms", True)
+        self.automatic_markdown_renderer = kwargs.pop("automatic_markdown_renderer", True)
         # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
         # (In element at least).
 
@@ -510,6 +514,17 @@ class NioBot(nio.AsyncClient):
             )
         )
 
+    async def _recursively_upload_attachments(self, base: "BaseAttachment", encrypted: bool = False,  __previous: list = None) -> typing.Dict[
+        "BaseAttachment": typing.Union[nio.UploadResponse, nio.UploadError]
+    ]:
+        """Recursively uploads attachments."""
+        previous = (__previous or []).copy()
+        x = await base.upload(self, encrypted)
+        previous.append(x)
+        if hasattr(base, 'thumbnail'):
+            previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
+        return previous
+
     async def send_message(
             self,
             room: nio.MatrixRoom | str,
@@ -531,6 +546,8 @@ class NioBot(nio.AsyncClient):
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
         """
+        if file and BaseAttachment is None:
+            raise ValueError("You are missing required libraries to use attachments.")
         if not any((content, file)):
             raise ValueError("You must specify either content or file.")
 
@@ -541,24 +558,27 @@ class NioBot(nio.AsyncClient):
 
         if file:
             # We need to upload the file first.
-            response = await file.upload(self, encrypted=getattr(room, 'encrypted', False))
-            if isinstance(response, nio.UploadError):
-                raise MessageException("Failed to upload media.", response)
+            responses = await self._recursively_upload_attachments(file, encrypted=getattr(file, "encrypted", False))
+            if any((isinstance(response, nio.UploadError) for response in responses)):
+                raise MessageException(
+                    "Failed to upload media.", tuple(filter(lambda x: isinstance(x, nio.UploadError), responses))[0]
+                )
 
             body = file.as_body(content)
         else:
-            parsed = await run_blocking(marko.parse, content)
-            if parsed.children:
-                rendered = await run_blocking(marko.render, parsed)
-                body["formatted_body"] = rendered
-                body["format"] = "org.matrix.custom.html"
+            if self.automatic_markdown_renderer:
+                parsed = await run_blocking(marko.parse, content)
+                if parsed.children:
+                    rendered = await run_blocking(marko.render, parsed)
+                    body["formatted_body"] = rendered
+                    body["format"] = "org.matrix.custom.html"
 
-            if reply_to and isinstance(reply_to, nio.RoomMessageText) and isinstance(room, nio.MatrixRoom):
-                body["formatted_body"] = "{}{}".format(
-                    self.generate_mx_reply(room, reply_to),
-                    body.get("formatted_body", body["body"])
-                )
-                body["format"] = "org.matrix.custom.html"
+                if reply_to and isinstance(reply_to, nio.RoomMessageText) and isinstance(room, nio.MatrixRoom):
+                    body["formatted_body"] = "{}{}".format(
+                        self.generate_mx_reply(room, reply_to),
+                        body.get("formatted_body", body["body"])
+                    )
+                    body["format"] = "org.matrix.custom.html"
 
         if reply_to:
             body["m.relates_to"] = {

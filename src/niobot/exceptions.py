@@ -13,6 +13,8 @@ __all__ = (
     "CommandError",
     "CommandDisabledError",
     "CommandArgumentsError",
+    "MediaCodecWarning",
+    "CommandParserError"
 )
 
 
@@ -79,6 +81,26 @@ class MediaUploadException(NioBotException):
     """
     Exception for media-uploading related errors
     """
+
+
+class MediaCodecWarning(ResourceWarning):
+    """
+    Warning that is dispatched when a media file is not in a supported codec.
+
+    You can filter this warning by using `warnings.filterwarnings("ignore", category=niobot.MediaCodecWarning)`
+
+    Often times, matrix clients are web-based, so they're limited to what the browser can display.
+    This is usually:
+
+    * h264/vp8/vp9/av1/theora video
+    * aac/opus/vorbis/mp3/pcm_* audio
+    * jpg/png/webp/avif/gif images
+    """
+    def __init__(self, codec: str, *supported: str):
+        super().__init__(
+            f"Codec {codec} is not supported by most clients. Use with caution.\n"
+            f"Suggested codecs: {', '.join(supported)}"
+        )
 
 
 class MetadataDetectionException(MediaUploadException):

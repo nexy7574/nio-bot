@@ -1,12 +1,9 @@
 """
 Matrix file attachments. Full e2ee support is implemented.
 
-Implemented media types:
-
-[X] Generic file
-[X] Image
-[X] Audio
-[X] Video
+!!! danger "You need FFMPEG for this to work"
+    In order for most attachment-related operations, you must have `ffprobe` in your $PATH.
+    As a matter of fact,
 """
 import abc
 import tempfile
@@ -27,7 +24,7 @@ import logging
 import blurhash
 
 from .utils import run_blocking
-from .exceptions import MediaUploadException, MetadataDetectionException
+from .exceptions import MediaUploadException, MetadataDetectionException, MediaCodecWarning
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -55,7 +52,42 @@ __all__ = (
     "ImageAttachment",
     "VideoAttachment",
     "AudioAttachment",
+    "AttachmentType",
+    "SUPPORTED_CODECS",
+    "SUPPORTED_VIDEO_CODECS",
+    "SUPPORTED_AUDIO_CODECS",
+    "SUPPORTED_IMAGE_CODECS",
 )
+
+SUPPORTED_VIDEO_CODECS = [
+    "h264",
+    "vp8",
+    "vp9",
+    "av1",
+    "theora",
+]
+# Come on browsers, five codecs is lackluster support. I'm looking at you, Safari.
+SUPPORTED_AUDIO_CODECS = [
+    "speex",
+    "opus",
+    "aac",
+    "mp3",
+    "vorbis",
+    "flac",
+    "mp2",
+]
+# All of the above codecs were played in Element Desktop. A bunch were cut out, as the list was far too long.
+# Realistically, I don't see the warning being useful to too many people, its literally only in to help people figure
+# out why their media isn't playing.
+SUPPORTED_IMAGE_CODECS = [
+    "mjpeg",
+    "gif",
+    "png",
+    "av1",
+    "webp"
+]
+# Probably not all of them but close enough
+SUPPORTED_CODECS = SUPPORTED_VIDEO_CODECS + SUPPORTED_AUDIO_CODECS + SUPPORTED_IMAGE_CODECS
 
 
 def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
@@ -171,7 +203,7 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
         return f.read()
 
 
-def generate_blur_hash(file: str | pathlib.Path | io.BytesIO) -> str:
+def generate_blur_hash(file: str | pathlib.Path | io.BytesIO, *parts: int) -> str:
     """
     Creates a blurhash
 
@@ -183,14 +215,16 @@ def generate_blur_hash(file: str | pathlib.Path | io.BytesIO) -> str:
 
         See: [woltapp/blurhash](https://github.com/woltapp/blurhash)
     """
+    if not parts:
+        parts = 4, 3
     file = _to_path(file)
     if not isinstance(file, io.BytesIO):
         with file.open("rb") as fd:
             log.info("Generating blurhash for %s", file)
-            return blurhash.encode(fd, 4, 3)
+            return blurhash.encode(fd, *parts)
     else:
         log.info("Generating blurhash for BytesIO object")
-        return blurhash.encode(file, 4, 3)
+        return blurhash.encode(file, *parts)
 
 
 def _file_okay(file: pathlib.Path | io.BytesIO) -> typing.Literal[True]:
@@ -238,7 +272,17 @@ def _size(file: pathlib.Path | io.BytesIO) -> int:
 class AttachmentType(enum.Enum):
     """
     Enumeration containing the different types of media.
+
+    :var FILE: A generic file.
+    :var AUDIO: An audio file.
+    :var VIDEO: A video file.
+    :var IMAGE: An image file.
     """
+    if typing.TYPE_CHECKING:
+        FILE: "AttachmentType"
+        AUDIO: "AttachmentType"
+        VIDEO: "AttachmentType"
+        IMAGE: "AttachmentType"
     FILE = "m.file"
     AUDIO = "m.audio"
     VIDEO = "m.video"
@@ -246,7 +290,39 @@ class AttachmentType(enum.Enum):
 
 
 class BaseAttachment(abc.ABC):
-    """Base class for attachments"""
+    """
+    Base class for attachments
+
+    !!! note
+        If you pass a custom `file_name`, this is only actually used if you pass a [io.BytesIO][] to `file`.
+        If you pass a [pathlib.Path][] or a [string][str], the file name will be resolved from the path, overriding
+        the `file_name` parameter.
+
+    :param file: The file path or BytesIO object to upload.
+    :param file_name: The name of the file. **Must be specified if uploading a BytesIO object.**
+    :param mime_type: The mime type of the file. If not specified, it will be detected.
+    :param size_bytes: The size of the file in bytes. If not specified, it will be detected.
+    :param attachment_type: The type of attachment. Defaults to `AttachmentType.FILE`.
+
+    :ivar file: The file path or BytesIO object to upload. Resolved to a [pathlib.Path][] object if a string is
+    passed to `__init__`.
+    :ivar file_name: The name of the file. If `file` was a string or `Path`, this will be the name of the file.
+    :ivar mime_type: The mime type of the file.
+    :ivar size: The size of the file in bytes.
+    :ivar type: The type of attachment.
+    :ivar url: The URL of the uploaded file. This is set after the file is uploaded.
+    :ivar keys: The encryption keys for the file. This is set after the file is uploaded.
+    """
+    if typing.TYPE_CHECKING:
+        file: typing.Union[pathlib.Path, io.BytesIO]
+        file_name: str
+        mime_type: str
+        size: int
+        type: AttachmentType
+
+        url: str | None
+        keys: typing.Dict[str, str] | None
+
     def __init__(
             self,
             file: typing.Union[str, io.BytesIO, pathlib.Path],
@@ -416,7 +492,15 @@ class BaseAttachment(abc.ABC):
 
 
 class SupportXYZAmorganBlurHash(BaseAttachment):
-    """Represents an attachment that supports blurhashes."""
+    """
+    Represents an attachment that supports blurhashes.
+
+    :param xyz_amorgan_blurhash: The blurhash of the attachment
+    :ivar xyz_amorgan_blurhash: The blurhash of the attachment
+    """
+    if typing.TYPE_CHECKING:
+        xyz_amorgan_blurhash: str
+
     def __init__(self, *args, xyz_amorgan_blurhash: str = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.xyz_amorgan_blurhash = xyz_amorgan_blurhash
@@ -427,7 +511,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
             file: typing.Union[str, io.BytesIO, pathlib.Path],
             file_name: str = None,
             xyz_amorgan_blurhash: str | bool = None,
-    ):
+    ) -> "SupportXYZAmorganBlurHash":
         file = _to_path(file)
         if isinstance(file, io.BytesIO):
             if not file_name:
@@ -443,10 +527,11 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
             await self.get_blurhash()
         return self
 
-    async def get_blurhash(self):
+    async def get_blurhash(self, quality: typing.Tuple[int, int] = (4, 3)) -> str:
         """
-        Gets the blurhash of the attachment.
+        Gets the blurhash of the attachment. See: [woltapp/blurhash](https://github.com/woltapp/blurhash)
 
+        :param quality: A tuple of the quality to generate the blurhash at. Defaults to (4, 3).
         :return: The blurhash
         """
         if isinstance(self.xyz_amorgan_blurhash, str):
@@ -470,6 +555,11 @@ class FileAttachment(BaseAttachment):
     [AudioAttachment][niobot.attachment.AudioAttachment] for audio,
     and [ImageAttachment][niobot.attachment.ImageAttachment] for images.
     This is for everything else.
+
+    :param file: The file to upload
+    :param file_name: The name of the file
+    :param mime_type: The mime type of the file
+    :param size_bytes: The size of the file in bytes
     """
     def __init__(
             self,
@@ -484,6 +574,18 @@ class FileAttachment(BaseAttachment):
 class ImageAttachment(SupportXYZAmorganBlurHash):
     """
     Represents an image attachment.
+
+    :param file: The file to upload
+    :param file_name: The name of the file
+    :param mime_type: The mime type of the file
+    :param size_bytes: The size of the file in bytes
+    :param height: The height of the image in pixels (e.g. 1080)
+    :param width: The width of the image in pixels (e.g. 1920)
+    :param thumbnail: A thumbnail of the image. NOT a blurhash.
+    :param xyz_amorgan_blurhash: The blurhash of the image
+
+    :ivar info: A dict of info about the image. Contains `h`, `w`, `mimetype`, and `size` keys.
+    :ivar thumbnail: A thumbnail of the image. NOT a blurhash.
     """
     def __init__(
             self,
@@ -521,6 +623,8 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
             width: int = None,
             thumbnail: "ImageAttachment" = None,
             generate_blurhash: bool = True,
+            *,
+            unsafe: bool = False
     ) -> "ImageAttachment":
         """
         Generates an image attachment
@@ -543,9 +647,18 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
 
             if height is None or width is None:
                 metadata = await run_blocking(get_metadata, file)
-                stream = metadata["streams"][0]
+                for stream in metadata["streams"]:
+                    if stream["codec_type"] == "video":
+                        if stream["codec_name"] not in SUPPORTED_IMAGE_CODECS and unsafe is False:
+                            continue
+                        else:
+                            break
+                else:
+                    raise ValueError("Unable to find an image stream in the given file. Are you sure its an image?")
+                # ffmpeg doesn't have an image type
                 height = stream["height"]
                 width = stream["width"]
+
 
         mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
@@ -568,6 +681,15 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
 class VideoAttachment(BaseAttachment):
     """
     Represents a video attachment.
+
+    :param file: The file to upload
+    :param file_name: The name of the file
+    :param mime_type: The mime type of the file
+    :param size_bytes: The size of the file in bytes
+    :param height: The height of the video in pixels (e.g. 1080)
+    :param width: The width of the video in pixels (e.g. 1920)
+    :param duration: The duration of the video in seconds
+    :param thumbnail: A thumbnail of the video. NOT a blurhash.
     """
     def __init__(
             self,
@@ -610,13 +732,17 @@ class VideoAttachment(BaseAttachment):
         """
         Generates a video attachment
 
-        !!! warning "This function auto-generates a thumbnail!
+        !!! warning "This function auto-generates a thumbnail!"
             As thumbnails greatly improve user experience, even with blurhashes enabled, this function will by default
             create a thumbnail of the first frame of the given video if you do not provide one yourself.
             **This may increase your initialisation time by a couple seconds, give or take!**
 
             If this is undesirable, pass `thumbnail=False` to disable generating a thumbnail.
             This is independent of `generate_blurhash`.
+
+            Generated thumbnails are always WebP images, so they will always be miniature, so you shouldn't
+            notice a significant increase in upload time, especially considering your video will likely be several
+            megabytes.
 
         :param file: The file to upload
         :param file_name: The name of the file (only used if file is a `BytesIO`)
@@ -637,10 +763,18 @@ class VideoAttachment(BaseAttachment):
 
             if height is None or width is None or duration is None:
                 metadata = await run_blocking(get_metadata, file)
-                stream = metadata["streams"][0]
-                height = stream["height"]
-                width = stream["width"]
-                duration = round(float(metadata["format"]["duration"]) * 1000)
+                for stream in metadata["streams"]:
+                    if stream["codec_type"] == "video":
+                        if stream["codec_name"] not in SUPPORTED_VIDEO_CODECS \
+                                or not stream["codec_name"].startswith("pcm_"):  # usually, pcm is supported.
+                            warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_VIDEO_CODECS)
+                            warnings.warn(warning)
+                        height = stream["height"]
+                        width = stream["width"]
+                        duration = round(float(metadata["format"]["duration"]) * 1000)
+                        break
+                else:
+                    raise ValueError("Could not find a video stream in this file.")
 
         mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
