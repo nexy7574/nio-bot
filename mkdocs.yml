@@ -3,6 +3,8 @@ theme:
   name: "material"
   palette:
     scheme: slate
+  features:
+    - content.tabs.link
 markdown_extensions:
   - admonition
   - def_list
@@ -21,6 +23,9 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 repo_url: https://github.com/EEKIM10/niobot
 plugins:
   - search
