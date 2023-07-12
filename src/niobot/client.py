@@ -534,7 +534,8 @@ class NioBot(nio.AsyncClient):
             content: str = None,
             file: BaseAttachment = None,
             reply_to: nio.RoomMessageText | str = None,
-            message_type: str = None
+            message_type: str = None,
+            clean_mentions: bool = False
     ) -> nio.RoomSendResponse:
         """
         Sends a message.
@@ -545,6 +546,7 @@ class NioBot(nio.AsyncClient):
         :param reply_to: A message to reply to.
         :param message_type: The message type to send. If none, defaults to NioBot.global_message_type,
         which itself is `m.notice` by default.
+        :param clean_mentions: Whether to escape all mentions
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
@@ -556,7 +558,6 @@ class NioBot(nio.AsyncClient):
 
         body = {
             "msgtype": message_type or self.global_message_type,
-            "body": content,
         }
 
         if file is not None:
@@ -569,6 +570,9 @@ class NioBot(nio.AsyncClient):
 
             body = file.as_body(content)
         else:
+            if clean_mentions:
+                content = content.replace("@", "@\u200b")
+            body['body'] = content
             if self.automatic_markdown_renderer:
                 parsed = await run_blocking(marko.parse, content)
                 if parsed.children:
@@ -606,6 +610,7 @@ class NioBot(nio.AsyncClient):
             content: str,
             *,
             message_type: str = None,
+            clean_mentions: bool = False
     ) -> nio.RoomSendResponse:
         """
         Edit an existing message. You must be the sender of the message.
@@ -616,9 +621,12 @@ class NioBot(nio.AsyncClient):
         :param message: The message to edit.
         :param content: The new content of the message.
         :param message_type: The new type of the message (i.e. m.text, m.notice. Defaults to client.global_message_type)
+        :param clean_mentions: Whether or not to escape all mentions
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
+        if clean_mentions:
+            content = content.replace("@", "@\u200b")
         event_id = self._get_id(message)
         message_type = message_type or self.global_message_type
         content = {
@@ -638,8 +646,6 @@ class NioBot(nio.AsyncClient):
                 "rel_type": "m.replace",
                 "event_id": event_id,
             },
-            "format": "org.matrix.custom.html",
-            "formatted_body": content["formatted_body"]
         }
         async with Typing(self, room.room_id):
             response = await self.room_send(
