@@ -1,18 +1,3 @@
-<details>
-    <summary>Version information & warning</summary>
-This library does not currently have a "stable" version, as such all versions will be <code>0.1.dev&lt;Commit Number&gt;+g&lt;Commit Hash&gt;</code>.
-In order to pin to a specific version you should use the following in a requirements.txt or equivalent:
-    
-```
-matrix-nio @ git+https://github.com/EEKIM10/niobot.git@<commit number>
-# or for e2ee
-matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git@<commit number>
-```
-
-Please remember, until there is a "stable" version, all commits will be pushed to main! Version pinning is highly
-recommended.
-</details>
-
 # NioBot
 A simple, easy to use python Matrix bot library, based on the excellent 
 [matrix-nio](https://pypi.org/project/matrix-nio/) library.
@@ -25,11 +10,7 @@ Please note that there *will* be teething problems, and as such some advanced fe
 available, as with any client.
 
 ## Need help?
-look at [examples](/examples), open an issue, or [contact me on matrix](https://matrix.to/#/@nex:nexy7574.co.uk)
-
-## Examples
-You can see the [examples](/examples) directory, which contains a few examples of how to use NioBot.
-Note that these examples are not tested and will need some tweaking.
+Take a look at the [docs!](https://eekim10.github.io/niobot)
 
 ---
 
@@ -44,14 +25,36 @@ You can see it live [here](https://matrix.to/#/@jimmy-bot:nexy7574.co.uk)
 (DM it, the prefix is ?, and full end-to-end encryption is supported. Average response time is ~300-500ms)
 
 ## Installation
+### Versions
+NioBot uses SemVer (semantic versioning) for versioning. This means that the version number is split into three parts:
+`Major`, `Minor` and `Patch`. As per the versioning, `Major` versions are not guaranteed to be backwards compatible,
+however `Minor` and `Patch` versions are.
+
+This means that there will always be a new `Major` increment when a backwards incompatible change is made, and a new
+`Minor` increment when a backwards compatible change is made. `Patch` versions are almost always bug fixes, and are
+always backwards compatible. If a bug fix is not backwards compatible, a new `Major` version will be released.
+
+Major changes may be pushed into their own branches for "feature previews". These branches will be prefixed with
+`feature/`, and will be merged into `master` when they are ready for release. For example, `feature/my-thing`,
+which means you can install it using `niobot @ git+https://github.com/EEKIM10/niobot.git@feature/my-thing`.
+This minimises the number of breaking releases.
+
+### Release versions
+You can use the [PyPi](https://pypi.org/project/niobot) releases:
+```python
+niobot==1.0.0  # or whatever version
+# Or to install it with extras
+niobot[e2ee,cli]==1.0.0
+```
+
+### Development (master branch)
 You should use requirements.txt:
 ```python
 matrix-nio @ git+https://github.com/EEKIM10/niobot.git
 # Or with e2ee support (note you will need libolm)
 matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git
 ```
-You can figure out how to install it in other ways. See the start of this README for more information on version
-pinning.
+You can figure out how to install it in other ways.
 
 ## Features
 NioBot aims to be as easy to use as possible, so form is preferred over function.
@@ -113,9 +116,9 @@ project_root
 
 In main.py, you'll put some similar code:
 ```python
-import niolib
+import niobot
 
-bot = niolib.Bot(...)
+bot = niobot.Bot(...)
 bot.mount_module("modules.ping")  # mounts the ping module
 
 bot.run(password="password")
@@ -129,7 +132,7 @@ registered under that class
 
 Take the following file as ping.py:
 ```python
-import niolib
+import niobot
 
 
 class MyPingModule(niolib.Module):
@@ -140,7 +143,7 @@ class MyPingModule(niolib.Module):
     #   It is recommended to use this instead of print().
     
     # Now we will define a command
-    @niolib.command()
+    @niobot.command()
     async def ping(self, ctx: niolib.Context):
         """Shows the latency"""
         roundtrip = (time.time() * 1000 - ctx.event.server_timestamp)

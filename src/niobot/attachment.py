@@ -3,7 +3,7 @@ Matrix file attachments. Full e2ee support is implemented.
 
 !!! danger "You need FFMPEG for this to work"
     In order for most attachment-related operations, you must have `ffprobe` in your $PATH.
-    As a matter of fact,
+    As a matter of fact, the library will not load any attachment-related classes without it.
 """
 import abc
 import tempfile
