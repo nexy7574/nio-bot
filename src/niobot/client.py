@@ -519,14 +519,14 @@ class NioBot(nio.AsyncClient):
             base: "BaseAttachment",
             encrypted: bool = False,
             __previous: list = None
-    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError]]:
+    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, type(None)]]:
         """Recursively uploads attachments."""
         previous = (__previous or []).copy()
-        x = await base.upload(self, encrypted)
-        previous.append(x)
-        if hasattr(base, 'thumbnail'):
+        if not base.url:
+            previous.append(await base.upload(self, encrypted))
+        if hasattr(base, 'thumbnail') and base.thumbnail and not base.url:
             previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
-        return
+        return previous
 
     async def send_message(
             self,
@@ -559,7 +559,7 @@ class NioBot(nio.AsyncClient):
             "body": content,
         }
 
-        if file:
+        if file is not None:
             # We need to upload the file first.
             responses = await self._recursively_upload_attachments(file, encrypted=getattr(file, "encrypted", False))
             if any((isinstance(response, nio.UploadError) for response in responses)):
