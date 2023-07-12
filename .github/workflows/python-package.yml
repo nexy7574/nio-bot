@@ -30,4 +30,4 @@ jobs:
         pip install -r requirements.txt
     - name: Test metadata
       run: |
-        python3 setup.py test -m -s
+        python3 src/niobot/setup.py test -m -s
