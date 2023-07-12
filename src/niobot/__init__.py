@@ -5,12 +5,7 @@ from .client import *
 from .commands import *
 from .context import *
 from .exceptions import *
-try:
-    from .attachment import *
-    ATTACHMENTS_AVAILABLE = True
-except ImportError:
-    pass
-    ATTACHMENTS_AVAILABLE = False
+from .attachment import *
 
 try:
     import __version__ as version_meta

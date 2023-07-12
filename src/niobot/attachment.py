@@ -1,9 +1,5 @@
 """
 Matrix file attachments. Full e2ee support is implemented.
-
-!!! danger "You need FFMPEG for this to work"
-    In order for most attachment-related operations, you must have `ffprobe` in your $PATH.
-    As a matter of fact, the library will not load any attachment-related classes without it.
 """
 import abc
 import tempfile
@@ -29,21 +25,14 @@ from .exceptions import MediaUploadException, MetadataDetectionException, MediaC
 if typing.TYPE_CHECKING:
     from .client import NioBot
 
-if not shutil.which("ffmpeg"):
-    raise ImportError(
-        "ffmpeg is not installed. You must install it to use this library. If its installed, is it in PATH?"
-    )
-if not shutil.which("ffprobe"):
-    raise ImportError(
-        "ffprobe is not installed. You must install it to use this library. If its installed, is it in PATH?"
-    )
-
 
 log = logging.getLogger(__name__)
 
 
 __all__ = (
     "detect_mime_type",
+    "get_metadata_ffmpeg",
+    "get_metadata_imagemagick",
     "get_metadata",
     "generate_blur_hash",
     "first_frame",
@@ -112,7 +101,7 @@ def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
         raise TypeError("File must be a string, BytesIO, or Path object.")
 
 
-def get_metadata(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typing.Any]:
+def get_metadata_ffmpeg(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typing.Any]:
     """
     Gets metadata for a file via ffprobe.
 
@@ -144,6 +133,8 @@ def get_metadata(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typi
     :param file: The file to get metadata for. **Must be a path-like object**
     :return: A dictionary containing the metadata.
     """
+    if not shutil.which("ffprobe"):
+        raise FileNotFoundError("ffprobe is not installed. If it is, check your $PATH.")
     command = [
         "ffprobe",
         "-of",
@@ -163,6 +154,72 @@ def get_metadata(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typi
     return json.loads(result.stdout or '{}')
 
 
+def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]:
+    """The same as `get_metadata_ffmpeg` but for ImageMagick.
+
+    Only returns a limited subset of the data, such as one stream, which contains the format, and size,
+    and the format, which contains the filename, format, and size."""
+    file = file.resolve(True)
+    command = [
+        "identify",
+        str(file)
+    ]
+    try:
+        result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
+    except subprocess.SubprocessError as e:
+        raise MetadataDetectionException("Failed to get metadata for file.", exception=e)
+    log.debug("identify output (%d): %s", result.returncode, result.stdout)
+    stdout = result.stdout
+    stdout = stdout[len(str(file)) + 1:]
+    img_format, img_size, *_ = stdout.split()
+    data = {
+        "streams": [
+            {
+                "index": 0,
+                "codec_name": img_format,
+                "codec_long_name": img_format,
+                "codec_type": "video",
+                "height": int(img_size.split("x")[0]),
+                "width": int(img_size.split("x")[1]),
+            }
+        ],
+        "format": {
+            "filename": str(file),
+            "format_long_name": img_format,
+            "size": str(file.stat().st_size),
+        }
+    }
+    return data
+
+
+def get_metadata(file: typing.Union[str, pathlib.Path], mime_type: str = None) -> typing.Dict[str, typing.Any]:
+    """
+    Gets metadata for a file.
+
+    This will use imagemagick (`identify`) for images where available, falling back to ffmpeg (`ffprobe`)
+    for everything else.
+
+    :param file: The file to get metadata for.
+    :param mime_type: The mime type of the file. If not provided, it will be detected.
+    :return: The metadata for the file. See [niobot.get_metadata_ffmpeg][] and [niobot.get_metadata_imagemagick][]
+     for more information.
+    """
+    mime = mime_type or detect_mime_type(file)
+    mime = mime.split("/")[0]
+    if mime == "image":
+        if not shutil.which("identify"):
+            log.warning(
+                "Imagemagick identify not found, falling back to ffmpeg for image metadata detection. "
+                "Check your $PATH."
+            )
+        else:
+            return get_metadata_imagemagick(file)
+
+    if mime not in ["audio", "video", "image"]:
+        raise MetadataDetectionException("Unsupported mime type. Must be an audio clip, video, or image.")
+    return get_metadata_ffmpeg(file)
+
+
 def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
     """
     Gets the first frame of a video file.
@@ -179,6 +236,8 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
     :param file_format: The format to save the frame as. Defaults to webp.
     :return: The first frame of the video in bytes.
     """
+    if not shutil.which("ffmpeg"):
+        raise FileNotFoundError("ffmpeg is not installed. If it is, check your $PATH.")
     with tempfile.NamedTemporaryFile(suffix=f".{file_format}") as f:
         command = [
             "ffmpeg",
