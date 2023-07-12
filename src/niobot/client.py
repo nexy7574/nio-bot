@@ -231,7 +231,7 @@ class NioBot(nio.AsyncClient):
                     except asyncio.CancelledError:
                         self.dispatch('command_cancelled', context, t)
                     if exc:
-                        self.dispatch('command_error', context, CommandError(exception=e))
+                        self.dispatch('command_error', context, CommandError(exception=exc))
                     else:
                         self.dispatch('command_complete', context, t)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
