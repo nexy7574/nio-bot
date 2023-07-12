@@ -514,16 +514,19 @@ class NioBot(nio.AsyncClient):
             )
         )
 
-    async def _recursively_upload_attachments(self, base: "BaseAttachment", encrypted: bool = False,  __previous: list = None) -> typing.Dict[
-        "BaseAttachment": typing.Union[nio.UploadResponse, nio.UploadError]
-    ]:
+    async def _recursively_upload_attachments(
+            self,
+            base: "BaseAttachment",
+            encrypted: bool = False,
+            __previous: list = None
+    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError]]:
         """Recursively uploads attachments."""
         previous = (__previous or []).copy()
         x = await base.upload(self, encrypted)
         previous.append(x)
         if hasattr(base, 'thumbnail'):
             previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
-        return previous
+        return
 
     async def send_message(
             self,

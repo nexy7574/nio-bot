@@ -637,6 +637,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
         :param width: The width, in pixels, of this image
         :param thumbnail: A thumbnail for this image
         :param generate_blurhash: Whether to generate a blurhash for this image
+        :param unsafe: Whether to allow uploading of images with unsupported codecs. May break metadata detection.
         :return: An image attachment
         """
         file = _to_path(file)
