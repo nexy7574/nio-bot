@@ -30,11 +30,11 @@ if typing.TYPE_CHECKING:
     from .client import NioBot
 
 if not shutil.which("ffmpeg"):
-    raise RuntimeError(
+    raise ImportError(
         "ffmpeg is not installed. You must install it to use this library. If its installed, is it in PATH?"
     )
 if not shutil.which("ffprobe"):
-    raise RuntimeError(
+    raise ImportError(
         "ffprobe is not installed. You must install it to use this library. If its installed, is it in PATH?"
     )
 
