@@ -204,6 +204,7 @@ def get_metadata(file: typing.Union[str, pathlib.Path], mime_type: str = None) -
     :return: The metadata for the file. See [niobot.get_metadata_ffmpeg][] and [niobot.get_metadata_imagemagick][]
      for more information.
     """
+    file = _to_path(file)
     mime = mime_type or detect_mime_type(file)
     mime = mime.split("/")[0]
     if mime == "image":
