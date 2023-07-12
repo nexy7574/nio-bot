@@ -14,6 +14,12 @@ authors = [
 ]
 dynamic = ["version", "dependencies"]
 
+[project.urls]
+Source = "https://github.com/eekim10/niobot"
+Tracker = "https://github.com/eekim10/niobot/issues"
+Documentation = "https://eekim10.github.io/niobot/"
+
+
 [project.optional-dependencies]
 e2ee = ['matrix-nio[e2e]']
 cli = ['httpx', 'click']
