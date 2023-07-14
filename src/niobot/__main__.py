@@ -174,6 +174,10 @@ def version(ctx, no_colour: bool):
         ["OLM Installed", "Yes" if ENCRYPTION_ENABLED else "No", lambda x: x != "No"],
     ]
 
+    _docker_path = pathlib.Path("/.dockerenv")
+    if _docker_path.is_file():
+        lines.append(["Running in Docker", "Probably (/.dockerenv exists)", lambda _: True])
+
     click.echo()
     for line in lines:
         if no_colour:
