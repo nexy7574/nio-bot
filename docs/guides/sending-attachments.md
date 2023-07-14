@@ -39,6 +39,25 @@ You should use your package manager to install these, as they are not python pac
     * [gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z)
     * [imagemagick.org/script/download.php](https://imagemagick.org/script/download.php#windows)
 
+## FAQ
+??? question "Why do I need to install `ffmpeg` and `imagemagick`?"
+    `imagemagick` is actually optional - if you trust `ffprobe` to work with all of your images (in some cases it can
+    fail to detect newer image formats), then you can skip installing it.
+    
+    However, `ffmpeg` is required for all but file attachments. This is because in order to get some rich data, such as
+    dimensions and duration, we need to use `ffprobe` to get this data.
+    Furthermore, in the event `imagemagick` is not installed, the metadata fetcher falls back to `ffprobe`.
+    
+    Not having these installed will result in a `RuntimeError` being raised when you try to send an attachment
+    when it tries to fetch metadata. This is because the metadata fetcher will not be able to find `ffprobe` or
+    `imagemagick` in your PATH.
+
+??? question "Why does it take a couple of seconds for `<attachment>.from_file()` to return?"
+    The `from_file` method (see: [niobot.VideoAttachment.from_file][], [niobot.ImageAttachment.from_file][], etc.) 
+    does a lot of heavy lifting in terms of preparing a file with all the bells and whistles for an upload. 
+    This means that it has to do a lot
+    of processing, which may take a couple of seconds to return.
+
 ---
 
 ## Sending:
@@ -68,7 +87,7 @@ async def upload_txt(ctx: Context):
 ```
 
 This results in the following:
-![image](/assets/guides/images/sending-attachments/file-send.avif)
+![image](https://eekim10.github.io/niobot/assets/guides/images/sending-attachments/file-send.avif)
 
 You can then click on the file to download it!
 
@@ -91,8 +110,8 @@ having an ugly loading spinner or outright blank space in place of a loading ima
 
 For example:
 
-![pre-blurhash (after loading the image)](/assets/guides/images/sending-attachments/blurhash-hashed.avif){ loading=lazy }
-![post-blurhash (after loading the image)](/assets/guides/images/sending-attachments/blurhash-dehashed.avif){ loading=lazy }
+![pre-blurhash (after loading the image)](https://eekim10.github.io/niobot/assets/guides/images/sending-attachments/blurhash-hashed.avif){ loading=lazy }
+![post-blurhash (after loading the image)](https://eekim10.github.io/niobot/assets/guides/images/sending-attachments/blurhash-dehashed.avif){ loading=lazy }
 
 ??? info "This may slow down your image upload"
     Generating blurhashes, especially for large images, even more especially with a weak CPU, can be very slow.
