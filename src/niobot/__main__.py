@@ -151,12 +151,25 @@ def version(ctx, no_colour: bool):
         bot_version_deep["date"].strftime("%d/%m/%Y")
     )
 
+    _os = platform.platform()
+    if hasattr(platform, "freedesktop_os_release"):
+        try:
+            _os_info = platform.freedesktop_os_release()
+        except OSError:
+            pass
+        else:
+            _os += " ({0}/{1} - {2})".format(
+                _os_info.get("NAME", "Unknown"),
+                _os_info.get("VERSION", "Unknown"),
+                _os_info.get("PRETTY_NAME", "Unknown")
+            )
+
     lines = [
         ["NioBot version", bot_version, lambda x: True],
         ["matrix-nio version", nio_version, lambda x: x.startswith("0.20")],
         ["Python version", platform.python_version(), lambda x: x.split(".")[0] == "3" and int(x.split(".")[1]) >= 9],
         ["Python implementation", platform.python_implementation(), lambda x: x == "CPython"],
-        ["Operating System", platform.platform(), lambda val: val.startswith(("Windows", "Linux"))],
+        ["Operating System", _os, lambda val: val.startswith(("Windows", "Linux"))],
         ["Architecture", platform.machine(), lambda x: x == "x86_64"],
         ["OLM Installed", "Yes" if ENCRYPTION_ENABLED else "No", lambda x: x != "No"],
     ]
