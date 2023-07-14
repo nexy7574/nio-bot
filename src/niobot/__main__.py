@@ -91,6 +91,7 @@ def cli_root(ctx, log_level: str):
 
 @cli_root.command()
 @click.option("--no-colour", "--no-color", "-C", is_flag=True, default=False)
+@click.option("--homeserver", "-H", default=None, help="An optional homeserver to display information about.")
 @click.pass_context
 def version(ctx, no_colour: bool):
     """Shows version information."""
@@ -127,7 +128,6 @@ def version(ctx, no_colour: bool):
             t3_commit, t3_date_raw = t3.split(".", 1)
         except ValueError:
             t3_commit = t3
-            logger.warning("Failed to parse commit date from %r, using current date instead.", t3)
             t3_date = datetime.datetime.now()
             t3_date_raw = t3_date.strftime("%Y%m%d")
         t3_date = datetime.datetime.strptime(t3_date_raw[1:], "%Y%m%d")
