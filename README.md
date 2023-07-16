@@ -10,7 +10,9 @@ Please note that there *will* be teething problems, and as such some advanced fe
 available, as with any client.
 
 ## Need help?
-Take a look at the [docs!](https://eekim10.github.io/niobot)
+Take a look at the [docs!](https://eekim10.github.io/niobot), or 
+[![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#niobot:nexy7574.co.uk)
+(dedicated support room)
 
 ---
 
@@ -22,7 +24,10 @@ features built into it, which a lot of users may not use yet.
 It is, however, a great example of how an advanced, full feature bot can be created using this library.
 
 You can see it live [here](https://matrix.to/#/@jimmy-bot:nexy7574.co.uk)
-(DM it, the prefix is ?, and full end-to-end encryption is supported. Average response time is ~300-500ms)
+(DM it, the prefix is ?, and full end-to-end encryption is supported(*). Average response time is ~300-500ms)
+
+(\* May not always work due to key store issues, but it should work most of the time, especially if its your first
+time using it.)
 
 ## Installation
 ### Versions
@@ -60,10 +65,6 @@ You can figure out how to install it in other ways.
 NioBot aims to be as easy to use as possible, so form is preferred over function.
 Some features you'd normally expect may not be implemented (yet, feel free to open a pull request!) or may not work as 
 intended or how you'd expect, however as with any matrix client.
-
-However, like any good client, NioBot tries to adhere to the 
-[Matrix Spec](https://spec.matrix.org/v1.7/client-server-api) (in terms of design at least, all the hard work is 
-done by matrix-nio)
 
 ## Quickstart
 ```python
