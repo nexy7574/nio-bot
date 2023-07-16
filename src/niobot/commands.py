@@ -341,9 +341,9 @@ def check(
 =    """
     def decorator(command_function):
         if hasattr(command_function, "__nio_checks__"):
-            command_function.__nio_checks__["name"][function] = name or function.__name__
+            command_function.__nio_checks__[function] = name or function.__name__
         else:
-            command_function.__nio__checks__ = {
+            command_function.__nio_checks__ = {
                 function: name or function.__name__
             }
         return command_function
