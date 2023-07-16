@@ -234,7 +234,7 @@ class Command:
                     usage.append(opt.format(arg.name))
             return " ".join(usage)
 
-    def invoke(self, ctx: Context):
+    async def invoke(self, ctx: Context) -> typing.Coroutine:
         """
         Invokes the current command with the given context
 
@@ -243,18 +243,19 @@ class Command:
         :raises CheckFailure: A check failed
         """
         if self.checks:
-            for check in self.checks:
+            for chk_func in self.checks:
+                name = chk_func.__nio_check_metadata__["names"][self]
                 try:
                     cr = await force_await(
-                        check,
+                        chk_func,
                         ctx
                     )
                 except CheckFailure:
                     raise  # re-raise existing check failures
                 except Exception as e:
-                    raise CheckFailure(check.__check_name__, exception=e)
+                    raise CheckFailure(name, exception=e)
                 if not cr:
-                    raise CheckFailure(check.__check_name__)
+                    raise CheckFailure(name)
 
         parsed_args = []
         if len(ctx.args) > (len(self.arguments) - 1):
