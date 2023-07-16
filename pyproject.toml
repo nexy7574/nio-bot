@@ -23,7 +23,7 @@ Documentation = "https://eekim10.github.io/niobot/"
 [project.optional-dependencies]
 e2ee = ['matrix-nio[e2e]']
 cli = ['httpx', 'click']
-dev = ['mkdocs', 'mkdocs-material', 'black', 'mkdocs-autorefs', 'mkdocs-glightbox']
+dev = ['mkdocs', 'mkdocs-material', 'black', 'mkdocs-autorefs', 'mkdocs-glightbox', 'mkdocstrings[python]']
 
 [project.scripts]
 niocli = "niobot.__main__:cli_root [cli]"
