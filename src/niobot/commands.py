@@ -339,14 +339,14 @@ def check(
     :param name: A human-readable name for the check. Defaults to function.__name__
     :return: The decorated function.
 =    """
-    def decorator(func):
-        if hasattr(function, "__nio_checks__"):
-            function.__nio_checks__["name"][func] = name or function.__name__
+    def decorator(command_function):
+        if hasattr(command_function, "__nio_checks__"):
+            command_function.__nio_checks__["name"][function] = name or function.__name__
         else:
-            function.__nio__checks__ = {
-                func: name or function.__name__
+            command_function.__nio__checks__ = {
+                function: name or function.__name__
             }
-        return func
+        return command_function
 
     decorator.internal = function
     return decorator
