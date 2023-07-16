@@ -256,7 +256,7 @@ class Command:
                 except CheckFailure:
                     raise  # re-raise existing check failures
                 except Exception as e:
-                    raise CheckFailure(name, exception=e)
+                    raise CheckFailure(name, exception=e) from e
                 if not cr:
                     raise CheckFailure(name)
 
