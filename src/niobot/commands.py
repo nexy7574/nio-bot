@@ -6,7 +6,8 @@ import nio
 import typing
 
 from .context import Context
-from .exceptions import CommandArgumentsError
+from .exceptions import *
+from .utils import force_await
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -17,7 +18,8 @@ __all__ = (
     "command",
     "event",
     "Module",
-    "Argument"
+    "Argument",
+    "check"
 )
 
 _T = typing.TypeVar("_T")
@@ -123,7 +125,8 @@ class Command:
         A string representing how to use this command's arguments. Will be shown in the auto-generated help.
         Do not include the command name or your bot's prefix here, only arguments.
         For example: `usage="<message> [times]"` will show up as `[p][command] <message> [times]` in the help command.
-
+    :param hidden:
+        Whether the command is hidden or not. If hidden, the command will be always hidden on the auto-generated help.
     """
     _CTX_ARG = Argument(
         "ctx",
@@ -140,6 +143,7 @@ class Command:
             aliases: list[str] = None,
             description: str = None,
             disabled: bool = False,
+            hidden: bool = False,
             **kwargs
     ):
         self.__runtime_id = os.urandom(16).hex()
@@ -149,6 +153,8 @@ class Command:
         self.description = description
         self.disabled = disabled
         self.aliases = aliases or []
+        self.checks = kwargs.pop("checks", [])
+        self.hidden = hidden
         self.usage = kwargs.pop("usage", None)
         self.module = kwargs.pop("module", None)
         self.arguments = kwargs.pop("arguments", None)
@@ -229,16 +235,40 @@ class Command:
             return " ".join(usage)
 
     def invoke(self, ctx: Context):
-        """Invokes the current command with the given context"""
+        """
+        Invokes the current command with the given context
+
+        :param ctx: The current context
+        :raises CommandArgumentsError: Too many/few arguments, or an error parsing an argument.
+        :raises CheckFailure: A check failed
+        """
+        if self.checks:
+            for check in self.checks:
+                try:
+                    cr = await force_await(
+                        check,
+                        ctx
+                    )
+                except CheckFailure:
+                    raise  # re-raise existing check failures
+                except Exception as e:
+                    raise CheckFailure(check.__check_name__, exception=e)
+                if not cr:
+                    raise CheckFailure(check.__check_name__)
+
         parsed_args = []
-        for index, argument in enumerate(self.arguments[1:], 0):
+        if len(ctx.args) > (len(self.arguments) - 1):
+            raise CommandArgumentsError(f"Too many arguments given to command {self.name}")
+        for index, argument in enumerate(self.arguments[1:]):
             argument: Argument
+
             if index >= len(ctx.args):
                 if argument.required:
                     raise CommandArgumentsError(f"Missing required argument {argument.name}")
                 else:
                     parsed_args.append(argument.default)
                     continue
+
             self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
             try:
                 parsed_argument = argument.parser(ctx, argument, ctx.args[index])
@@ -284,6 +314,51 @@ def command(name: str = None, **kwargs) -> callable:
         func.__nio_command__ = cmd
         return func
 
+    return decorator
+
+
+def check(
+        function: typing.Callable[[Context], typing.Union[bool, typing.Coroutine[None, None, bool]]],
+        name: str = None,
+) -> callable:
+    """
+    Allows you to register checks in modules.
+    You **MUST** call this after registering a command via either [`niobot.command`][] or
+    [`niobot.NioBot.command`][]
+
+    This means your code should look like:
+
+    ```python
+    @niobot.command()
+    @niobot.check(my_check_func, name="My Check")
+
+    :param function: The function to register as a check
+    :param name: A human-readable name for the check. Defaults to function.__name__
+    :return: The decorated function.
+    :raises RuntimeError: If the function is not (yet) a command, or the same check was registered multiple times.
+    """
+    def decorator(func):
+        if not hasattr(func, "__nio_command__"):
+            raise RuntimeError("Cannot register check on non-command function.")
+
+        cmd = func.__nio_command__
+        if function in cmd.checks:
+            raise RuntimeError("Cannot register same check twice.")
+        if name.lower() in map(lambda c: c.__nio_check_name__.lower(), cmd.checks):
+            raise RuntimeError("Cannot register check with same name twice.")
+
+        if hasattr(function, "__nio_check_metadata__"):
+            function.__nio_check_metadata__["names"][cmd] = name or function.__name__
+        else:
+            function.__nio_check_metadata__ = {
+                "names": {
+                    cmd: name or function.__name__
+                }
+            }
+        cmd.checks.append(function)
+        return func
+
+    decorator.internal = function
     return decorator
 
 
