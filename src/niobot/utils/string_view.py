@@ -33,7 +33,6 @@ class ArgumentView:
         :param argument: The argument to add
         :return: none"""
         if not argument:
-            log.warning("Blank argument added to ArgumentView (FIXME)")
             return
         self.arguments.append(argument)
 
