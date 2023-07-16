@@ -35,22 +35,22 @@ class NioBotException(Exception):
     """
     message: str | None
     response: nio.ErrorResponse | None
-    exception: Exception | None
-    original: nio.ErrorResponse | Exception | None
+    exception: BaseException | None
+    original: nio.ErrorResponse | BaseException | None
 
     def __init__(
             self,
             message: str = None,
             response: nio.ErrorResponse = None,
             *,
-            exception: Exception = None,
-            original: typing.Union[nio.ErrorResponse, Exception] = None,
+            exception: BaseException = None,
+            original: typing.Union[nio.ErrorResponse, BaseException] = None,
     ):
         if original:
             warnings.warn(DeprecationWarning("original is deprecated, use response or exception instead"))
         self.original = original or response or exception
         self.response = response
-        self.exception: typing.Union[nio.ErrorResponse, Exception] = exception
+        self.exception: typing.Union[nio.ErrorResponse, BaseException] = exception
         self.message = message
 
         if self.original is None and self.message is None:

@@ -217,7 +217,14 @@ class NioBot(nio.AsyncClient):
             content = event.body
 
         if content.startswith(self.command_prefix):
-            command = original_command = content[len(self.command_prefix):].splitlines()[0].split(" ")[0]
+            try:
+                command = original_command = content[len(self.command_prefix):].splitlines()[0].split(" ")[0]
+            except IndexError:
+                self.log.info(
+                    "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
+                    event.body
+                )
+                return
             command = self.get_command(command)
             if command:
                 if command.disabled is True:
@@ -230,10 +237,11 @@ class NioBot(nio.AsyncClient):
                         exc = t.exception()
                     except asyncio.CancelledError:
                         self.dispatch('command_cancelled', context, t)
-                    if exc:
-                        self.dispatch('command_error', context, CommandError(exception=exc))
                     else:
-                        self.dispatch('command_complete', context, t)
+                        if exc:
+                            self.dispatch('command_error', context, CommandError(exception=exc))
+                        else:
+                            self.dispatch('command_complete', context, t)
                 self.log.debug(f"Running command {command.name} with context {context!r}")
                 try:
                     task = asyncio.create_task(command.invoke(context))
