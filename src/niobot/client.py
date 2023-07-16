@@ -275,6 +275,15 @@ class NioBot(nio.AsyncClient):
 
         Must be a subclass of niobot.commands.Module, or else this function will not work.
 
+        ??? danger "There may not be an event loop running when this function is called."
+            If you are calling this function before you call `bot.run()`, it is entirely possible that you don't have
+            a running [asyncio][] event loop. If you use the event loop in `Module.__init__`, you will get an error,
+            and the module will fail the mount.
+
+            You can get around this by deferring mounting your modules until the `bot.on_ready` event is fired,
+            at which point not only will the first full sync have completed (meaning the bot has all of its caches
+            populated), but the event loop will be running.
+
         :param import_path: The import path (such as modules.file), which would be ./modules/file.py in a file tree.
         :returns: Optional[List[Command]] - A list of commands mounted. None if the module's setup() was called.
         :raise ImportError: The module path is incorrect of there was another error while importing
