@@ -4,6 +4,7 @@ from .unblocking import *
 from .help_command import *
 from .parsers import *
 from .federation import *
+from .checks import *
 
 
 def deprecated(use_instead: str = None):
