@@ -137,10 +137,10 @@ class NioBot(nio.AsyncClient):
         # noinspection PyTypeChecker
         self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
         # noinspection PyTypeChecker
-        self.add_event_callback(self._auto_join_room_callback, nio.Event)
+        self.add_event_callback(self._look_for_dm_rooms, nio.Event)
         # noinspection PyTypeChecker
-        self.add_global_account_data_callback(self._look_for_dm_rooms, nio.AccountDataEvent)
-        self.add_room_account_data_callback(self._look_for_dm_rooms, nio.AccountDataEvent)
+        self.add_global_account_data_callback(self._look_for_dm_rooms, None)
+        self.add_room_account_data_callback(self._look_for_dm_rooms, None)
 
     async def _look_for_dm_rooms(self, event):
         self.log.debug("dm searcher event (%r): %r", event.__class__.__name__, event)
