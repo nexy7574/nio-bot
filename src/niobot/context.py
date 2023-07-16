@@ -111,6 +111,11 @@ class Context:
         self._args.parse_arguments()
         self._original_response = None
 
+        # property aliases
+        self.bot = self.client
+        self.msg = self.event = self.message
+        self.arguments = self.args
+
     def __repr__(self):
         return "<Context room={0.room!r} event={0.event!r} command={0.command!r}>".format(self)
 
@@ -133,8 +138,6 @@ class Context:
         """The current instance of the client"""
         return self._client
 
-    bot = client
-
     @property
     def command(self) -> "Command":
         """The current command being invoked"""
@@ -145,8 +148,6 @@ class Context:
         """Each argument given to this command"""
         return self._args.arguments
 
-    arguments = args
-
     @property
     def message(self) -> nio.RoomMessageText:
         """The current message"""
@@ -156,8 +157,6 @@ class Context:
     def original_response(self) -> typing.Optional[nio.RoomSendResponse]:
         """The result of Context.reply(), if it exists."""
         return self._original_response
-
-    msg = event = message
 
     @property
     def latency(self) -> float:
