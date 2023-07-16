@@ -154,6 +154,9 @@ class Command:
         self.disabled = disabled
         self.aliases = aliases or []
         self.checks = kwargs.pop("checks", [])
+        if hasattr(self.callback, "__nio_checks__"):
+            for check_func in self.callback.__nio_checks__.keys():
+                self.checks.append(check_func)
         self.hidden = hidden
         self.usage = kwargs.pop("usage", None)
         self.module = kwargs.pop("module", None)
@@ -324,39 +327,25 @@ def check(
 ) -> callable:
     """
     Allows you to register checks in modules.
-    You **MUST** call this after registering a command via either [`niobot.command`][] or
-    [`niobot.NioBot.command`][]
-
-    This means your code should look like:
 
     ```python
     @niobot.command()
     @niobot.check(my_check_func, name="My Check")
+    async def my_command(ctx: niobot.Context):
+        pass
+    ```
 
     :param function: The function to register as a check
     :param name: A human-readable name for the check. Defaults to function.__name__
     :return: The decorated function.
-    :raises RuntimeError: If the function is not (yet) a command, or the same check was registered multiple times.
-    """
+=    """
     def decorator(func):
-        if not hasattr(func, "__nio_command__"):
-            raise RuntimeError("Cannot register check on non-command function.")
-
-        cmd = func.__nio_command__
-        if function in cmd.checks:
-            raise RuntimeError("Cannot register same check twice.")
-        if name.lower() in map(lambda c: c.__nio_check_name__.lower(), cmd.checks):
-            raise RuntimeError("Cannot register check with same name twice.")
-
-        if hasattr(function, "__nio_check_metadata__"):
-            function.__nio_check_metadata__["names"][cmd] = name or function.__name__
+        if hasattr(function, "__nio_checks__"):
+            function.__nio_checks__["name"][func] = name or function.__name__
         else:
-            function.__nio_check_metadata__ = {
-                "names": {
-                    cmd: name or function.__name__
-                }
+            function.__nio__checks__ = {
+                func: name or function.__name__
             }
-        cmd.checks.append(function)
         return func
 
     decorator.internal = function
