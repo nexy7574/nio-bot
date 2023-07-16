@@ -164,8 +164,8 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
                 "codec_name": img_format,
                 "codec_long_name": img_format,
                 "codec_type": "video",
-                "height": int(img_size.split("x")[0]),
-                "width": int(img_size.split("x")[1]),
+                "height": int(img_size.split("x")[1]),
+                "width": int(img_size.split("x")[0]),
             }
         ],
         "format": {
