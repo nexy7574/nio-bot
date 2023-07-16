@@ -126,6 +126,7 @@ class NioBot(nio.AsyncClient):
             self.update_read_receipts,
             nio.RoomMessage
         )
+        self.direct_rooms: typing.Dict[str, list[str]] = {}
 
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
             maxlen=kwargs.pop("max_message_cache", 1000)
@@ -135,6 +136,17 @@ class NioBot(nio.AsyncClient):
 
         # noinspection PyTypeChecker
         self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
+        # noinspection PyTypeChecker
+        self.add_global_account_data_callback(self._look_for_dm_rooms, (nio.AccountDataEvent, nio.UnknownAccountDataEvent))
+        self.add_room_account_data_callback(self._look_for_dm_rooms, (nio.AccountDataEvent, nio.UnknownAccountDataEvent))
+
+    async def _look_for_dm_rooms(self, event: nio.UnknownAccountDataEvent):
+        self.log.debug("Got account data event: %s", event)
+        if hasattr(event, "type"):
+            if event.type == "m.direct":
+                for user, rooms in event.content.keys():
+                    self.log.debug("Found direct room(s) for %s", user)
+                    self.direct_rooms[user] = rooms
 
     async def _auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
         """Callback for auto-joining rooms"""
