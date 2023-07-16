@@ -9,12 +9,17 @@ __all__ = (
     "MessageException",
     "LoginException",
     "MediaUploadException",
+    "MediaCodecWarning",
     "MetadataDetectionException",
     "CommandError",
+    "CommandParserError",
+    "CommandPreparationError",
     "CommandDisabledError",
+    "CommandNotFoundError",
     "CommandArgumentsError",
-    "MediaCodecWarning",
-    "CommandParserError"
+    "CheckFailure",
+    "NotOwner",
+    "InsufficientPower"
 )
 
 
@@ -77,7 +82,7 @@ class LoginException(NioBotException):
     """
 
 
-class MediaUploadException(NioBotException):
+class MediaUploadException(MessageException):
     """
     Exception for media-uploading related errors
     """
@@ -115,7 +120,22 @@ class CommandError(NioBotException):
     """
 
 
-class CommandDisabledError(CommandError):
+class CommandNotFoundError(CommandError):
+    """
+    Exception raised when a command is not found.
+    """
+    def __init__(self, command_name: str):
+        super().__init__(f"Command {command_name} not found")
+        self.command_name = command_name
+
+
+class CommandPreparationError(CommandError):
+    """
+    Exception subclass for errors raised while preparing a command for execution.
+    """
+
+
+class CommandDisabledError(CommandPreparationError):
     """
     Exception raised when a command is disabled.
     """
@@ -123,7 +143,7 @@ class CommandDisabledError(CommandError):
         super().__init__(f"Command {command} is disabled")
 
 
-class CommandArgumentsError(CommandError):
+class CommandArgumentsError(CommandPreparationError):
     """
     Exception subclass for command argument related errors.
     """
@@ -133,3 +153,68 @@ class CommandParserError(CommandArgumentsError):
     """
     Exception raised when there is an error parsing arguments.
     """
+
+
+class CheckFailure(CommandPreparationError):
+    """
+    Exception raised when a generic check call fails.
+
+    You should prefer one of the subclass errors over this generic one, or a custom subclass.
+
+    `CheckFailure` is often raised by the built-in checker when a check returns a falsy value without raising an error.
+    """
+    def __init__(
+            self,
+            check_name: str = None,
+            message: str = None,
+            exception: BaseException = None,
+    ):
+        if not message:
+            message = f"Check {check_name} failed."
+        super().__init__(message, exception=exception)
+        self.check_name = check_name
+
+    def __str__(self) -> str:
+        return self.message or f"Check {self.check_name} failed."
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} check_name={self.check_name!r} message={self.message!r}" \
+               f" exception={self.exception!r}>"
+
+
+class NotOwner(CheckFailure):
+    """
+    Exception raised when the command invoker is not the owner of the bot.
+    """
+    def __init__(self, check_name: str = None, message: str = None, exception: BaseException = None):
+        if not message:
+            message = "You are not the owner of this bot."
+        super().__init__(check_name, message, exception)
+
+
+class InsufficientPower(CheckFailure):
+    """
+    Exception raised when the command invoker does not have enough power to run the command.
+    """
+    def __init__(
+            self,
+            check_name: str = None,
+            message: str = None,
+            exception: BaseException = None,
+            *,
+            needed: int,
+            have: int
+    ):
+        if not message:
+            message = "Insufficient power level. Needed %d, have %d." % (needed, have)
+        super().__init__(check_name, message, exception)
+
+
+class NotADirectRoom(CheckFailure):
+    """
+    Exception raised when the current room is not `m.direct` (a DM room)
+    """
+    def __init__(self, check_name: str = None, message: str = None, exception: BaseException = None):
+        if not message:
+            message = "This command can only be run in a direct message room."
+        super().__init__(check_name, message, exception)
