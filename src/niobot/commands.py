@@ -247,7 +247,7 @@ class Command:
         """
         if self.checks:
             for chk_func in self.checks:
-                name = chk_func.__nio_checks__[self]
+                name = self.callback.__nio_checks__[chk_func]
                 try:
                     cr = await force_await(
                         chk_func,
