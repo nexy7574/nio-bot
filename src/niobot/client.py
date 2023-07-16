@@ -126,7 +126,7 @@ class NioBot(nio.AsyncClient):
             self.update_read_receipts,
             nio.RoomMessage
         )
-        self.direct_rooms: typing.Dict[str, list[str]] = {}
+        self.direct_rooms: typing.Dict[str, nio.MatrixRoom] = {}
 
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
             maxlen=kwargs.pop("max_message_cache", 1000)
@@ -136,14 +136,21 @@ class NioBot(nio.AsyncClient):
 
         # noinspection PyTypeChecker
         self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
-        # noinspection PyTypeChecker
-        self.add_event_callback(self._look_for_dm_rooms, nio.Event)
-        # noinspection PyTypeChecker
-        self.add_global_account_data_callback(self._look_for_dm_rooms, None)
-        self.add_room_account_data_callback(self._look_for_dm_rooms, None)
 
-    async def _look_for_dm_rooms(self, event):
-        self.log.debug("dm searcher event (%r): %r", event.__class__.__name__, event)
+    async def sync(self, *args, **kwargs):
+        sync = await super().sync(*args, **kwargs)
+        if isinstance(sync, nio.SyncResponse):
+            self._populate_dm_rooms(sync)
+        return sync
+
+    def _populate_dm_rooms(self, sync: nio.SyncResponse):
+        for room_id, room_info in sync.rooms.join.items():
+            for event in room_info.state:
+                if isinstance(event, nio.RoomMemberEvent):
+                    prev = event.prev_content or {}
+                    if event.content.get("is_direct", prev.get("is_direct", False)):
+                        self.log.debug("Found DM room in sync: %s", room_id)
+                        self.direct_rooms[room_id] = self.rooms[room_id]
 
     async def _auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
         """Callback for auto-joining rooms"""
@@ -522,6 +529,8 @@ class NioBot(nio.AsyncClient):
     def _get_id(obj) -> str:
         if hasattr(obj, "room_id"):
             return obj.room_id
+        if hasattr(obj, "user_id"):
+            return obj.user_id
         if hasattr(obj, "event_id"):
             return obj.event_id
         if isinstance(obj, str):
