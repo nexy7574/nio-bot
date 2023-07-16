@@ -128,7 +128,9 @@ def get_metadata_ffmpeg(file: typing.Union[str, pathlib.Path]) -> typing.Dict[st
     except subprocess.SubprocessError as e:
         raise MetadataDetectionException("Failed to get metadata for file.", exception=e)
     log.debug("ffprobe output (%d): %s", result.returncode, result.stdout)
-    return json.loads(result.stdout or '{}')
+    data = json.loads(result.stdout or '{}')
+    log.debug("parsed ffprobe output:\n%s", json.dumps(data, indent=4))
+    return data
 
 
 def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]:
@@ -172,6 +174,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
             "size": str(file.stat().st_size),
         }
     }
+    log.debug("Parsed identify output:\n%s", json.dumps(data, indent=4))
     return data
 
 
@@ -696,11 +699,13 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
             if height is None or width is None:
                 metadata = await run_blocking(get_metadata, file)
                 for stream in metadata["streams"]:
+                    log.debug("Found stream in image:\n%s", stream)
                     if stream["codec_type"] == "video":
                         if stream["codec_name"].lower() not in SUPPORTED_IMAGE_CODECS and unsafe is False:
-                            continue
-                        else:
-                            break
+                            warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_IMAGE_CODECS)
+                            warnings.warn(warning)
+                        log.debug("Selecting stream %r for image", stream)
+                        break
                 else:
                     raise ValueError("Unable to find an image stream in the given file. Are you sure its an image?")
                 # ffmpeg doesn't have an image type

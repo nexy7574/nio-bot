@@ -630,7 +630,7 @@ class NioBot(nio.AsyncClient):
         :param message: The message to edit.
         :param content: The new content of the message.
         :param message_type: The new type of the message (i.e. m.text, m.notice. Defaults to client.global_message_type)
-        :param clean_mentions: Whether or not to escape all mentions
+        :param clean_mentions: Whether to escape all mentions
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
