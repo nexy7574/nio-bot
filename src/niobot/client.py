@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import importlib
+import re
 import time
 import inspect
 import typing
@@ -92,8 +93,8 @@ class NioBot(nio.AsyncClient):
 
         if command_prefix == "/":
             self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
-        if " " in command_prefix:
-            raise RuntimeError("Command prefix cannot contain spaces.")
+        if re.match(r"\s", command_prefix):
+            raise RuntimeError("Command prefix cannot contain whitespace.")
 
         self.start_time: float | None = None
         help_cmd = Command(
@@ -129,6 +130,7 @@ class NioBot(nio.AsyncClient):
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
             maxlen=kwargs.pop("max_message_cache", 1000)
         )
+        self.is_ready = asyncio.Event()
         self._waiting_events = {}
 
         # noinspection PyTypeChecker
@@ -774,6 +776,7 @@ class NioBot(nio.AsyncClient):
         result = await self.sync(timeout=30000, full_state=True, set_presence="unavailable")
         if not isinstance(result, nio.SyncResponse):
             raise NioBotException("Failed to perform first sync.", result)
+        self.is_ready.set()
         self.dispatch("ready", result)
         self.log.info("Starting sync loop")
         try:
