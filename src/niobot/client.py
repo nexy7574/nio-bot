@@ -137,7 +137,7 @@ class NioBot(nio.AsyncClient):
         # noinspection PyTypeChecker
         self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
 
-    async def sync(self, *args, **kwargs):
+    async def sync(self, *args, **kwargs) -> nio.SyncResponse | nio.SyncError:
         sync = await super().sync(*args, **kwargs)
         if isinstance(sync, nio.SyncResponse):
             self._populate_dm_rooms(sync)
