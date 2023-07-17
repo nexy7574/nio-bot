@@ -4,6 +4,7 @@ This utility modules contains a handful of simple off-the-shelf parser for some 
 
 import re
 import typing
+import urllib.parse as urllib
 
 import nio
 
@@ -138,6 +139,7 @@ async def room_parser(ctx: "Context", arg: "Argument", value: str) -> nio.Matrix
         groups = m.groupdict()
         if "room_id" not in groups:
             raise CommandParserError(f"Invalid matrix.to link: {value} (no room).")
+        room_id = urllib.unquote(groups["room_id"])
         room = ctx.client.rooms.get(groups["room_id"])
     else:
         raise CommandParserError(f"Invalid room ID, alias, or matrix.to link: {value!r}.")
@@ -168,6 +170,8 @@ def event_parser(event_type: str = None) -> typing.Callable[
                 raise CommandParserError(f"Invalid matrix.to link: {value} (expected an event).")
             value = groups["event_id"]
             room_id = groups["room_id"]
+            value = urllib.unquote(value)
+            room_id = urllib.unquote(room_id)
 
         if value.startswith("$"):
             # from raw ID
