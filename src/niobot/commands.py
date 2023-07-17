@@ -7,8 +7,7 @@ import typing
 
 from .context import Context
 from .exceptions import *
-from .utils import force_await
-from .utils.checks import BUILTIN_MAPPING
+from .utils import force_await, BUILTIN_MAPPING
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
