@@ -278,7 +278,12 @@ class Command:
 
             self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
             try:
-                parsed_argument = argument.parser(ctx, argument, ctx.args[index])
+                parsed_argument = await force_await(
+                    argument.parser,
+                    ctx, 
+                    argument, 
+                    ctx.args[index]
+                )
             except Exception as e:
                 error = f"Error while parsing argument {argument.name}: {e}"
                 raise CommandArgumentsError(error) from e

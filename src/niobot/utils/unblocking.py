@@ -55,7 +55,9 @@ async def force_await(function: typing.Union[typing.Callable, typing.Coroutine],
     :param kwargs: The keyword arguments to pass to the function.
     :returns: The result of the function.
     """
-    if asyncio.iscoroutinefunction(function) or asyncio.iscoroutine(function):
+    if asyncio.iscoroutinefunction(function):
         return await function(*args, **kwargs)
+    elif asyncio.iscoroutine(function):
+        return await function
     else:
         return await run_blocking(function, *args, **kwargs)
