@@ -25,18 +25,6 @@ __all__ = (
 MATRIX_TO_REGEX = re.compile(
     r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/]+))?",
 )
-BUILTIN_MAPPING = {
-    bool: boolean_parser,
-    float: float_parser,
-    int: integer_parser,
-    str: str,
-    list: json_parser,
-    dict: json_parser,
-    nio.RoomMessageText: event_parser('m.room.message'),
-    nio.Event: event_parser(),
-    nio.MatrixRoom: room_parser
-}
-
 
 def boolean_parser(_: "Context", __, value: str) -> bool:
     """
@@ -196,3 +184,16 @@ def event_parser(event_type: str = None) -> typing.Callable[
             raise CommandParserError(f"Invalid event ID or matrix.to link: {value!r}.")
 
     return internal
+
+
+BUILTIN_MAPPING = {
+    bool: boolean_parser,
+    float: float_parser,
+    int: integer_parser,
+    str: str,
+    list: json_parser,
+    dict: json_parser,
+    nio.RoomMessageText: event_parser('m.room.message'),
+    nio.Event: event_parser(),
+    nio.MatrixRoom: room_parser
+}
