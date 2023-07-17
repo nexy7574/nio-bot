@@ -19,11 +19,23 @@ __all__ = (
     "integer_parser",
     "json_parser",
     "event_parser",
-    "room_parser"
+    "room_parser",
+    "BUILTIN_MAPPING",
 )
 MATRIX_TO_REGEX = re.compile(
     r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/]+))?",
 )
+BUILTIN_MAPPING = {
+    bool: boolean_parser,
+    float: float_parser,
+    int: integer_parser,
+    str: str,
+    list: json_parser,
+    dict: json_parser,
+    nio.RoomMessageText: event_parser('m.room.message'),
+    nio.Event: event_parser(),
+    nio.MatrixRoom: room_parser
+}
 
 
 def boolean_parser(_: "Context", __, value: str) -> bool:
@@ -157,7 +169,7 @@ def event_parser(event_type: str = None) -> typing.Callable[
     :param event_type: The event type to expect (such as m.room.message). If None, any event type is allowed.
     :return: The actual internal (async) parser.
     """
-    async def internal(ctx: Context, _, value: str) -> nio.Event:
+    async def internal(ctx: "Context", _, value: str) -> nio.Event:
         room_id = ctx.room.room_id
         if m := MATRIX_TO_REGEX.match(value):
             # matrix.to link

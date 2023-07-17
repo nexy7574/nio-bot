@@ -8,6 +8,7 @@ import typing
 from .context import Context
 from .exceptions import *
 from .utils import force_await
+from .utils.checks import BUILTIN_MAPPING
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -70,7 +71,10 @@ class Argument:
         self.extra = kwargs
         self.parser = parser
         if self.parser is ...:
-            self.parser = self.internal_parser
+            if self.type in BUILTIN_MAPPING:
+                self.parser = BUILTIN_MAPPING[self.type]
+            else:
+                self.parser = self.internal_parser
 
     def __repr__(self):
         return "<Argument name={0.name!r} type={0.type!r} default={0.default!r} required={0.required!r} " \
