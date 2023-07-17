@@ -194,7 +194,6 @@ BUILTIN_MAPPING = {
     bool: boolean_parser,
     float: float_parser,
     int: integer_parser,
-    str: str,
     list: json_parser,
     dict: json_parser,
     nio.RoomMessageText: event_parser('m.room.message'),

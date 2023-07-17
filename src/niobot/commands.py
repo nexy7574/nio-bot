@@ -59,6 +59,7 @@ class Argument:
             parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
             **kwargs
     ):
+        log = logging.getLogger(__name__)
         self.name = name
         self.type = arg_type
         self.description = description
@@ -71,9 +72,17 @@ class Argument:
         self.parser = parser
         if self.parser is ...:
             if self.type in BUILTIN_MAPPING:
+                log.info("Using builtin parser %r for %s", self.type)
                 self.parser = BUILTIN_MAPPING[self.type]
             else:
-                self.parser = self.internal_parser
+                for base in inspect.getmro(self.type):
+                    if base in BUILTIN_MAPPING:
+                        log.info("Using builtin parser %r for %s due to being a subclass", base, self.type)
+                        self.parser = BUILTIN_MAPPING[base]
+                        break
+                else:
+                    log.info("Using default parser for %s", self.type)
+                    self.parser = self.internal_parser
 
     def __repr__(self):
         return "<Argument name={0.name!r} type={0.type!r} default={0.default!r} required={0.required!r} " \
