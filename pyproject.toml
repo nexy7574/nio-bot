@@ -32,6 +32,8 @@ dev = [
     'mkdocstrings[python]',
     'mkdocs-git-revision-date-localized-plugin',
     'isort',
+    'build',
+    'pep440'
 ]
 
 [project.scripts]

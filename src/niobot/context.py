@@ -1,21 +1,18 @@
 import logging
 import time
+import typing
 
 import nio
-import typing
 
 from .utils.string_view import ArgumentView
 
 if typing.TYPE_CHECKING:
+    from .attachment import BaseAttachment
     from .client import NioBot
     from .commands import Command
-    from .attachment import BaseAttachment
 
 
-__all__ = (
-    "Context",
-    "ContextualResponse"
-)
+__all__ = ("Context", "ContextualResponse")
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +21,7 @@ class ContextualResponse:
     """Context class for managing replies.
 
     Usage of this function is not required, however it is a useful utility."""
+
     def __init__(self, ctx: "Context", response: nio.RoomSendResponse):
         self.ctx = ctx
         self._response = response
@@ -62,12 +60,7 @@ class ContextualResponse:
         :param kwargs: Any extra arguments to pass to Client.edit_message
         :return: self
         """
-        await self.ctx.client.edit_message(
-            self.ctx.room,
-            self._response.event_id,
-            content,
-            **kwargs
-        )
+        await self.ctx.client.edit_message(self.ctx.room, self._response.event_id, content, **kwargs)
         return self
 
     async def delete(self, reason: str = None) -> None:
@@ -77,23 +70,20 @@ class ContextualResponse:
         :param reason: An optional reason for the redaction
         :return: None, as there will be no more response.
         """
-        await self.ctx.client.delete_message(
-            self.ctx.room,
-            self._response.event_id,
-            reason=reason
-        )
+        await self.ctx.client.delete_message(self.ctx.room, self._response.event_id, reason=reason)
 
 
 class Context:
     """Event-based context for a command callback"""
+
     def __init__(
-            self,
-            _client: "NioBot",
-            room: nio.MatrixRoom,
-            event: nio.RoomMessageText,
-            command: "Command",
-            *,
-            invoking_string: str = None
+        self,
+        _client: "NioBot",
+        room: nio.MatrixRoom,
+        event: nio.RoomMessageText,
+        command: "Command",
+        *,
+        invoking_string: str = None,
     ):
         self._init_ts = time.time()
         self._client = _client
@@ -104,7 +94,7 @@ class Context:
         to_parse = event.body
         if invoking_string:
             try:
-                to_parse = event.body[len(invoking_string):]
+                to_parse = event.body[len(invoking_string) :]
             except IndexError:
                 to_parse = ""
         self._args = ArgumentView(to_parse)
@@ -122,11 +112,7 @@ class Context:
     def __eq__(self, other):
         if not isinstance(other, Context):
             return False
-        return (
-            self.room == other.room and
-            self.event == other.event and
-            self.command == other.command
-        )
+        return self.room == other.room and self.event == other.event and self.command == other.command
 
     @property
     def room(self) -> nio.MatrixRoom:
@@ -171,10 +157,5 @@ class Context:
         :param file: A file to reply with
         :return:
         """
-        result = await self.client.send_message(
-            self.room,
-            content,
-            file,
-            self.message
-        )
+        result = await self.client.send_message(self.room, content, file, self.message)
         return ContextualResponse(self, result)

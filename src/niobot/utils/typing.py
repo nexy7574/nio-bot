@@ -5,9 +5,7 @@ if typing.TYPE_CHECKING:
     from ..client import NioBot
 
 
-__all__ = (
-    "Typing",
-)
+__all__ = ("Typing",)
 
 
 class Typing:
@@ -19,6 +17,7 @@ class Typing:
     :param timeout: The timeout in seconds
     :param persistent: Whether to send a typing notification every `timeout` seconds, to keep the typing status active
     """
+
     def __init__(self, client: "NioBot", room_id: str, *, timeout: int = 30, persistent: bool = True):
         self.room_id = room_id
         self.client = client

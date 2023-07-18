@@ -1,12 +1,10 @@
 import logging
+
 # Inspiration from https://github.com/Pycord-Development/pycord/blob/36fea3/discord/ext/commands/view.py#L55
 
-__all__ = (
-    "QUOTES",
-    "ArgumentView"
-)
+__all__ = ("QUOTES", "ArgumentView")
 
-QUOTES = ['"', "'", '`']
+QUOTES = ['"', "'", "`"]
 
 log = logging.getLogger(__name__)
 
@@ -21,6 +19,7 @@ class ArgumentView:
 
     :param string: The string to parse
     """
+
     def __init__(self, string: str):
         self.source = string
         self.index = 0

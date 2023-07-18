@@ -3,7 +3,6 @@ import warnings
 
 import nio
 
-
 __all__ = (
     "NioBotException",
     "MessageException",
@@ -19,7 +18,7 @@ __all__ = (
     "CommandArgumentsError",
     "CheckFailure",
     "NotOwner",
-    "InsufficientPower"
+    "InsufficientPower",
 )
 
 
@@ -38,18 +37,19 @@ class NioBotException(Exception):
     :var exception: The exception that was raised, if available.
     :var original: The original response, or exception if response was not available.
     """
+
     message: str | None
     response: nio.ErrorResponse | None
     exception: BaseException | None
     original: nio.ErrorResponse | BaseException | None
 
     def __init__(
-            self,
-            message: str = None,
-            response: nio.ErrorResponse = None,
-            *,
-            exception: BaseException = None,
-            original: typing.Union[nio.ErrorResponse, BaseException] = None,
+        self,
+        message: str = None,
+        response: nio.ErrorResponse = None,
+        *,
+        exception: BaseException = None,
+        original: typing.Union[nio.ErrorResponse, BaseException] = None,
     ):
         if original:
             warnings.warn(DeprecationWarning("original is deprecated, use response or exception instead"))
@@ -101,6 +101,7 @@ class MediaCodecWarning(ResourceWarning):
     * aac/opus/vorbis/mp3/pcm_* audio
     * jpg/png/webp/avif/gif images
     """
+
     def __init__(self, codec: str, *supported: str):
         super().__init__(
             f"Codec {codec} is not supported by most clients. Use with caution.\n"
@@ -124,6 +125,7 @@ class CommandNotFoundError(CommandError):
     """
     Exception raised when a command is not found.
     """
+
     def __init__(self, command_name: str):
         super().__init__(f"Command {command_name} not found")
         self.command_name = command_name
@@ -139,6 +141,7 @@ class CommandDisabledError(CommandPreparationError):
     """
     Exception raised when a command is disabled.
     """
+
     def __init__(self, command):
         super().__init__(f"Command {command} is disabled")
 
@@ -163,11 +166,12 @@ class CheckFailure(CommandPreparationError):
 
     `CheckFailure` is often raised by the built-in checker when a check returns a falsy value without raising an error.
     """
+
     def __init__(
-            self,
-            check_name: str = None,
-            message: str = None,
-            exception: BaseException = None,
+        self,
+        check_name: str = None,
+        message: str = None,
+        exception: BaseException = None,
     ):
         if not message:
             message = f"Check {check_name} failed."
@@ -178,14 +182,17 @@ class CheckFailure(CommandPreparationError):
         return self.message or f"Check {self.check_name} failed."
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} check_name={self.check_name!r} message={self.message!r}" \
-               f" exception={self.exception!r}>"
+        return (
+            f"<{self.__class__.__name__} check_name={self.check_name!r} message={self.message!r}"
+            f" exception={self.exception!r}>"
+        )
 
 
 class NotOwner(CheckFailure):
     """
     Exception raised when the command invoker is not the owner of the bot.
     """
+
     def __init__(self, check_name: str = None, message: str = None, exception: BaseException = None):
         if not message:
             message = "You are not the owner of this bot."
@@ -196,14 +203,9 @@ class InsufficientPower(CheckFailure):
     """
     Exception raised when the command invoker does not have enough power to run the command.
     """
+
     def __init__(
-            self,
-            check_name: str = None,
-            message: str = None,
-            exception: BaseException = None,
-            *,
-            needed: int,
-            have: int
+        self, check_name: str = None, message: str = None, exception: BaseException = None, *, needed: int, have: int
     ):
         if not message:
             message = "Insufficient power level. Needed %d, have %d." % (needed, have)
@@ -214,6 +216,7 @@ class NotADirectRoom(CheckFailure):
     """
     Exception raised when the current room is not `m.direct` (a DM room)
     """
+
     def __init__(self, check_name: str = None, message: str = None, exception: BaseException = None):
         if not message:
             message = "This command can only be run in a direct message room."

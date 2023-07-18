@@ -2,25 +2,29 @@
 Matrix file attachments. Full e2ee support is implemented.
 """
 import abc
-import tempfile
-import warnings
-
-import nio
-import subprocess
-import json
+import enum
 import io
+import json
+import logging
 import os
 import pathlib
 import shutil
-import magic
+import subprocess
+import tempfile
 import typing
-import enum
-import aiofiles
-import logging
-import blurhash
+import warnings
 
+import aiofiles
+import blurhash
+import magic
+import nio
+
+from .exceptions import (
+    MediaCodecWarning,
+    MediaUploadException,
+    MetadataDetectionException,
+)
 from .utils import run_blocking
-from .exceptions import MediaUploadException, MetadataDetectionException, MediaCodecWarning
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -69,13 +73,7 @@ SUPPORTED_AUDIO_CODECS = [
 # All of the above codecs were played in Element Desktop. A bunch were cut out, as the list was far too long.
 # Realistically, I don't see the warning being useful to too many people, its literally only in to help people figure
 # out why their media isn't playing.
-SUPPORTED_IMAGE_CODECS = [
-    "mjpeg",
-    "gif",
-    "png",
-    "av1",
-    "webp"
-]
+SUPPORTED_IMAGE_CODECS = ["mjpeg", "gif", "png", "av1", "webp"]
 # Probably not all of them but close enough
 SUPPORTED_CODECS = SUPPORTED_VIDEO_CODECS + SUPPORTED_AUDIO_CODECS + SUPPORTED_IMAGE_CODECS
 
@@ -113,23 +111,13 @@ def get_metadata_ffmpeg(file: typing.Union[str, pathlib.Path]) -> typing.Dict[st
     """
     if not shutil.which("ffprobe"):
         raise FileNotFoundError("ffprobe is not installed. If it is, check your $PATH.")
-    command = [
-        "ffprobe",
-        "-of",
-        "json",
-        "-loglevel",
-        "9",
-        "-show_format",
-        "-show_streams",
-        "-i",
-        str(file)
-    ]
+    command = ["ffprobe", "-of", "json", "-loglevel", "9", "-show_format", "-show_streams", "-i", str(file)]
     try:
         result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
     except subprocess.SubprocessError as e:
         raise MetadataDetectionException("Failed to get metadata for file.", exception=e)
     log.debug("ffprobe output (%d): %s", result.returncode, result.stdout)
-    data = json.loads(result.stdout or '{}')
+    data = json.loads(result.stdout or "{}")
     log.debug("parsed ffprobe output:\n%s", json.dumps(data, indent=4))
     return data
 
@@ -146,17 +134,14 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     :return: A slimmed-down dictionary containing the metadata.
     """
     file = file.resolve(True)
-    command = [
-        "identify",
-        str(file)
-    ]
+    command = ["identify", str(file)]
     try:
         result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
     except subprocess.SubprocessError as e:
         raise MetadataDetectionException("Failed to get metadata for file.", exception=e)
     log.debug("identify output (%d): %s", result.returncode, result.stdout)
     stdout = result.stdout
-    stdout = stdout[len(str(file)) + 1:]
+    stdout = stdout[len(str(file)) + 1 :]
     img_format, img_size, *_ = stdout.split()
     data = {
         "streams": [
@@ -173,7 +158,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
             "filename": str(file),
             "format_long_name": img_format,
             "size": str(file.stat().st_size),
-        }
+        },
     }
     log.debug("Parsed identify output:\n%s", json.dumps(data, indent=4))
     return data
@@ -227,25 +212,10 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
     if not shutil.which("ffmpeg"):
         raise FileNotFoundError("ffmpeg is not installed. If it is, check your $PATH.")
     with tempfile.NamedTemporaryFile(suffix=f".{file_format}") as f:
-        command = [
-            "ffmpeg",
-            "-loglevel",
-            "9",
-            "-i",
-            str(file),
-            "-frames:v",
-            "1",
-            '-y',
-            '-strict',
-            '-2',
-            f.name
-        ]
-        log.debug("Extracting first frame of %r: %s", file, ' '.join(command))
+        command = ["ffmpeg", "-loglevel", "9", "-i", str(file), "-frames:v", "1", "-y", "-strict", "-2", f.name]
+        log.debug("Extracting first frame of %r: %s", file, " ".join(command))
         try:
-            log.debug(
-                "Extraction return code: %d",
-                subprocess.run(command, capture_output=True, check=True).returncode
-            )
+            log.debug("Extraction return code: %d", subprocess.run(command, capture_output=True, check=True).returncode)
         except subprocess.SubprocessError as e:
             raise MediaUploadException("Failed to extract first frame of video.", exception=e)
         f.seek(0)
@@ -318,11 +288,13 @@ def _size(file: pathlib.Path | io.BytesIO) -> int:
     return file.stat().st_size
 
 
-def which(file: io.BytesIO | pathlib.Path | str, mime_type: str = None) -> typing.Union[
+def which(
+    file: io.BytesIO | pathlib.Path | str, mime_type: str = None
+) -> typing.Union[
     typing.Type["FileAttachment"],
     typing.Type["ImageAttachment"],
     typing.Type["AudioAttachment"],
-    typing.Type["VideoAttachment"]
+    typing.Type["VideoAttachment"],
 ]:
     """
     Gets the correct attachment type for a file.
@@ -370,6 +342,7 @@ class AttachmentType(enum.Enum):
     :var VIDEO: A video file.
     :var IMAGE: An image file.
     """
+
     if typing.TYPE_CHECKING:
         FILE: "AttachmentType"
         AUDIO: "AttachmentType"
@@ -405,6 +378,7 @@ class BaseAttachment(abc.ABC):
     :ivar url: The URL of the uploaded file. This is set after the file is uploaded.
     :ivar keys: The encryption keys for the file. This is set after the file is uploaded.
     """
+
     if typing.TYPE_CHECKING:
         file: typing.Union[pathlib.Path, io.BytesIO]
         file_name: str
@@ -416,13 +390,13 @@ class BaseAttachment(abc.ABC):
         keys: typing.Dict[str, str] | None
 
     def __init__(
-            self,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            mime_type: str = None,
-            size_bytes: int = None,
-            *,
-            attachment_type: AttachmentType = AttachmentType.FILE
+        self,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        mime_type: str = None,
+        size_bytes: int = None,
+        *,
+        attachment_type: AttachmentType = AttachmentType.FILE,
     ):
         self.file = _to_path(file)
         self.file_name = self.file.name if isinstance(self.file, pathlib.Path) else file_name
@@ -436,8 +410,10 @@ class BaseAttachment(abc.ABC):
         self.keys = None
 
     def __repr__(self):
-        return "<{0.__class__.__name__} file={0.file!r} file_name={0.file_name!r} " \
-               "mime_type={0.mime_type!r} size={0.size!r} type={0.type!r}>".format(self)
+        return (
+            "<{0.__class__.__name__} file={0.file!r} file_name={0.file_name!r} "
+            "mime_type={0.mime_type!r} size={0.size!r} type={0.type!r}>".format(self)
+        )
 
     def as_body(self, body: str = None) -> dict:
         """
@@ -462,9 +438,9 @@ class BaseAttachment(abc.ABC):
 
     @classmethod
     async def from_file(
-            cls,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
+        cls,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
     ) -> "BaseAttachment":
         """
         Creates an attachment from a file.
@@ -489,10 +465,7 @@ class BaseAttachment(abc.ABC):
 
     @classmethod
     async def from_mxc(
-            cls,
-            client: "NioBot",
-            url: str, *,
-            force_write: bool | pathlib.Path = False
+        cls, client: "NioBot", url: str, *, force_write: bool | pathlib.Path = False
     ) -> "BaseAttachment":
         """
         Creates an attachment from an MXC URL.
@@ -519,10 +492,7 @@ class BaseAttachment(abc.ABC):
             save_to = force_write
         else:
             save_to = None
-        response: nio.DiskDownloadResponse | nio.MemoryDownloadResponse = await client.download(
-            url,
-            save_to=save_to
-        )
+        response: nio.DiskDownloadResponse | nio.MemoryDownloadResponse = await client.download(url, save_to=save_to)
         if isinstance(response, nio.MemoryDownloadResponse):
             file = io.BytesIO(response.body)
         else:
@@ -535,16 +505,16 @@ class BaseAttachment(abc.ABC):
         return self.size
 
     def size_as(
-            self,
-            unit: typing.Literal[
-                'b',
-                'kb',
-                'kib',
-                'mb',
-                'mib',
-                'gb',
-                'gib',
-            ]
+        self,
+        unit: typing.Literal[
+            "b",
+            "kb",
+            "kib",
+            "mb",
+            "mib",
+            "gb",
+            "gib",
+        ],
     ) -> typing.Union[int, float]:
         """
         Helper function to convert the size of this attachment into a different unit.
@@ -570,13 +540,13 @@ class BaseAttachment(abc.ABC):
         :return: The converted size
         """
         multi = {
-            'b': 1,
-            'kb': 1000,
-            'kib': 1024,
-            'mb': 1000 ** 2,
-            'mib': 1024 ** 2,
-            'gb': 1000 ** 3,
-            'gib': 1024 ** 3,
+            "b": 1,
+            "kb": 1000,
+            "kib": 1024,
+            "mb": 1000**2,
+            "mib": 1024**2,
+            "gb": 1000**3,
+            "gib": 1024**3,
         }
         return self.size_bytes / multi[unit]
 
@@ -638,6 +608,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
     :param xyz_amorgan_blurhash: The blurhash of the attachment
     :ivar xyz_amorgan_blurhash: The blurhash of the attachment
     """
+
     if typing.TYPE_CHECKING:
         xyz_amorgan_blurhash: str
 
@@ -647,10 +618,10 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
 
     @classmethod
     async def from_file(
-            cls,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            xyz_amorgan_blurhash: str | bool = None,
+        cls,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        xyz_amorgan_blurhash: str | bool = None,
     ) -> "SupportXYZAmorganBlurHash":
         file = _to_path(file)
         if isinstance(file, io.BytesIO):
@@ -701,12 +672,13 @@ class FileAttachment(BaseAttachment):
     :param mime_type: The mime type of the file
     :param size_bytes: The size of the file in bytes
     """
+
     def __init__(
-            self,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            mime_type: str = None,
-            size_bytes: int = None,
+        self,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        mime_type: str = None,
+        size_bytes: int = None,
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.FILE)
 
@@ -727,16 +699,17 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
     :ivar info: A dict of info about the image. Contains `h`, `w`, `mimetype`, and `size` keys.
     :ivar thumbnail: A thumbnail of the image. NOT a blurhash.
     """
+
     def __init__(
-            self,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            mime_type: str = None,
-            size_bytes: int = None,
-            height: int = None,
-            width: int = None,
-            thumbnail: "ImageAttachment" = None,
-            xyz_amorgan_blurhash: str = None,
+        self,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        mime_type: str = None,
+        size_bytes: int = None,
+        height: int = None,
+        width: int = None,
+        thumbnail: "ImageAttachment" = None,
+        xyz_amorgan_blurhash: str = None,
     ):
         super().__init__(
             file,
@@ -744,7 +717,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
             mime_type,
             size_bytes,
             xyz_amorgan_blurhash=xyz_amorgan_blurhash,
-            attachment_type=AttachmentType.IMAGE
+            attachment_type=AttachmentType.IMAGE,
         )
         self.info = {
             "h": height,
@@ -756,15 +729,15 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
 
     @classmethod
     async def from_file(
-            cls,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            height: int = None,
-            width: int = None,
-            thumbnail: "ImageAttachment" = None,
-            generate_blurhash: bool = True,
-            *,
-            unsafe: bool = False
+        cls,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        height: int = None,
+        width: int = None,
+        thumbnail: "ImageAttachment" = None,
+        generate_blurhash: bool = True,
+        *,
+        unsafe: bool = False,
     ) -> "ImageAttachment":
         """
         Generates an image attachment
@@ -833,24 +806,19 @@ class VideoAttachment(BaseAttachment):
     :param duration: The duration of the video in seconds
     :param thumbnail: A thumbnail of the video. NOT a blurhash.
     """
+
     def __init__(
-            self,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            mime_type: str = None,
-            size_bytes: int = None,
-            duration: int = None,
-            height: int = None,
-            width: int = None,
-            thumbnail: "ImageAttachment" = None,
+        self,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        mime_type: str = None,
+        size_bytes: int = None,
+        duration: int = None,
+        height: int = None,
+        width: int = None,
+        thumbnail: "ImageAttachment" = None,
     ):
-        super().__init__(
-            file,
-            file_name,
-            mime_type,
-            size_bytes,
-            attachment_type=AttachmentType.VIDEO
-        )
+        super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.VIDEO)
         self.info = {
             "duration": round(duration * 1000) if duration else None,
             "h": height,
@@ -862,14 +830,14 @@ class VideoAttachment(BaseAttachment):
 
     @classmethod
     async def from_file(
-            cls,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            duration: int = None,
-            height: int = None,
-            width: int = None,
-            thumbnail: ImageAttachment | typing.Literal[False] = None,
-            generate_blurhash: bool = True,
+        cls,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        duration: int = None,
+        height: int = None,
+        width: int = None,
+        thumbnail: ImageAttachment | typing.Literal[False] = None,
+        generate_blurhash: bool = True,
     ) -> "VideoAttachment":
         """
         Generates a video attachment
@@ -907,8 +875,11 @@ class VideoAttachment(BaseAttachment):
                 metadata = await run_blocking(get_metadata, file)
                 for stream in metadata["streams"]:
                     if stream["codec_type"] == "video":
-                        if stream["codec_name"].lower() not in SUPPORTED_VIDEO_CODECS \
-                                or not stream["codec_name"].startswith("pcm_"):  # usually, pcm is supported.
+                        if stream["codec_name"].lower() not in SUPPORTED_VIDEO_CODECS or not stream[
+                            "codec_name"
+                        ].startswith(
+                            "pcm_"
+                        ):  # usually, pcm is supported.
                             warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_VIDEO_CODECS)
                             warnings.warn(warning)
                         height = stream["height"]
@@ -965,21 +936,16 @@ class AudioAttachment(BaseAttachment):
     """
     Represents an audio attachment.
     """
+
     def __init__(
-            self,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            mime_type: str = None,
-            size_bytes: int = None,
-            duration: int = None,
+        self,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        mime_type: str = None,
+        size_bytes: int = None,
+        duration: int = None,
     ):
-        super().__init__(
-            file,
-            file_name,
-            mime_type,
-            size_bytes,
-            attachment_type=AttachmentType.AUDIO
-        )
+        super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.AUDIO)
         self.info = {
             "duration": round(duration * 1000) if duration else None,
             "mimetype": mime_type,
@@ -988,10 +954,10 @@ class AudioAttachment(BaseAttachment):
 
     @classmethod
     async def from_file(
-            cls,
-            file: typing.Union[str, io.BytesIO, pathlib.Path],
-            file_name: str = None,
-            duration: int = None,
+        cls,
+        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file_name: str = None,
+        duration: int = None,
     ) -> "AudioAttachment":
         """
         Generates an audio attachment

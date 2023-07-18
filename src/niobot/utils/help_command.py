@@ -1,10 +1,10 @@
+import re
 import textwrap
 import typing
-import re
 
 if typing.TYPE_CHECKING:
-    from ..context import Context
     from ..commands import Command
+    from ..context import Context
 
 
 __all__ = (
@@ -13,19 +13,19 @@ __all__ = (
     "get_short_description",
     "get_long_description",
     "help_command_callback",
-    "clean_output"
+    "clean_output",
 )
 
 
 def clean_output(
-        text: str,
-        *,
-        escape_user_mentions: bool = True,
-        escape_room_mentions: bool = True,
-        escape_room_references: bool = False,
-        escape_all_periods: bool = False,
-        escape_all_at_signs: bool = False,
-        escape_method: typing.Callable[[str], str] = None
+    text: str,
+    *,
+    escape_user_mentions: bool = True,
+    escape_room_mentions: bool = True,
+    escape_room_references: bool = False,
+    escape_all_periods: bool = False,
+    escape_all_at_signs: bool = False,
+    escape_method: typing.Callable[[str], str] = None,
 ) -> str:
     """
     Escapes given text and sanitises it, ready for outputting to the user.
@@ -48,6 +48,7 @@ def clean_output(
     :return: The cleaned text
     """
     if escape_method is None:
+
         def escape_method(x: str) -> str:
             return "\u200b".join(x.split())
 
@@ -70,9 +71,7 @@ def format_command_name(command: "Command") -> str:
     if not command.aliases:
         return command.name
     else:
-        return "[{}]".format(
-            "|".join([command.name, *command.aliases])
-        )
+        return "[{}]".format("|".join([command.name, *command.aliases]))
 
 
 def format_command_line(prefix: str, command: "Command") -> str:
@@ -109,9 +108,7 @@ def get_long_description(command: "Command") -> str:
     else:
         description = command.description
 
-    return "\n".join(
-        "> " + x for x in description.splitlines()
-    )
+    return "\n".join("> " + x for x in description.splitlines())
 
 
 async def help_command_callback(ctx: "Context"):
@@ -136,8 +133,5 @@ async def help_command_callback(ctx: "Context"):
 
         display = format_command_line(ctx.client.command_prefix, command)
         description = get_long_description(command)
-        lines = [
-            "* {}:".format(display),
-            *description.splitlines()
-        ]
+        lines = ["* {}:".format(display), *description.splitlines()]
         await ctx.respond(clean_output("\n".join(lines)))

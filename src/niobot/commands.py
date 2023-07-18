@@ -1,26 +1,19 @@
-import logging
 import inspect
+import logging
 import os
+import typing
 
 import nio
-import typing
 
 from .context import Context
 from .exceptions import *
-from .utils import force_await, BUILTIN_MAPPING
+from .utils import BUILTIN_MAPPING, force_await
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
 
 
-__all__ = (
-    "Command",
-    "command",
-    "event",
-    "Module",
-    "Argument",
-    "check"
-)
+__all__ = ("Command", "command", "event", "Module", "Argument", "check")
 
 _T = typing.TypeVar("_T")
 
@@ -48,16 +41,17 @@ class Argument:
     :param default: The default value of the argument
     :param required: Whether the argument is required or not. Defaults to True if default is ..., False otherwise.
     """
+
     def __init__(
-            self,
-            name: str,
-            arg_type: _T,
-            *,
-            description: str = None,
-            default: typing.Any = ...,
-            required: bool = ...,
-            parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
-            **kwargs
+        self,
+        name: str,
+        arg_type: _T,
+        *,
+        description: str = None,
+        default: typing.Any = ...,
+        required: bool = ...,
+        parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
+        **kwargs,
     ):
         log = logging.getLogger(__name__)
         self.name = name
@@ -85,8 +79,10 @@ class Argument:
                     self.parser = self.internal_parser
 
     def __repr__(self):
-        return "<Argument name={0.name!r} type={0.type!r} default={0.default!r} required={0.required!r} " \
-               "parser={0.parser!r}>".format(self)
+        return (
+            "<Argument name={0.name!r} type={0.type!r} default={0.default!r} required={0.required!r} "
+            "parser={0.parser!r}>".format(self)
+        )
 
     @staticmethod
     def internal_parser(_: Context, arg: "Argument", value: str) -> typing.Optional[_T]:
@@ -140,23 +136,19 @@ class Command:
     :param hidden:
         Whether the command is hidden or not. If hidden, the command will be always hidden on the auto-generated help.
     """
-    _CTX_ARG = Argument(
-        "ctx",
-        Context,
-        description="The context for the command",
-        parser=lambda ctx, *_: ctx
-    )
+
+    _CTX_ARG = Argument("ctx", Context, description="The context for the command", parser=lambda ctx, *_: ctx)
 
     def __init__(
-            self,
-            name: str,
-            callback: callable,
-            *,
-            aliases: list[str] = None,
-            description: str = None,
-            disabled: bool = False,
-            hidden: bool = False,
-            **kwargs
+        self,
+        name: str,
+        callback: callable,
+        *,
+        aliases: list[str] = None,
+        description: str = None,
+        disabled: bool = False,
+        hidden: bool = False,
+        **kwargs,
     ):
         self.__runtime_id = os.urandom(16).hex()
         self.log = logging.getLogger(__name__)
@@ -261,10 +253,7 @@ class Command:
             for chk_func in self.checks:
                 name = self.callback.__nio_checks__[chk_func]
                 try:
-                    cr = await force_await(
-                        chk_func,
-                        ctx
-                    )
+                    cr = await force_await(chk_func, ctx)
                 except CheckFailure:
                     raise  # re-raise existing check failures
                 except Exception as e:
@@ -287,12 +276,7 @@ class Command:
 
             self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
             try:
-                parsed_argument = await force_await(
-                    argument.parser,
-                    ctx, 
-                    argument, 
-                    ctx.args[index]
-                )
+                parsed_argument = await force_await(argument.parser, ctx, argument, ctx.args[index])
             except Exception as e:
                 error = f"Error while parsing argument {argument.name}: {e}"
                 raise CommandArgumentsError(error) from e
@@ -307,11 +291,7 @@ class Command:
             return self.callback(*parsed_args)
 
     def construct_context(
-            self,
-            client: "NioBot",
-            room: nio.MatrixRoom,
-            src_event: nio.RoomMessageText,
-            meta: str
+        self, client: "NioBot", room: nio.MatrixRoom, src_event: nio.RoomMessageText, meta: str
     ) -> Context:
         return Context(client, room, src_event, self, invoking_string=meta)
 
@@ -339,30 +319,29 @@ def command(name: str = None, **kwargs) -> callable:
 
 
 def check(
-        function: typing.Callable[[Context], typing.Union[bool, typing.Coroutine[None, None, bool]]],
-        name: str = None,
+    function: typing.Callable[[Context], typing.Union[bool, typing.Coroutine[None, None, bool]]],
+    name: str = None,
 ) -> callable:
     """
-    Allows you to register checks in modules.
+        Allows you to register checks in modules.
 
-    ```python
-    @niobot.command()
-    @niobot.check(my_check_func, name="My Check")
-    async def my_command(ctx: niobot.Context):
-        pass
-    ```
+        ```python
+        @niobot.command()
+        @niobot.check(my_check_func, name="My Check")
+        async def my_command(ctx: niobot.Context):
+            pass
+        ```
 
-    :param function: The function to register as a check
-    :param name: A human-readable name for the check. Defaults to function.__name__
-    :return: The decorated function.
-=    """
+        :param function: The function to register as a check
+        :param name: A human-readable name for the check. Defaults to function.__name__
+        :return: The decorated function.
+    ="""
+
     def decorator(command_function):
         if hasattr(command_function, "__nio_checks__"):
             command_function.__nio_checks__[function] = name or function.__name__
         else:
-            command_function.__nio_checks__ = {
-                function: name or function.__name__
-            }
+            command_function.__nio_checks__ = {function: name or function.__name__}
         return command_function
 
     decorator.internal = function
@@ -376,13 +355,11 @@ def event(name: str) -> callable:
     :param name: the name of the event (no ``on_`` prefix)
     :return:
     """
+
     def decorator(func):
-        func.__nio_event__ = {
-            "function": func,
-            "name": name,
-            "_module_instance": None
-        }
+        func.__nio_event__ = {"function": func, "name": name, "_module_instance": None}
         return func
+
     return decorator
 
 
@@ -407,6 +384,7 @@ class Module:
         # Due to the fact events are less stateful than commands, we need to manually inject self for events
         async def wrapper(*args, **kwargs):
             return await function(self, *args, **kwargs)
+
         return wrapper
 
     def __setup__(self):

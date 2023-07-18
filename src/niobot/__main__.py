@@ -1,13 +1,13 @@
 import asyncio
 import datetime
+import importlib.metadata
+import logging
 import os
 import pathlib
 import re
 import sys
-import logging
 
 import niobot
-import importlib.metadata
 
 try:
     import click
@@ -62,9 +62,7 @@ bot.run(password="{password}")
 
 @click.group()
 @click.option(
-    "--log-level", "-L",
-    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
-    default="WARNING"
+    "--log-level", "-L", type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]), default="WARNING"
 )
 @click.pass_context
 def cli_root(ctx, log_level: str):
@@ -82,11 +80,7 @@ def cli_root(ctx, log_level: str):
     else:
         logger.debug("Version: %s", __version__)
 
-    ctx.obj = {
-        "timestamp": datetime.datetime.now(),
-        "version_info": __version__,
-        "version_tuple": __version_tuple__
-    }
+    ctx.obj = {"timestamp": datetime.datetime.now(), "version_info": __version__, "version_tuple": __version_tuple__}
 
 
 @cli_root.command()
@@ -97,6 +91,7 @@ def version(ctx, no_colour: bool):
     """Shows version information."""
     logger.info("Gathering version info...")
     import platform
+
     from nio.crypto import ENCRYPTION_ENABLED
 
     logger.debug("Attempting to resolve matrix-nio via importlib...")
@@ -108,11 +103,7 @@ def version(ctx, no_colour: bool):
 
     if not nio_version:
         logger.debug("Attempting to resolve matrix-nio version information via pip...")
-        command = [
-            "pip",
-            "show",
-            "matrix-nio"
-        ]
+        command = ["pip", "show", "matrix-nio"]
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
             logger.critical("Failed to resolve nio version information via pip.")
@@ -123,7 +114,7 @@ def version(ctx, no_colour: bool):
 
     t = ctx.obj["version_tuple"]
     if len(t) > 3:
-        t3 = t[3] or 'gN/A.d%s' % (datetime.datetime.now().strftime("%Y%m%d"))
+        t3 = t[3] or "gN/A.d%s" % (datetime.datetime.now().strftime("%Y%m%d"))
         try:
             t3_commit, t3_date_raw = t3.split(".", 1)
         except ValueError:
@@ -136,19 +127,14 @@ def version(ctx, no_colour: bool):
         mtime = pathlib.Path(__file__).stat().st_mtime
         t3_date = datetime.datetime.fromtimestamp(mtime)
 
-    bot_version_deep = {
-        "version": "%d.%d" % (t[0], t[1]),
-        "build": t[2],
-        "commit": t3_commit,
-        "date": t3_date
-    }
+    bot_version_deep = {"version": "%d.%d" % (t[0], t[1]), "build": t[2], "commit": t3_commit, "date": t3_date}
 
     bot_version = "%s (Version %s, build %s, commit %r, built %r)" % (
         ctx.obj["version_info"],
         bot_version_deep["version"],
         bot_version_deep["build"],
         bot_version_deep["commit"][1:],
-        bot_version_deep["date"].strftime("%d/%m/%Y")
+        bot_version_deep["date"].strftime("%d/%m/%Y"),
     )
 
     _os = platform.platform()
@@ -161,7 +147,7 @@ def version(ctx, no_colour: bool):
             _os += " ({0}/{1} - {2})".format(
                 _os_info.get("NAME", "Unknown"),
                 _os_info.get("VERSION", "Unknown"),
-                _os_info.get("PRETTY_NAME", "Unknown")
+                _os_info.get("PRETTY_NAME", "Unknown"),
             )
 
     lines = [
@@ -184,8 +170,7 @@ def version(ctx, no_colour: bool):
             click.echo("%s: %s" % tuple(line)[:2])
         else:
             click.echo(
-                click.style(line[0], fg="cyan") + ": " +
-                click.style(line[1], fg="green" if line[2](line[1]) else "red")
+                click.style(line[0], fg="cyan") + ": " + click.style(line[1], fg="green" if line[2](line[1]) else "red")
             )
     click.echo()
 
@@ -194,8 +179,9 @@ def version(ctx, no_colour: bool):
 @click.argument("homeserver")
 def test_homeserver(homeserver: str):
     """Walks through resolving and testing a given homeserver."""
-    import httpx
     import urllib.parse
+
+    import httpx
 
     if homeserver.startswith("@"):
         _, homeserver = homeserver.split(":", 1)
@@ -215,10 +201,7 @@ def test_homeserver(homeserver: str):
     logger.info("Trying well-known of %r...", parsed.netloc)
     base_url = None
     try:
-        response = httpx.get(
-            "https://%s/.well-known/matrix/client" % parsed.netloc,
-            timeout=30
-        )
+        response = httpx.get("https://%s/.well-known/matrix/client" % parsed.netloc, timeout=30)
     except httpx.HTTPError as e:
         logger.critical("Failed to get well-known: %r", e)
         return
@@ -234,7 +217,7 @@ def test_homeserver(homeserver: str):
             )
 
         if response.status_code != 404:
-            if response.status_code != 200 or len(response.content or b'') == 0:
+            if response.status_code != 200 or len(response.content or b"") == 0:
                 logger.critical("Well-known returned non-404, but no content. Failing.")
                 return
             else:
@@ -257,10 +240,7 @@ def test_homeserver(homeserver: str):
     logger.info("Using %r as homeserver.", base_url)
     logger.info("Validating homeserver...")
     try:
-        response = httpx.get(
-            base_url + "/_matrix/client/versions",
-            timeout=30
-        )
+        response = httpx.get(base_url + "/_matrix/client/versions", timeout=30)
     except httpx.HTTPError as e:
         logger.critical("Failed to get versions: %r", e)
         return
@@ -283,9 +263,12 @@ def test_homeserver(homeserver: str):
 @click.option("--password", "-P", default=None, help="The password to use (will be prompted if not given)")
 @click.option("--homeserver", "-H", default=None, help="The homeserver to use (will be prompted if not given)")
 @click.option(
-    "--device-id", "-D", "--session", "--session-id",
+    "--device-id",
+    "-D",
+    "--session",
+    "--session-id",
     default=None,
-    help="The device ID to use (will be prompted if not given)"
+    help="The device ID to use (will be prompted if not given)",
 )
 @click.pass_context
 def get_access_token(ctx, username: str, password: str, homeserver: str, device_id: str):
@@ -308,8 +291,7 @@ def get_access_token(ctx, username: str, password: str, homeserver: str, device_
 
     if not device_id:
         device_id = click.prompt(
-            "Device ID (a memorable display name for this login, such as 'bot-production')",
-            default=os.uname().nodename
+            "Device ID (a memorable display name for this login, such as 'bot-production')", default=os.uname().nodename
         )
 
     click.secho("Resolving homeserver... ", fg="cyan", nl=False)
@@ -327,14 +309,11 @@ def get_access_token(ctx, username: str, password: str, homeserver: str, device_
             homeserver + "/_matrix/client/r0/login",
             json={
                 "type": "m.login.password",
-                "identifier": {
-                    "type": "m.id.user",
-                    "user": username
-                },
+                "identifier": {"type": "m.id.user", "user": username},
                 "password": password,
                 "device_id": device_id,
-                "initial_device_display_name": device_id
-            }
+                "initial_device_display_name": device_id,
+            },
         )
         status_code = response.status_code
         if status_code == 429:
@@ -366,29 +345,31 @@ def new():
 @click.option("--owner-id", "-O", prompt=True)
 @click.pass_context
 def bot(
-        ctx,
-        path: str,
-        password: str,
-        homeserver: str,
-        user_id: str,
-        device_id: str,
-        store_path: str,
-        prefix: str,
-        owner_id: str
+    ctx,
+    path: str,
+    password: str,
+    homeserver: str,
+    user_id: str,
+    device_id: str,
+    store_path: str,
+    prefix: str,
+    owner_id: str,
 ):
     """Creates a new bot with two basic commands from the template. Easy quickstart."""
     with open(path, "w") as f:
-        f.write(DEFAULT_BOT_TEMPLATE.format(
-            password=password,
-            homeserver=homeserver,
-            user_id=user_id,
-            device_id=device_id,
-            store_path=store_path,
-            prefix=prefix,
-            owner_id=owner_id,
-            timestamp=datetime.datetime.utcnow().isoformat(),
-            version_info=ctx.obj["version_info"]
-        ))
+        f.write(
+            DEFAULT_BOT_TEMPLATE.format(
+                password=password,
+                homeserver=homeserver,
+                user_id=user_id,
+                device_id=device_id,
+                store_path=store_path,
+                prefix=prefix,
+                owner_id=owner_id,
+                timestamp=datetime.datetime.utcnow().isoformat(),
+                version_info=ctx.obj["version_info"],
+            )
+        )
     click.echo("Created bot file at %r" % path)
 
 

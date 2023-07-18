@@ -2,7 +2,6 @@ from ..commands import check
 from ..context import Context
 from ..exceptions import CheckFailure, InsufficientPower, NotOwner
 
-
 __all__ = (
     "is_owner",
     "is_dm",
@@ -19,12 +18,14 @@ def is_owner(*extra_owner_ids, name: str = None):
     :return: True - the check passed.
     :raises NotOwner: The sender is not the owner of the bot and is not in the given IDs.
     """
+
     def predicate(ctx):
         if ctx.message.sender in extra_owner_ids:
             return True
         if ctx.message.sender != ctx.bot.owner_id:
             raise NotOwner(name)
         return True
+
     return check(predicate, name)
 
 
@@ -36,6 +37,7 @@ def is_dm(allow_dual_membership: bool = False, name: str = None):
     :param name: The human name of this check.
     :return:
     """
+
     def predicate(ctx: "Context"):
         if ctx.room.room_id in ctx.client.direct_rooms:
             return True
@@ -44,6 +46,7 @@ def is_dm(allow_dual_membership: bool = False, name: str = None):
             if members == 2 and ctx.client.user_id in ctx.room.users:
                 return True
         raise CheckFailure(name)
+
     return check(predicate, name)
 
 
@@ -56,12 +59,14 @@ def sender_has_power(level: int, room_creator_bypass: bool = False, name: str = 
     :param name: The human name of this check
     :return:
     """
+
     def predicate(ctx):
         if ctx.message.sender == ctx.room.creator and room_creator_bypass:
             return True
         if (sp := ctx.room.power_levels.get(ctx.message.sender, -999)) < level:
             raise InsufficientPower(name, needed=level, have=sp)
         return True
+
     return check(predicate, name)
 
 
@@ -73,8 +78,10 @@ def client_has_power(level: int, name: str = None):
     :param name: The human name of this check
     :return:
     """
+
     def predicate(ctx):
         if (sp := ctx.room.power_levels.get(ctx.client.user_id, -999)) < level:
             raise InsufficientPower(name, needed=level, have=sp)
         return True
+
     return check(predicate, name)

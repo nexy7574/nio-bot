@@ -1,18 +1,21 @@
 from nio import *
+
 from . import utils
-from .utils import *
+from .attachment import *
 from .client import *
 from .commands import *
 from .context import *
 from .exceptions import *
-from .attachment import *
+from .utils import *
 
 try:
     import __version__ as version_meta
 except ImportError:
+
     class __VersionMeta:
         __version__ = "0.0.dev0+gFFFFFF"
         __version_tuple__ = (0, 0, "dev0", "gFFFFFF")
+
     version_meta = __VersionMeta()
 
 __author__ = "Nexus <pip@nexy7574.co.uk>"

@@ -9,9 +9,10 @@ import urllib.parse as urllib
 import nio
 
 from ..exceptions import CommandParserError
+
 if typing.TYPE_CHECKING:
-    from ..context import Context
     from ..commands import Argument
+    from ..context import Context
 
 
 __all__ = (
@@ -26,6 +27,7 @@ __all__ = (
 MATRIX_TO_REGEX = re.compile(
     r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/]+))?",
 )
+
 
 def boolean_parser(_: "Context", __, value: str) -> bool:
     """
@@ -42,11 +44,11 @@ def boolean_parser(_: "Context", __, value: str) -> bool:
     :return: The parsed boolean
     """
     value = value.lower()
-    if value in ('1', 'y', 'yes', 'true', 'on'):
+    if value in ("1", "y", "yes", "true", "on"):
         return True
-    if value in ('0', 'n', 'no', 'false', 'off'):
+    if value in ("0", "n", "no", "false", "off"):
         return False
-    raise CommandParserError(f'Invalid boolean value: {value}. Should be a sensible value, such as 1, yes, false.')
+    raise CommandParserError(f"Invalid boolean value: {value}. Should be a sensible value, such as 1, yes, false.")
 
 
 def float_parser(_: "Context", __: "Argument", value: str) -> float:
@@ -59,12 +61,12 @@ def float_parser(_: "Context", __: "Argument", value: str) -> float:
     try:
         return float(value)
     except ValueError:
-        raise CommandParserError(f'Invalid float value: {value}. Should be a number.')
+        raise CommandParserError(f"Invalid float value: {value}. Should be a number.")
 
 
-def integer_parser(allow_floats: bool = False, base: int = 10) -> typing.Callable[
-    ["Context", "Argument", str], typing.Union[int, float]
-]:
+def integer_parser(
+    allow_floats: bool = False, base: int = 10
+) -> typing.Callable[["Context", "Argument", str], typing.Union[int, float]]:
     """
     Converts a given value into an integer, or a float if allowed.
 
@@ -73,6 +75,7 @@ def integer_parser(allow_floats: bool = False, base: int = 10) -> typing.Callabl
     :return: The parsed number.
     :raises CommandParserError: if the value is not a valid number.
     """
+
     def __parser(_, __, v) -> typing.Union[int, float]:
         try:
             return int(v, base)
@@ -82,12 +85,14 @@ def integer_parser(allow_floats: bool = False, base: int = 10) -> typing.Callabl
                     return float_parser(_, __, v)
                 except CommandParserError as e2:
                     e = e2
-            raise CommandParserError(f'Invalid integer value: {v}. Should be a number.', exception=e)
+            raise CommandParserError(f"Invalid integer value: {v}. Should be a number.", exception=e)
 
     return __parser
 
 
-def json_parser(_: "Context", __: "Argument", value: str) -> typing.Union[list, dict, str, int, float, type(None), bool]:
+def json_parser(
+    _: "Context", __: "Argument", value: str
+) -> typing.Union[list, dict, str, int, float, type(None), bool]:
     """
     Converts a given string into a JSON object.
 
@@ -107,7 +112,7 @@ def json_parser(_: "Context", __: "Argument", value: str) -> typing.Union[list, 
     try:
         return json.loads(value)
     except json.JSONDecodeError as e:
-        raise CommandParserError(f'Invalid JSON value: {value}. Should be a valid JSON object.', exception=e)
+        raise CommandParserError(f"Invalid JSON value: {value}. Should be a valid JSON object.", exception=e)
 
 
 async def room_parser(ctx: "Context", arg: "Argument", value: str) -> nio.MatrixRoom:
@@ -149,16 +154,16 @@ async def room_parser(ctx: "Context", arg: "Argument", value: str) -> nio.Matrix
     return room
 
 
-def event_parser(event_type: str = None) -> typing.Callable[
-    ["Context", "Argument", str],
-    typing.Coroutine[typing.Any, typing.Any, nio.Event]
-]:
+def event_parser(
+    event_type: str = None,
+) -> typing.Callable[["Context", "Argument", str], typing.Coroutine[typing.Any, typing.Any, nio.Event]]:
     """
     Parses an event reference from either its ID, or matrix.to link.
 
     :param event_type: The event type to expect (such as m.room.message). If None, any event type is allowed.
     :return: The actual internal (async) parser.
     """
+
     async def internal(ctx: "Context", _, value: str) -> nio.Event:
         room_id = ctx.room.room_id
         if m := MATRIX_TO_REGEX.match(value):
@@ -196,7 +201,7 @@ BUILTIN_MAPPING = {
     int: integer_parser,
     list: json_parser,
     dict: json_parser,
-    nio.RoomMessageText: event_parser('m.room.message'),
+    nio.RoomMessageText: event_parser("m.room.message"),
     nio.Event: event_parser(),
-    nio.MatrixRoom: room_parser
+    nio.MatrixRoom: room_parser,
 }

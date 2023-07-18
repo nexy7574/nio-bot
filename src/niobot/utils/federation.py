@@ -1,8 +1,7 @@
 import json
-
-import aiohttp
 from urllib.parse import urlparse
 
+import aiohttp
 
 __all__ = ["resolve_homeserver"]
 
@@ -15,6 +14,7 @@ async def resolve_homeserver(domain: str) -> str:
     :return: The resolved homeserver
     """
     from niobot import __user_agent__
+
     if not domain.startswith("https://"):
         domain = f"https://{domain}"
     domain = urlparse(domain).netloc

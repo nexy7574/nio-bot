@@ -1,8 +1,7 @@
 import asyncio
-import typing
 import functools
+import typing
 from typing import Any
-
 
 __all__ = ("run_blocking", "force_await")
 
