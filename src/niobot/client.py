@@ -150,7 +150,7 @@ class NioBot(nio.AsyncClient):
                     prev = event.prev_content or {}
                     if event.content.get("is_direct", prev.get("is_direct", False)):
                         self.log.debug("Found DM room in sync: %s", room_id)
-                        self.direct_rooms[room_id] = self.rooms[room_id]
+                        self.direct_rooms[event.state_key] = self.rooms[room_id]
 
     async def _auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
         """Callback for auto-joining rooms"""
@@ -574,9 +574,46 @@ class NioBot(nio.AsyncClient):
             previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
         return previous
 
+    async def get_dm_room(self, user: nio.MatrixUser | str) -> nio.MatrixRoom:
+        """
+        Gets (or creates) a room that is a private DM room for the given user.
+
+        !!! danger "Unreliable detection"
+            Due to an [issue in `matrix-nio`](https://github.com/poljar/matrix-nio/issues/421), some clients
+            (as per the matrix spec) do not issue the flag that indicates a room is a DM room while inviting users.
+
+            Due to the lack of a native solution in matrix-nio, `niobot` has a very hacky workaround that hooks into
+            the timeline for rooms, and manually detects DM rooms.
+            Due to this being a workaround, not a full solution, this may be unreliable. You should not rely on this
+            function to reliably return an existing DM room, or a valid DM room at all.
+
+        :param user: The User or user ID to fetch a DM room for.
+        :return: The DM room, either pre-existing, or a new one.
+        :raises NioBotException: A room could not be created.
+        :raises RuntimeError: The room was created, but was not in the internal cache.
+        """
+        user_id = self._get_id(user)
+        if user_id in self.direct_rooms:
+            room = self.direct_rooms[user_id]
+            self.log.debug("%r already has a DM room: %r. Returning that.", user_id, room)
+        else:
+            self.log.debug("%r does not have a DM room. Creating one.", user_id)
+            room = await self.room_create(
+                is_direct=True,
+                invite=[user_id]
+            )
+            if not isinstance(room, nio.RoomCreateResponse):
+                raise NioBotException("Unable to create DM room for %r: %r" % (user_id, room), response=room)
+            self.log.debug("Created DM room for %r: %r", user_id, room)
+            room = self.rooms.get(room.room_id)
+            if not room:
+                raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room.room_id)
+            self.direct_rooms[user_id] = room
+        return room
+
     async def send_message(
             self,
-            room: nio.MatrixRoom | str,
+            room: nio.MatrixRoom | nio.MatrixUser | str,
             content: str = None,
             file: BaseAttachment = None,
             reply_to: nio.RoomMessageText | str = None,
@@ -586,7 +623,12 @@ class NioBot(nio.AsyncClient):
         """
         Sends a message.
 
-        :param room: The room to send this message to
+        !!! tip "New! DMs!"
+            As of v1.1.0, you can now send messages to users (either a [`nio.MatrixUser`][] or a user ID string),
+            and a direct message room will automatically be created for you if one does not exist, using an existing
+            one if it does.
+
+        :param room: The room or to send this message to
         :param content: The content to send. Cannot be used with file.
         :param file: A file to send, if any. Cannot be used with content.
         :param reply_to: A message to reply to.
@@ -601,6 +643,11 @@ class NioBot(nio.AsyncClient):
             raise ValueError("You are missing required libraries to use attachments.")
         if not any((content, file)):
             raise ValueError("You must specify either content or file.")
+
+        if isinstance(room, nio.MatrixUser) or (isinstance(room, str) and room.startswith("@")):
+            room = await self.get_dm_room(room)
+
+        self.log.debug("Send message resolved room to %r", room)
 
         body = {
             "msgtype": message_type or self.global_message_type,
@@ -771,6 +818,12 @@ class NioBot(nio.AsyncClient):
     async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:
         """Starts the bot, running the sync loop."""
         if password or sso_token:
+            if password:
+                self.log.critical(
+                    "Logging in with a password is insecure, slow, and clunky. "
+                    "An access token will be issued after logging in, please use that. For more information, see:"
+                    "https://eekim10.github.io/niobot/guides/faq.html#why-is-logging-in-with-a-password-so-bad"
+                )
             self.log.info("Logging in with a password or SSO token")
             login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
             if isinstance(login_response, nio.LoginError):
