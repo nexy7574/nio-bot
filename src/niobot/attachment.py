@@ -23,6 +23,7 @@ from .exceptions import (
     MediaCodecWarning,
     MediaUploadException,
     MetadataDetectionException,
+    MediaDownloadException,
 )
 from .utils import run_blocking
 
@@ -484,20 +485,12 @@ class BaseAttachment(abc.ABC):
         :param force_write: Whether to force writing downloaded attachments to a temporary file.
         :return: The downloaded and probed attachment.
         """
-        if not hasattr(nio, "DiskDownloadResponse"):
-            raise NotImplementedError("Missing required upstream change to matrix-nio. Feature unavailable.")
-        if force_write is True:
-            save_to = tempfile.TemporaryDirectory()  # save_to will automatically create a file
-        elif force_write:
-            save_to = force_write
-        else:
-            save_to = None
-        response: nio.DiskDownloadResponse | nio.MemoryDownloadResponse = await client.download(url, save_to=save_to)
-        if isinstance(response, nio.MemoryDownloadResponse):
-            file = io.BytesIO(response.body)
-        else:
-            file = response.body
-        return await cls.from_file(file, response.filename)
+        if force_write is not None:
+            raise NotImplementedError("force_write is not implemented yet.")
+        response = await client.download(url)
+        if isinstance(response, nio.DownloadResponse):
+            return await cls.from_file(io.BytesIO(response.body), response.filename)
+        raise MediaDownloadException("Failed to download attachment.", response)
 
     @property
     def size_bytes(self) -> int:
