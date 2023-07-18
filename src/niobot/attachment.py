@@ -42,6 +42,7 @@ __all__ = (
     "VideoAttachment",
     "AudioAttachment",
     "AttachmentType",
+    "which",
     "SUPPORTED_CODECS",
     "SUPPORTED_VIDEO_CODECS",
     "SUPPORTED_AUDIO_CODECS",
@@ -317,6 +318,49 @@ def _size(file: pathlib.Path | io.BytesIO) -> int:
     return file.stat().st_size
 
 
+def which(file: io.BytesIO | pathlib.Path | str, mime_type: str = None) -> typing.Union[
+    typing.Type["FileAttachment"],
+    typing.Type["ImageAttachment"],
+    typing.Type["AudioAttachment"],
+    typing.Type["VideoAttachment"]
+]:
+    """
+    Gets the correct attachment type for a file.
+
+    This function will provide either Image/Video/Audio attachment where possible, or FileAttachment otherwise.
+
+    For example, `image/png` (from `my_image.png`) will see `image/` and will return [`ImageAttachment`][niobot.ImageAttachment],
+    and `video/mp4` (from `my_video.mp4`) will see `video/` and will return [`VideoAttachment`][niobot.VideoAttachment].
+
+    If the mime type cannot be mapped to an attachment type, this function will return [`FileAttachment`][niobot.FileAttachment].
+
+    ??? example "Usage"
+        ```python
+        import niobot
+        import pathlib
+
+        my_file = pathlib.Path("/tmp/foo.bar")
+        attachment = await niobot.which(my_file).from_file(my_file)
+        # or
+        attachment_type = niobot.which(my_file)  # one of the BaseAttachment subclasses
+        attachment = await attachment_type.from_file(my_file)
+        ```
+
+    :param file: The file or BytesIO to investigate
+    :param mime_type: The optional pre-detected mime type. If this is not provided, it will be detected.
+    :return: The correct type for this attachment (not instantiated)
+    """
+    values = {
+        "image": ImageAttachment,
+        "audio": AudioAttachment,
+        "video": VideoAttachment,
+    }
+    if not mime_type:
+        mime_type = detect_mime_type(file)
+    mime_start = mime_type.split("/")[0].lower()
+    return values.get(mime_start, FileAttachment)
+
+
 class AttachmentType(enum.Enum):
     """
     Enumeration containing the different types of media.
@@ -443,6 +487,48 @@ class BaseAttachment(abc.ABC):
         size = _size(file)
         return cls(file, file_name, mime_type, size)
 
+    @classmethod
+    async def from_mxc(
+            cls,
+            client: "NioBot",
+            url: str, *,
+            force_write: bool | pathlib.Path = False
+    ) -> "BaseAttachment":
+        """
+        Creates an attachment from an MXC URL.
+
+        !!! warning "This function loads the entire attachment into memory."
+            If you are downloading large attachments, you should set `force_write` to `True`, otherwise the downloaded
+            attachment is pushed into an [`io.BytesIO`][] object (for speed benefits), which can cause memory issues
+            on low-memory systems.
+
+            Bear in mind that most attachments are <= 100 megabytes. Also, forcing temp file writes may not be useful
+            unless your temporary file directory is backed by a physical disk, because otherwise you're just loading
+            into RAM with extra steps (for example, by default, `/tmp` is in-memory on linux, but `/var/tmp` is not).
+
+        :param client: The current client instance (used to download the attachment)
+        :param url: The MXC:// url to download
+        :param force_write: Whether to force writing downloaded attachments to a temporary file.
+        :return: The downloaded and probed attachment.
+        """
+        if not hasattr(nio, "DiskDownloadResponse"):
+            raise NotImplementedError("Missing required upstream change to matrix-nio. Feature unavailable.")
+        if force_write is True:
+            save_to = tempfile.TemporaryDirectory()  # save_to will automatically create a file
+        elif force_write:
+            save_to = force_write
+        else:
+            save_to = None
+        response: nio.DiskDownloadResponse | nio.MemoryDownloadResponse = await client.download(
+            url,
+            save_to=save_to
+        )
+        if isinstance(response, nio.MemoryDownloadResponse):
+            file = io.BytesIO(response.body)
+        else:
+            file = response.body
+        return await cls.from_file(file, response.filename)
+
     @property
     def size_bytes(self) -> int:
         """Returns the size of this attachment in bytes."""
@@ -463,16 +549,20 @@ class BaseAttachment(abc.ABC):
         """
         Helper function to convert the size of this attachment into a different unit.
 
-        ??? note "Example"
+        ??? example "Example"
             ```python
             >>> import niobot
-            >>> attachment = niobot.FileAttachment("test.txt", "text/plain")
+            >>> attachment = niobot.FileAttachment("background.png", "image/png")
             >>> attachment.size_bytes
-            1024
+            329945
             >>> attachment.size_as("kb")
-            1.024
+            329.945
+            >>> attachment.size_as("kib")
+            322.2119140625
             >>> attachment.size_as("mb")
-            0.001024
+            0.329945
+            >>> attachment.size_as("mib")
+            0.31466007232666016
             ```
             *Note that due to the nature of floats, precision may be lost, especially the larger in units you go.*
 
@@ -495,7 +585,7 @@ class BaseAttachment(abc.ABC):
         Uploads the file to matrix.
 
         :param client: The client to upload
-        :param encrypted: Whether to encrypt the thumbnail or not
+        :param encrypted: Whether to encrypt the attachment or not
         :return: The attachment
         """
         if self.keys or self.url:
