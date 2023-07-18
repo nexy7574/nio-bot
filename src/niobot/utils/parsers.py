@@ -25,7 +25,7 @@ __all__ = (
     "BUILTIN_MAPPING",
 )
 MATRIX_TO_REGEX = re.compile(
-    r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/]+))?",
+    r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/?&#]+))?(?P<query_string>\?.+)?",
 )
 
 
