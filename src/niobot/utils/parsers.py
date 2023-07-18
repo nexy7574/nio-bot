@@ -5,6 +5,7 @@ This utility modules contains a handful of simple off-the-shelf parser for some 
 import re
 import typing
 import urllib.parse as urllib
+from collections import namedtuple
 
 import nio
 
@@ -23,10 +24,17 @@ __all__ = (
     "event_parser",
     "room_parser",
     "BUILTIN_MAPPING",
+    "MATRIX_TO_REGEX",
+    "MatrixToLink",
+    "MatrixMXCUrl",
+    "matrix_to_parser",
+    "mxc_url_parser",
 )
 MATRIX_TO_REGEX = re.compile(
-    r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/?&#]+))?(?P<query_string>\?.+)?",
+    r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/?&#]+))?(?P<qs>([&?](via=[^&]+))*)?",
 )
+MatrixToLink = namedtuple("MatrixToLink", ("room", "event", "query"), defaults=(None, None, None))
+MatrixMXCUrl = namedtuple("MatrixMXCUrl", ("server", "media_id"), defaults=(None, None))
 
 
 def boolean_parser(_: "Context", __, value: str) -> bool:
@@ -195,6 +203,84 @@ def event_parser(
     return internal
 
 
+def matrix_to_parser(
+    require_room: bool = True, require_event: bool = False, allow_user_as_room: bool = True
+) -> typing.Callable[
+    ["Context", "Argument", str],
+    typing.Coroutine[
+        typing.Any, typing.Any, typing.NamedTuple[MatrixToLink, typing.Union[nio.MatrixRoom, nio.Event | None]]
+    ],
+]:
+    """
+    Advanced multi-functional parser for matrix.to links.
+
+    This parser takes an https://matrix.to link, and breaks it down into room-id and event-id where applicable. It then
+    returns all of these as a namedtuple.
+
+    :param require_room: Whether to require the room part of this url to be present
+    :param require_event: Whether to require the event part of this url to be present
+    :param allow_user_as_room: Whether to allow user links as room links
+    :return: The actual internal (async) parser.
+    """
+
+    async def internal(ctx: "Context", _, value: str) -> MatrixToLink:
+        if m := MATRIX_TO_REGEX.match(value):
+            # matrix.to link
+            groups = m.groupdict()
+            event_id = groups.get("event_id", "")
+            room_id = groups.get("room_id", "")
+            event_id = urllib.unquote(event_id)
+            room_id = urllib.unquote(room_id)
+
+            if require_room and not room_id:
+                raise CommandParserError(f"Invalid matrix.to link: {value} (no room).")
+            if require_event and not event_id:
+                raise CommandParserError(f"Invalid matrix.to link: {value} (no event).")
+
+            if room_id.startswith("@") and not allow_user_as_room:
+                raise CommandParserError(f"Invalid matrix.to link: {value} (expected room, got user).")
+
+            if room_id.startswith("@"):
+                room = await ctx.client.get_dm_room(room_id)
+            else:
+                room = ctx.client.rooms.get(room_id)
+
+            if room is None:
+                raise CommandParserError(f"No room with that ID, alias, or matrix.to link found.")
+
+            if event_id:
+                event: nio.RoomGetEventResponse | nio.RoomGetEventError = await ctx.client.room_get_event(
+                    room_id, event_id
+                )
+                if not isinstance(event, nio.RoomGetEventResponse):
+                    raise CommandParserError(f"Invalid event ID: {event_id}.", response=event)
+                event: nio.Event = event.event
+            else:
+                event: None = None
+            return MatrixToLink(room, event, groups.get("qs"))
+        else:
+            raise CommandParserError(f"Invalid matrix.to link: {value!r}.")
+
+    return internal
+
+
+def mxc_url_parser(_, __, value: str) -> MatrixMXCUrl:
+    """
+    Parses an MXC URL. Basically just a validator
+    """
+    if not value.startswith("mxc://"):
+        raise CommandParserError(f"Invalid MXC URL: {value!r}.")
+    parsed = urllib.urlparse(value, "mxc://", allow_fragments=False)
+    if not parsed.path:
+        raise CommandParserError(f"Invalid MXC URL: {value!r} (missing media ID).")
+    if parsed.path == "/":
+        raise CommandParserError(f"Invalid MXC URL: {value!r} (no media ID).")
+    if not parsed.netloc:
+        raise CommandParserError(f"Invalid MXC URL: {value!r} (no server).")
+
+    return MatrixMXCUrl(parsed.netloc, parsed.path[1:])
+
+
 BUILTIN_MAPPING = {
     bool: boolean_parser,
     float: float_parser,
@@ -204,4 +290,5 @@ BUILTIN_MAPPING = {
     nio.RoomMessageText: event_parser("m.room.message"),
     nio.Event: event_parser(),
     nio.MatrixRoom: room_parser,
+    MatrixToLink: matrix_to_parser(require_event=True),
 }

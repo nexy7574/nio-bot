@@ -7,7 +7,7 @@ import nio
 
 from .context import Context
 from .exceptions import *
-from .utils import BUILTIN_MAPPING, force_await
+from .utils import force_await
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -65,6 +65,8 @@ class Argument:
         self.extra = kwargs
         self.parser = parser
         if self.parser is ...:
+            from .utils import BUILTIN_MAPPING
+
             if self.type in BUILTIN_MAPPING:
                 log.info("Using builtin parser %r for %s", self.type)
                 self.parser = BUILTIN_MAPPING[self.type]
