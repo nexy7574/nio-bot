@@ -30,20 +30,6 @@ You can see it live [here](https://matrix.to/#/@jimmy-bot:nexy7574.co.uk)
 time using it.)
 
 ## Installation
-### Versions
-NioBot uses SemVer (semantic versioning) for versioning. This means that the version number is split into three parts:
-`Major`, `Minor` and `Patch`. As per the versioning, `Major` versions are not guaranteed to be backwards compatible,
-however `Minor` and `Patch` versions are.
-
-This means that there will always be a new `Major` increment when a backwards incompatible change is made, and a new
-`Minor` increment when a backwards compatible change is made. `Patch` versions are almost always bug fixes, and are
-always backwards compatible. If a bug fix is not backwards compatible, a new `Major` version will be released.
-
-Major changes may be pushed into their own branches for "feature previews". These branches will be prefixed with
-`feature/`, and will be merged into `master` when they are ready for release. For example, `feature/my-thing`,
-which means you can install it using `niobot @ git+https://github.com/EEKIM10/niobot.git@feature/my-thing`.
-This minimises the number of breaking releases.
-
 ### Release versions
 You can use the [PyPi](https://pypi.org/project/niobot) releases:
 ```python

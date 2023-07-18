@@ -23,7 +23,16 @@ Documentation = "https://eekim10.github.io/niobot/"
 [project.optional-dependencies]
 e2ee = ['matrix-nio[e2e]']
 cli = ['httpx', 'click']
-dev = ['mkdocs', 'mkdocs-material', 'black', 'mkdocs-autorefs', 'mkdocs-glightbox', 'mkdocstrings[python]']
+dev = [
+    'mkdocs',
+    'mkdocs-material',
+    'black',
+    'mkdocs-autorefs',
+    'mkdocs-glightbox',
+    'mkdocstrings[python]',
+    'mkdocs-git-revision-date-localized-plugin',
+    'isort',
+]
 
 [project.scripts]
 niocli = "niobot.__main__:cli_root [cli]"
@@ -33,3 +42,12 @@ write_to = "src/niobot/__version__.py"
 
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]
+include = 'src/niobot(/utils)?/.+\.py'
+
+[tool.isort]
+profile = "black"
+src_paths = ["src/niobot"]

@@ -5,6 +5,12 @@ theme:
     scheme: slate
   features:
     - content.tabs.link
+    - content.action.edit
+    - navigation.footer
+    - header.autohide
+    - search.share
+    - navigation.instant
+    - navigation.tracking
 markdown_extensions:
   - admonition
   - def_list
@@ -13,7 +19,9 @@ markdown_extensions:
   - abbr
   - toc:
       permalink: true
-
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.highlight:
@@ -27,6 +35,7 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
 repo_url: https://github.com/EEKIM10/niobot
+edit_uri: edit/master/docs/
 plugins:
   - search
   - autorefs
@@ -52,3 +61,11 @@ plugins:
             - https://docs.python.org/3/objects.inv
             - https://matrix-nio.readthedocs.io/en/latest/objects.inv
             - https://docs.aiohttp.org/en/stable/objects.inv
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+      type: datetime
+extra:
+  social:
+    - icon: simple/matrix
+      link: https://matrix.to/#/#niobot:nexy7574.co.uk
