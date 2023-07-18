@@ -8,13 +8,16 @@ import json
 import logging
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import tempfile
 import typing
+import urllib.parse
 import warnings
 
 import aiofiles
+import aiohttp
 import blurhash
 import magic
 import nio
@@ -491,6 +494,69 @@ class BaseAttachment(abc.ABC):
         if isinstance(response, nio.DownloadResponse):
             return await cls.from_file(io.BytesIO(response.body), response.filename)
         raise MediaDownloadException("Failed to download attachment.", response)
+
+    @classmethod
+    async def from_http(
+        cls,
+        url: str,
+        client_session: aiohttp.ClientSession = None,
+        *,
+        force_write: bool | pathlib.Path = False,
+    ) -> "BaseAttachment":
+        """
+        Creates an attachment from an HTTP URL.
+
+        This is not necessarily just for images, video, or other media - it can be used for any HTTP resource.
+
+        :param url: The http/s URL to download
+        :param client_session: The aiohttp client session to use. If not specified, a new one will be created.
+        :param force_write: Whether to force stream the download to the file system, instead of into memory.
+            See: [niobot.BaseAttachment.from_mxc][]
+        :return: The downloaded and probed attachment.
+        :raises: niobot.MediaDownloadException if the download failed.
+        :raises: aiohttp.ClientError if the download failed.
+        :raises niobot.MediaDetectionException if the MIME type could not be detected.
+        """
+        if not client_session:
+            from . import __user_agent__
+
+            async with aiohttp.ClientSession(headers={"User-Agent": __user_agent__}) as session:
+                return await cls.from_http(url, session, force_write=force_write)
+
+        async with client_session.get(url) as response:
+            try:
+                response.raise_for_status()
+            except aiohttp.ClientResponseError as err:
+                raise MediaDownloadException("Failed to download attachment.", exception=err)
+            save_path = None
+            if force_write is not None:
+                if force_write is True:
+                    tempdir = tempfile.gettempdir()
+                elif isinstance(force_write, pathlib.Path):
+                    tempdir = force_write
+
+                file_name = response.headers.get("Content-Disposition")
+                if file_name:
+                    file_name = re.search(r"filename=\"(.+)\"", file_name)
+                    if file_name:
+                        file_name = file_name.group(1)
+
+                if not file_name:
+                    u = urllib.parse.urlparse(url)
+                    file_name = os.path.basename(u.path)
+
+                if os.path.isdir(tempdir):
+                    save_path = os.path.join(tempdir, file_name)
+                else:
+                    save_path = tempdir
+
+            if save_path is not None:
+                async with aiofiles.open(save_path, "wb") as fh:
+                    async for chunk in response.content.iter_chunked(1024):
+                        await fh.write(chunk)
+                return await cls.from_file(save_path, file_name)
+            else:
+                return await cls.from_file(io.BytesIO(await response.read()), file_name)
 
     @property
     def size_bytes(self) -> int:
