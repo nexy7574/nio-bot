@@ -13,7 +13,7 @@ async def run_blocking(function: typing.Callable, *args: Any, **kwargs: Any) -> 
     You should use this for any long-running functions that may take a long time to respond that are not coroutines
     that you can await. For example, running a subprocess.
 
-    ??? note "Example"
+    ??? example
         ```py
         import asyncio
         import subprocess

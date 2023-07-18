@@ -54,6 +54,10 @@ class NioBot(nio.AsyncClient):
         owner_id: str = None,
         **kwargs,
     ):
+        try:
+            self.loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self.loop = None
         self.log = logging.getLogger(__name__)
         if store_path:
             if not os.path.exists(store_path):
@@ -774,6 +778,7 @@ class NioBot(nio.AsyncClient):
 
     async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:
         """Starts the bot, running the sync loop."""
+        self.loop = asyncio.get_event_loop()
         if password or sso_token:
             if password:
                 self.log.critical(

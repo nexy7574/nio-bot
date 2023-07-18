@@ -223,8 +223,8 @@ For example:
 ```bash
 (venv) [me@host test-niobot]$ niocli get-access-token
 User ID (@username:homeserver.tld): @test:matrix.org
-Password (will not echo): 
-Device ID (a memorable display name for this login, such as 'bot-production') [host]: 
+Password (will not echo):
+Device ID (a memorable display name for this login, such as 'bot-production') [host]:
 Resolving homeserver... OK
 Getting access token... OK
 Access token: syt_<...>
@@ -257,7 +257,7 @@ Bot is ready!
     This often results in a LOT of IO, and a lot of network waiting, etc.
 
     You can speed up this process in the future by:
-    
+
     * Making sure you have `store_path` and a valid store in your configuration. Stores mean that the bot doesn't have
       to re-sync everything every time it starts up.
     * Using an access token instead of a password. This means that the bot doesn't have to log in, and can just start
@@ -305,7 +305,7 @@ Then, you can run `!help` to get a list of commands, and `!help <command>` to ge
     import config
 
     logging.basicConfig(level=logging.INFO, filename="bot.log")
-    
+
     bot = niobot.NioBot(
         homeserver=config.HOMESERVER,
         user_id=config.USER_ID,
@@ -316,18 +316,18 @@ Then, you can run `!help` to get a list of commands, and `!help <command>` to ge
     )
     # We also want to load `fun.py`'s commands before starting:
     bot.mount_module("fun")
-    
+
     @bot.on_event("ready")
     async def on_ready(_):
         # That first argument is needed as the first result of the sync loop is passed to ready. Without it, this event
         # will fail to fire, and will cause a potentially catasrophic failure.
         print("Bot is ready!")
-    
-    
+
+
     @bot.command()
     async def ping(ctx):  # can be invoked with "!ping"
         await ctx.reply("Pong!")
-    
+
     bot.run(access_token=config.ACCESS_TOKEN)
     ```
 
@@ -339,8 +339,36 @@ Then, you can run `!help` to get a list of commands, and `!help <command>` to ge
     class MyFunModule(niobot.Module):  # subclassing niobot.Module is mandatory for auto-detection.
         def __init__(self, bot):
             self.bot = bot  # bot is the NioBot instance you made in main.py!
-    
+
         @niobot.command()
         async def hello(self, ctx):
             await ctx.reply("Hello %s!" % ctx.event.sender)
     ```
+
+## Why is logging in with a password so bad?
+
+You may get a notice in your console when you try to log in with a password.
+
+This is because logging in with a password is actually an awful idea.
+It will create an entirely new session, 9 times out of 10 a hard-coded password, can cause issues with e2ee, and is
+generally just a bad idea.
+
+What you **should** do instead is get an access token.
+
+If you already know how to get yours, that's great! Otherwise, `niocli` has the solution:
+
+```bash
+$ niocli get-access-token
+```
+
+This will log into the account when prompted, and will grab you an access token, spitting it out into your terminal.
+
+From there, you can replace `bot.run(password="...")` with `bot.run(access_token="...")`, and you're good to go!
+
+!!! tip
+    You'll also notice that the bot starts up in a matter of seconds when using an access token.
+    This is because the client has already logged in before, so rather than having to sync the entire state and history,
+    it only downloads and syncs new events and data.
+
+    In comparison to using a password, which creates a new session, meaning the client has to download and sync the
+    entire history yet again.
