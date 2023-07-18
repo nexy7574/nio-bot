@@ -26,8 +26,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pytest pip
-        pip install -r requirements.txt
-    - name: Test metadata
+        python -m pip install --upgrade pytest pip wheel setuptools
+        pip install -r requirements.txt build
+    - name: build
       run: |
-        python3 src/niobot/setup.py test -m -s
+        python3 -m built
