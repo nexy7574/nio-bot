@@ -30,4 +30,4 @@ jobs:
         pip install -r requirements.txt build
     - name: build
       run: |
-        python3 -m built
+        python3 -m build
