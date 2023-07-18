@@ -7,7 +7,9 @@ __all__ = (
     "NioBotException",
     "MessageException",
     "LoginException",
+    "MediaException",
     "MediaUploadException",
+    "MediaDownloadException",
     "MediaCodecWarning",
     "MetadataDetectionException",
     "CommandError",
@@ -61,6 +63,21 @@ class NioBotException(Exception):
         if self.original is None and self.message is None:
             raise ValueError("If there is no error history, at least a human readable message should be provided.")
 
+    def bottom_of_chain(self, other: Exception | nio.ErrorResponse = None) -> BaseException | nio.ErrorResponse:
+        """Recursively checks the `original` attribute of the exception until it reaches the bottom of the chain.
+
+        This function finds you the absolute first exception that was raised.
+
+        :param other: The other exception to recurse down. If None, defaults to the exception this method is called on.
+        :returns: The bottom of the chain exception."""
+        other = other or self
+        if hasattr(other, "original") and other.original is not None:
+            try:
+                return self.bottom_of_chain(other.original)
+            except RecursionError:  # what a deeply nested error??
+                return other
+        return other
+
     def __str__(self) -> str:
         """Returns a human-readable version of the exception."""
         return self.message or str(self.original)
@@ -82,9 +99,21 @@ class LoginException(NioBotException):
     """
 
 
-class MediaUploadException(MessageException):
+class MediaException(MessageException):
+    """
+    Exception for media-related errors.
+    """
+
+
+class MediaUploadException(MediaException):
     """
     Exception for media-uploading related errors
+    """
+
+
+class MediaDownloadException(MediaException):
+    """
+    Exception for media-downloading related errors
     """
 
 
@@ -109,7 +138,7 @@ class MediaCodecWarning(ResourceWarning):
         )
 
 
-class MetadataDetectionException(MediaUploadException):
+class MetadataDetectionException(MediaException):
     """
     Exception raised when metadata detection fails. Most of the time, this is an ffmpeg-related error
     """
