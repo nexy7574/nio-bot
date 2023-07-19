@@ -598,7 +598,7 @@ class NioBot(nio.AsyncClient):
         Sends a message.
 
         !!! tip "New! DMs!"
-            As of v1.1.0, you can now send messages to users (either a [`nio.MatrixUser`][] or a user ID string),
+            As of v1.1.0, you can now send messages to users (either a [nio.MatrixUser][] or a user ID string),
             and a direct message room will automatically be created for you if one does not exist, using an existing
             one if it does.
 
