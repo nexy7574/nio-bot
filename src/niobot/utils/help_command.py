@@ -1,6 +1,7 @@
 import re
 import textwrap
 import typing
+import warnings
 
 if typing.TYPE_CHECKING:
     from ..commands import Command
@@ -13,6 +14,7 @@ __all__ = (
     "get_short_description",
     "get_long_description",
     "help_command_callback",
+    "default_help_command",
     "clean_output",
 )
 
@@ -111,7 +113,7 @@ def get_long_description(command: "Command") -> str:
     return "\n".join("> " + x for x in description.splitlines())
 
 
-async def help_command_callback(ctx: "Context"):
+async def default_help_command(ctx: "Context"):
     """Displays help text"""
     lines = []
     if not ctx.args:
@@ -135,3 +137,12 @@ async def help_command_callback(ctx: "Context"):
         description = get_long_description(command)
         lines = ["* {}:".format(display), *description.splitlines()]
         await ctx.respond(clean_output("\n".join(lines)))
+
+
+def help_command_callback(ctx: "Context"):
+    """Default help command callback"""
+    warnings.warn(
+        "help_command_callback is deprecated and will be removed in v1.2.0, please use default_help_command instead",
+        DeprecationWarning,
+    )
+    return default_help_command(ctx)

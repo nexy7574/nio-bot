@@ -19,7 +19,7 @@ except ImportError:
 from .commands import Command, Module
 from .exceptions import *
 from .utils import Typing, force_await, run_blocking
-from .utils.help_command import help_command_callback
+from .utils.help_command import default_help_command
 
 __all__ = ("NioBot",)
 
@@ -94,8 +94,20 @@ class NioBot(nio.AsyncClient):
 
         self.start_time: float | None = None
         help_cmd = Command(
-            "help", help_command_callback, aliases=["h"], description="Shows a list of commands for this bot"
+            "help", default_help_command, aliases=["h"], description="Shows a list of commands for this bot"
         )
+        if kwargs.get("help_command"):
+            cmd = kwargs.pop("help_command")
+            if isinstance(cmd, Command):
+                help_cmd = cmd
+            elif asyncio.iscoroutinefunction(cmd) or inspect.isfunction(cmd):
+                self.log.warning(
+                    "Manually changing default help command callback to %r. Please consider passing your own"
+                    " Command instance instead."
+                )
+                help_cmd.callback = cmd
+            else:
+                raise TypeError("help_command must be a Command instance or a coroutine/function.")
         self._commands = {"help": help_cmd, "h": help_cmd}
         self._modules = {}
         self._events = {}
