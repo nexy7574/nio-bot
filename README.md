@@ -1,5 +1,5 @@
 # NioBot
-A simple, easy to use python Matrix bot library, based on the excellent 
+A simple, easy to use python Matrix bot library, based on the excellent
 [matrix-nio](https://pypi.org/project/matrix-nio/) library.
 
 NioBot is designed to have a similar (as similar as reasonably possible) design and feel to the
@@ -10,7 +10,7 @@ Please note that there *will* be teething problems, and as such some advanced fe
 available, as with any client.
 
 ## Need help?
-Take a look at the [docs!](https://eekim10.github.io/niobot), or 
+Take a look at the [docs!](https://eekim10.github.io/niobot), or
 [![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#niobot:nexy7574.co.uk)
 (dedicated support room)
 
@@ -49,7 +49,7 @@ You can figure out how to install it in other ways.
 
 ## Features
 NioBot aims to be as easy to use as possible, so form is preferred over function.
-Some features you'd normally expect may not be implemented (yet, feel free to open a pull request!) or may not work as 
+Some features you'd normally expect may not be implemented (yet, feel free to open a pull request!) or may not work as
 intended or how you'd expect, however as with any matrix client.
 
 ## Quickstart
@@ -114,7 +114,7 @@ bot.run(password="password")
 When you call `mount_module`, it effectively calls `import module` under the hood, and then does one of the following:
 
 1. Calls the `module.setup(bot)` function, if it exists
-2. Discovers all classes that subclass `niolib.Module` in the module, and calls their `__setup__`, adding all commands
+2. Discovers all classes that subclass `niobot.Module` in the module, and calls their `__setup__`, adding all commands
 registered under that class
 
 Take the following file as ping.py:
@@ -122,28 +122,28 @@ Take the following file as ping.py:
 import niobot
 
 
-class MyPingModule(niolib.Module):
-    # This class is a subclass of niolib.Module, so it will be automatically discovered and loaded
+class MyPingModule(niobot.Module):
+    # This class is a subclass of niobot.Module, so it will be automatically discovered and loaded
     # It also has two attributes defined that you can use:
     # * self.bot: the instance of the bot
     # * self.log: An instance of logging.Logger, which you can use to log messages to the console or log file.
     #   It is recommended to use this instead of print().
-    
+
     # Now we will define a command
     @niobot.command()
-    async def ping(self, ctx: niolib.Context):
+    async def ping(self, ctx: niobot.Context):
         """Shows the latency"""
-        roundtrip = (time.time() * 1000 - ctx.event.server_timestamp)
+        roundtrip = ctx.bot.latency(ctx.message)
         await ctx.reply("Pong! Took {:,.2f}ms".format(roundtrip))
 ```
 
-Notice how here, we use `@niolib.command`, instead of `@bot.command`? They work the same, however
-`niolib.command` is designed to be loaded in a module context, where you usually don't have the bot instance at runtime
+Notice how here, we use `@niobot.command`, instead of `@bot.command`? They work the same, however
+`niobot.command` is designed to be loaded in a module context, where you usually don't have the bot instance at runtime
 (since that is injected by `NioBot.mount_module`). If you do have the bot instance, you can use `@bot.command` instead,
 which will register your command instantly.
 
 Once `mount_module` is called, it will scan through `ping.py`. It will find `MyPingModule`, realise it is a subclass
-of `Module`, and will automatically add any commands defined by `@niolib.command`.
+of `Module`, and will automatically add any commands defined by `@niobot.command`.
 
 After all of this, `[prefix]ping` is now available!
 
@@ -152,7 +152,7 @@ After all of this, `[prefix]ping` is now available!
 You can customise the behaviour of the loading process at two-levels:
 
 1. By overriding `Module.__setup__`, you can customise how the module is loaded. By default, it will scan through the
-class' functions and detect any that're annotated with `@niolib.command`, and register them. You can override this
+class' functions and detect any that're annotated with `@niobot.command`, and register them. You can override this
 to do whatever you want.
 2. Providing a `setup(niobot)` function in your module. This will be called when the module is loaded, and you can
 do whatever you want in here. This is useful if you want to do something that isn't related to commands, such as
