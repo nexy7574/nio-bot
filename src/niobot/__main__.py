@@ -85,7 +85,6 @@ def cli_root(ctx, log_level: str):
 
 @cli_root.command()
 @click.option("--no-colour", "--no-color", "-C", is_flag=True, default=False)
-@click.option("--homeserver", "-H", default=None, help="An optional homeserver to display information about.")
 @click.pass_context
 def version(ctx, no_colour: bool):
     """Shows version information."""
@@ -152,7 +151,7 @@ def version(ctx, no_colour: bool):
 
     lines = [
         ["NioBot version", bot_version, lambda x: True],
-        ["matrix-nio version", nio_version, lambda x: x.startswith("0.20")],
+        ["matrix-nio version", nio_version, lambda x: x.startswith(("0.20", "0.21"))],
         ["Python version", platform.python_version(), lambda x: x.split(".")[0] == "3" and int(x.split(".")[1]) >= 9],
         ["Python implementation", platform.python_implementation(), lambda x: x == "CPython"],
         ["Operating System", _os, lambda val: val.startswith(("Windows", "Linux"))],
