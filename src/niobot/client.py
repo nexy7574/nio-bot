@@ -21,7 +21,7 @@ from .exceptions import *
 from .utils import Typing, force_await, run_blocking
 from .utils.help_command import default_help_command
 
-__all__ = ("NioBot",)
+__all__ = ("NioBot", "Client", "Bot")
 
 
 class NioBot(nio.AsyncClient):
@@ -866,3 +866,7 @@ class NioBot(nio.AsyncClient):
         :return:
         """
         asyncio.run(self.start(password=password, access_token=access_token, sso_token=sso_token))
+
+
+# Aliases for NioBot
+Client = Bot = NioBot
