@@ -393,7 +393,7 @@ class Module:
         """Setup function called once by NioBot.mount_module(). Mounts every command discovered."""
         for cmd in self.list_commands():
             cmd.module = self
-            logging.getLogger(__name__).info("Discovered command %r in %s.", cmd, self.__class__.__name__)
+            logging.getLogger(__name__).debug("Discovered command %r in %s.", cmd, self.__class__.__name__)
             self.bot.add_command(cmd)
 
         for _event in self.list_events():
