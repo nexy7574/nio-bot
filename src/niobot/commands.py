@@ -7,7 +7,6 @@ import nio
 
 from .context import Context
 from .exceptions import *
-from .utils import force_await
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -251,6 +250,8 @@ class Command:
         :raises CommandArgumentsError: Too many/few arguments, or an error parsing an argument.
         :raises CheckFailure: A check failed
         """
+        from .utils import force_await
+
         if self.checks:
             for chk_func in self.checks:
                 name = self.callback.__nio_checks__[chk_func]
