@@ -130,8 +130,10 @@ class NioBot(nio.AsyncClient):
         self.is_ready = asyncio.Event()
         self._waiting_events = {}
 
-        # noinspection PyTypeChecker
-        self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
+        if self.auto_join_rooms is True:
+            self.log.info("Auto-joining rooms enabled.")
+            # noinspection PyTypeChecker
+            self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
 
     async def sync(self, *args, **kwargs) -> nio.SyncResponse | nio.SyncError:
         sync = await super().sync(*args, **kwargs)
@@ -140,6 +142,9 @@ class NioBot(nio.AsyncClient):
         return sync
 
     def _populate_dm_rooms(self, sync: nio.SyncResponse):
+        # This function is a workaround until a solution is implemented upstream.
+        # This function is unreliable (see: `is_direct` below, not always provided, optional in spec)
+        # See: https://github.com/poljar/matrix-nio/issues/421
         for room_id, room_info in sync.rooms.join.items():
             for event in room_info.state:
                 if isinstance(event, nio.RoomMemberEvent):
@@ -202,15 +207,18 @@ class NioBot(nio.AsyncClient):
             return False
         return start_time - event.server_timestamp / 1000 > 0
 
-    async def update_read_receipts(self, room, event):
+    async def update_read_receipts(self, room: str | nio.MatrixRoom, event: nio.Event):
         """part of spec module 11.6"""
+        room = self._get_id(room)
         if self.is_old(event):
             self.log.debug("Ignoring event %s, sent before bot started.", event.event_id)
             return
-        self.log.debug("Updating read receipts for %s", room.room_id)
-        result = await self.room_read_markers(room, event.event_id, event.event_id)
+        event = event.event_id
+        result = await self.room_read_markers(room, event, event)
         if not isinstance(result, nio.RoomReadMarkersResponse):
-            self.log.warning("Failed to update read receipts for %s: %s", room.room_id, result.message)
+            self.log.warning("Failed to update read receipts for %s: %s", room, result.message)
+        else:
+            self.log.debug("Updated read receipts for %s to %s.", room, event)
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
         """Processes a message and runs the command it is trying to invoke if any."""
