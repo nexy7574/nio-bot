@@ -40,6 +40,7 @@ class NioBot(nio.AsyncClient):
     :param auto_join_rooms: Whether to automatically join rooms the bot is invited to.
     :param automatic_markdown_renderer: Whether to automatically render markdown in messages when sending/editing.
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
+    :param max_message_cache: The maximum number of messages to cache. Defaults to 1000.
     """
 
     def __init__(

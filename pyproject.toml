@@ -10,7 +10,7 @@ readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.11"
 license = { text = "GNU GPLv3" }
 authors = [
-    {name = "Nexus", email = "packages@nexy7574.co.uk"}
+    {name = "Nexus", email = "pip@nexy7574.co.uk"}
 ]
 dynamic = ["version", "dependencies"]
 
