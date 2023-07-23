@@ -474,20 +474,19 @@ class BaseAttachment(abc.ABC):
         """
         Creates an attachment from an MXC URL.
 
-        !!! warning "This function loads the entire attachment into memory."
-            If you are downloading large attachments, you should set `force_write` to `True`, otherwise the downloaded
-            attachment is pushed into an [`io.BytesIO`][] object (for speed benefits), which can cause memory issues
-            on low-memory systems.
-
-            Bear in mind that most attachments are <= 100 megabytes. Also, forcing temp file writes may not be useful
-            unless your temporary file directory is backed by a physical disk, because otherwise you're just loading
-            into RAM with extra steps (for example, by default, `/tmp` is in-memory on linux, but `/var/tmp` is not).
-
         :param client: The current client instance (used to download the attachment)
         :param url: The MXC:// url to download
         :param force_write: Whether to force writing downloaded attachments to a temporary file.
         :return: The downloaded and probed attachment.
         """
+        # !!! warning "This function loads the entire attachment into memory."
+        #     If you are downloading large attachments, you should set `force_write` to `True`, otherwise the downloaded
+        #     attachment is pushed into an [`io.BytesIO`][] object (for speed benefits), which can cause memory issues
+        #     on low-memory systems.
+        #
+        #     Bear in mind that most attachments are <= 100 megabytes. Also, forcing temp file writes may not be useful
+        #     unless your temporary file directory is backed by a physical disk, because otherwise you're just loading
+        #     into RAM with extra steps (for example, by default, `/tmp` is in-memory on linux, but `/var/tmp` is not).
         if force_write is not None:
             raise NotImplementedError("force_write is not implemented yet.")
         response = await client.download(url)
@@ -515,7 +514,7 @@ class BaseAttachment(abc.ABC):
         :return: The downloaded and probed attachment.
         :raises: niobot.MediaDownloadException if the download failed.
         :raises: aiohttp.ClientError if the download failed.
-        :raises niobot.MediaDetectionException if the MIME type could not be detected.
+        :raises niobot.MediaDetectionException: if the MIME type could not be detected.
         """
         if not client_session:
             from . import __user_agent__

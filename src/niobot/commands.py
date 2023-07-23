@@ -28,7 +28,7 @@ class Argument:
 
         bot = NioBot(...)
 
-        @bot.command("echo", arguments=[Argument("message", str)])
+        @bot.command("echo")
         def echo(ctx: niobot.Context, message: str):
             await ctx.respond(message)
 
