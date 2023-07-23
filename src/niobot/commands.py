@@ -325,19 +325,19 @@ def check(
     name: str = None,
 ) -> callable:
     """
-        Allows you to register checks in modules.
+    Allows you to register checks in modules.
 
-        ```python
-        @niobot.command()
-        @niobot.check(my_check_func, name="My Check")
-        async def my_command(ctx: niobot.Context):
-            pass
-        ```
+    ```python
+    @niobot.command()
+    @niobot.check(my_check_func, name="My Check")
+    async def my_command(ctx: niobot.Context):
+        pass
+    ```
 
-        :param function: The function to register as a check
-        :param name: A human-readable name for the check. Defaults to function.__name__
-        :return: The decorated function.
-    ="""
+    :param function: The function to register as a check
+    :param name: A human-readable name for the check. Defaults to function.__name__
+    :return: The decorated function.
+    """
 
     def decorator(command_function):
         if hasattr(command_function, "__nio_checks__"):
@@ -354,7 +354,7 @@ def event(name: str) -> callable:
     """
     Allows you to register event listeners in modules.
 
-    :param name: the name of the event (no ``on_`` prefix)
+    :param name: the name of the event (no `on_` prefix)
     :return:
     """
 
