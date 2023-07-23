@@ -205,12 +205,7 @@ def event_parser(
 
 def matrix_to_parser(
     require_room: bool = True, require_event: bool = False, allow_user_as_room: bool = True
-) -> typing.Callable[
-    ["Context", "Argument", str],
-    typing.Coroutine[
-        typing.Any, typing.Any, typing.NamedTuple[MatrixToLink, typing.Union[nio.MatrixRoom, nio.Event | None]]
-    ],
-]:
+) -> typing.Callable[["Context", "Argument", str], typing.Coroutine[typing.Any, typing.Any, MatrixToLink],]:
     """
     Advanced multi-functional parser for matrix.to links.
 
