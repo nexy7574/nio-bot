@@ -92,7 +92,7 @@ class Argument:
         try:
             return arg.type(value)
         except ValueError:
-            raise CommandArgumentsError(f"Invalid value for argument {arg.name}: {value!r}")
+            raise CommandParserError(f"Invalid value for argument {arg.name}: {value!r}")
 
 
 class Command:
