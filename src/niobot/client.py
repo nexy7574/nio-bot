@@ -64,12 +64,14 @@ class NioBot(nio.AsyncClient):
                 self.log.warning("Store path %s does not exist, creating...", store_path)
                 os.makedirs(store_path, mode=0o751, exist_ok=True)
             elif not os.path.isdir(store_path):
-                raise RuntimeError("Store path %s is not a directory!" % store_path)
+                raise FileNotFoundError("Store path %s is not a directory!" % store_path)
 
         if ENCRYPTION_ENABLED:
             if not kwargs.get("config"):
                 kwargs.setdefault("config", nio.AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True))
                 self.log.info("Encryption support enabled automatically.")
+        else:
+            self.log.info("Encryption support is not available (are the e2ee extras installed?)")
 
         super().__init__(
             homeserver,
