@@ -67,7 +67,7 @@ class Argument:
             from .utils import BUILTIN_MAPPING
 
             if self.type in BUILTIN_MAPPING:
-                log.info("Using builtin parser %r for %s", self.type)
+                log.info("Using builtin parser %r for %r", self.type, self)
                 self.parser = BUILTIN_MAPPING[self.type]
             else:
                 for base in inspect.getmro(self.type):
