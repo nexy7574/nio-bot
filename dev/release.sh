@@ -26,7 +26,8 @@ python3 -m build
 #echo "\nDocker image built & imported. You should 'docker image push n3xy7574/nio-bot:$VERSION'."
 
 printf '\nFinalising & pushing release...\n'
-git push --all origin
+git push origin "release/$VERSION_P"  # push the release branch
+git push origin "$VERSION_P"  # push the tag itself
 
 printf '\nSwitching back to master for further development...\n'
 git checkout master
