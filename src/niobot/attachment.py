@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 import typing
 import urllib.parse
 import warnings
@@ -75,7 +76,7 @@ SUPPORTED_AUDIO_CODECS = [
     "mp2",
 ]
 # All of the above codecs were played in Element Desktop. A bunch were cut out, as the list was far too long.
-# Realistically, I don't see the warning being useful to too many people, its literally only in to help people figure
+# Realistically, I don't see the warning being useful to too many people, it's literally only in to help people figure
 # out why their media isn't playing.
 SUPPORTED_IMAGE_CODECS = ["mjpeg", "gif", "png", "av1", "webp"]
 # Probably not all of them but close enough
@@ -95,11 +96,16 @@ def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
     if isinstance(file, io.BytesIO):
         current_position = file.tell()
         file.seek(0)
+        start = time.perf_counter()
         mt = magic.from_buffer(file.read(), mime=True)
+        log.debug("Took %f seconds to detect mime type", time.perf_counter() - start)
         file.seek(current_position)  # Reset the file position
         return mt
     elif isinstance(file, pathlib.Path):
-        return magic.from_file(str(file), mime=True)
+        start = time.perf_counter()
+        mt = magic.from_file(str(file), mime=True)
+        log.debug("Took %f seconds to detect mime type", time.perf_counter() - start)
+        return mt
     else:
         raise TypeError("File must be a string, BytesIO, or Path object.")
 
@@ -116,10 +122,12 @@ def get_metadata_ffmpeg(file: typing.Union[str, pathlib.Path]) -> typing.Dict[st
     if not shutil.which("ffprobe"):
         raise FileNotFoundError("ffprobe is not installed. If it is, check your $PATH.")
     command = ["ffprobe", "-of", "json", "-loglevel", "9", "-show_format", "-show_streams", "-i", str(file)]
+    start = time.perf_counter()
     try:
         result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
     except subprocess.SubprocessError as e:
         raise MetadataDetectionException("Failed to get metadata for file.", exception=e)
+    log.debug("Took %f seconds to run ffprobe", time.perf_counter() - start)
     log.debug("ffprobe output (%d): %s", result.returncode, result.stdout)
     data = json.loads(result.stdout or "{}")
     log.debug("parsed ffprobe output:\n%s", json.dumps(data, indent=4))
@@ -139,11 +147,13 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     """
     file = file.resolve(True)
     command = ["identify", str(file)]
+    start = time.perf_counter()
     try:
         result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
     except subprocess.SubprocessError as e:
         raise MetadataDetectionException("Failed to get metadata for file.", exception=e)
     log.debug("identify output (%d): %s", result.returncode, result.stdout)
+    log.debug("identify took %f seconds", time.perf_counter() - start)
     stdout = result.stdout
     stdout = stdout[len(str(file)) + 1 :]
     img_format, img_size, *_ = stdout.split()
@@ -190,11 +200,17 @@ def get_metadata(file: typing.Union[str, pathlib.Path], mime_type: str = None) -
                 "Check your $PATH."
             )
         else:
-            return get_metadata_imagemagick(file)
+            start = time.perf_counter()
+            r = get_metadata_imagemagick(file)
+            log.debug("get_metadata_imagemagick took %f seconds", time.perf_counter() - start)
+            return r
 
     if mime not in ["audio", "video", "image"]:
         raise MetadataDetectionException("Unsupported mime type. Must be an audio clip, video, or image.")
-    return get_metadata_ffmpeg(file)
+    start = time.perf_counter()
+    r = get_metadata_ffmpeg(file)
+    log.debug("get_metadata_ffmpeg took %f seconds", time.perf_counter() - start)
+    return r
 
 
 def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
@@ -219,7 +235,9 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
         command = ["ffmpeg", "-loglevel", "9", "-i", str(file), "-frames:v", "1", "-y", "-strict", "-2", f.name]
         log.debug("Extracting first frame of %r: %s", file, " ".join(command))
         try:
+            start = time.perf_counter()
             log.debug("Extraction return code: %d", subprocess.run(command, capture_output=True, check=True).returncode)
+            log.debug("Extraction took %f seconds", time.perf_counter() - start)
         except subprocess.SubprocessError as e:
             raise MediaUploadException("Failed to extract first frame of video.", exception=e)
         f.seek(0)
@@ -244,10 +262,16 @@ def generate_blur_hash(file: str | pathlib.Path | io.BytesIO, *parts: int) -> st
     if not isinstance(file, io.BytesIO):
         with file.open("rb") as fd:
             log.info("Generating blurhash for %s", file)
-            return blurhash.encode(fd, *parts)
+            start = time.perf_counter()
+            x = blurhash.encode(fd, *parts)
+            log.debug("Generating blurhash took %f seconds", time.perf_counter() - start)
+            return x
     else:
         log.info("Generating blurhash for BytesIO object")
-        return blurhash.encode(file, *parts)
+        start = time.perf_counter()
+        x = blurhash.encode(file, *parts)
+        log.debug("Generating blurhash took %f seconds", time.perf_counter() - start)
+        return x
 
 
 def _file_okay(file: pathlib.Path | io.BytesIO) -> typing.Literal[True]:
