@@ -10,8 +10,8 @@ VERSION_P="v$VERSION"
 echo '\nPerforming last-minute formatting...'
 black src
 isort src
-git add .
-git commit -am "Format code for release $VERSION"
+git add . || true
+git commit -am "Format code for release $VERSION" || true
 
 echo '\nCreating release branch...'
 git tag -m "Release $VERSION_P" "$VERSION"

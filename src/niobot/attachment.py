@@ -25,9 +25,9 @@ import nio
 
 from .exceptions import (
     MediaCodecWarning,
+    MediaDownloadException,
     MediaUploadException,
     MetadataDetectionException,
-    MediaDownloadException,
 )
 from .utils import run_blocking
 

@@ -3,7 +3,7 @@
 import typing as t
 
 if t.TYPE_CHECKING:
-    from . import SyncResponse, MatrixRoom, RoomMessageText, Context, CommandError
+    from . import CommandError, Context, MatrixRoom, RoomMessageText, SyncResponse
 
 
 async def ready(result: "SyncResponse") -> t.Optional[t.Any]:
