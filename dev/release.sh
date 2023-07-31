@@ -7,25 +7,25 @@ echo '\nEnsuring version is pep440-compliant...'
 python3 -m pep440 "$VERSION"
 VERSION_P="v$VERSION"
 
-echo '\nCreating release branch...'
-git checkout -b release/"$VERSION_P"
-
 echo '\nPerforming last-minute formatting...'
 black src
 isort src
-git add src || true
-git commit -m "Format code for release $VERSION" || true
+git add .
+git commit -am "Format code for release $VERSION"
+
+echo '\nCreating release branch...'
+git tag -m "Release $VERSION_P" "$VERSION"
+git checkout -b release/"$VERSION_P"
 
 echo '\nBuilding python wheel & source dist...'
 python3 -m build
 
-echo '\nBuilding docker image...'
-docker buildx build -t nexy7574/nio-bot:"$VERSION" --platform linux/amd64,linux/arm64 --load .
-echo "\nDocker image built & imported. You should 'docker image push n3xy7574/nio-bot:$VERSION'."
+#echo '\nBuilding docker image...'
+#docker buildx build -t nexy7574/nio-bot:"$VERSION" --platform linux/amd64,linux/arm64 --load .
+#echo "\nDocker image built & imported. You should 'docker image push n3xy7574/nio-bot:$VERSION'."
 
 echo '\nFinalising & pushing release...'
-git tag -m "Release $VERSION" "$VERSION"
-#git push --tags origin release/"$VERSION"
+git push --tags origin release/"$VERSION"
 
 echo '\nSwitching back to master for further development...'
 git checkout master
