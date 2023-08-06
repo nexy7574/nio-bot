@@ -757,14 +757,14 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
             Remember, most image quality is lost - there's very little point in generating a blurhash for a 4K image.
             Anything over 800x600 is definitely overkill.
 
-            You can easily resize images with Pillow:
+            You can easily resize images with
+            [SupportXYZAmorganBlurHash.thumbnailify_image][niobot.attachment.SupportXYZAmorganBlurHash.thumbnailify_image]:
+
             ```python
-            from PIL import Image
-            my_image = Image.open("my_image.png")
-            my_image.thumbnail((320, 240))
             attachment = await niobot.ImageAttachment.from_file(my_image, generate_blurhash=False)
-            await attachment.get_blurhash(file=my_image)
+            await attachment.get_blurhash(file=attachment.thumbnailify_image(attachment.file))
             ```
+
             This will generate a roughly 320x240 thumbnail image, and generate the blurhash from that.
 
 

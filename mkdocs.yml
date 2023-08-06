@@ -61,6 +61,7 @@ plugins:
             - https://docs.python.org/3/objects.inv
             - https://matrix-nio.readthedocs.io/en/latest/objects.inv
             - https://docs.aiohttp.org/en/stable/objects.inv
+            - https://pillow.readthedocs.io/en/stable/objects.inv
   - git-revision-date-localized:
       enable_creation_date: true
       fallback_to_build_date: true
