@@ -774,7 +774,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
         """
         if isinstance(self.xyz_amorgan_blurhash, str):
             return self.xyz_amorgan_blurhash
-        x = await run_blocking(generate_blur_hash, file=file or self.file, *quality)
+        x = await run_blocking(generate_blur_hash, file or self.file, *quality)
         self.xyz_amorgan_blurhash = x
         return x
 
