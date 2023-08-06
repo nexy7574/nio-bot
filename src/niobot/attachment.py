@@ -261,14 +261,19 @@ def generate_blur_hash(file: str | pathlib.Path | io.BytesIO | PIL.Image.Image, 
         parts = 4, 3
     if not isinstance(file, (io.BytesIO, PIL.Image.Image)):
         file = _to_path(file)
+        size = PIL.Image.open(file).size
         with file.open("rb") as fd:
-            log.info("Generating blurhash for %s", file)
+            log.info("Generating blurhash for %s (%s)", file, size)
             start = time.perf_counter()
             x = blurhash.encode(fd, *parts)
             log.debug("Generating blurhash took %f seconds", time.perf_counter() - start)
             return x
     else:
-        log.info("Generating blurhash for BytesIO object")
+        if isinstance(file, io.BytesIO):
+            size = PIL.Image.open(file).size
+        else:
+            size = file.size
+        log.info("Generating blurhash for BytesIO/PIL object %r (%s)", file, size)
         start = time.perf_counter()
         x = blurhash.encode(file, *parts)
         log.debug("Generating blurhash took %f seconds", time.perf_counter() - start)
