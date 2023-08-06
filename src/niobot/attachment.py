@@ -259,8 +259,8 @@ def generate_blur_hash(file: str | pathlib.Path | io.BytesIO | PIL.Image.Image, 
     """
     if not parts:
         parts = 4, 3
-    file = _to_path(file)
     if not isinstance(file, (io.BytesIO, PIL.Image.Image)):
+        file = _to_path(file)
         with file.open("rb") as fd:
             log.info("Generating blurhash for %s", file)
             start = time.perf_counter()
