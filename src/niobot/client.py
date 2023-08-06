@@ -576,8 +576,10 @@ class NioBot(nio.AsyncClient):
         """Recursively uploads attachments."""
         previous = (__previous or []).copy()
         if not base.url:
+            self.log.info("Uploading attachment %r (encrypted: %r)", base, encrypted)
             previous.append(await base.upload(self, encrypted))
         if hasattr(base, "thumbnail") and base.thumbnail and not base.url:
+            self.log.info("Uploading thumbnail %r (encrypted: %r)", base.thumbnail, encrypted)
             previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
         return previous
 
@@ -658,6 +660,7 @@ class NioBot(nio.AsyncClient):
         }
 
         if file is not None:
+            self.log.info("Recursively uploading %r.", file)
             # We need to upload the file first.
             responses = await self._recursively_upload_attachments(file, encrypted=getattr(file, "encrypted", False))
             if any((isinstance(response, nio.UploadError) for response in responses)):
