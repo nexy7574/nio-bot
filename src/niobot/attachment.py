@@ -202,9 +202,15 @@ def get_metadata(file: typing.Union[str, pathlib.Path], mime_type: str = None) -
             )
         else:
             start = time.perf_counter()
-            r = get_metadata_imagemagick(file)
-            log.debug("get_metadata_imagemagick took %f seconds", time.perf_counter() - start)
-            return r
+
+            try:
+                r = get_metadata_imagemagick(file)
+                log.debug("get_metadata_imagemagick took %f seconds", time.perf_counter() - start)
+                return r
+            except (IndexError, ValueError, subprocess.SubprocessError, IOError, OSError):
+                log.warning(
+                    "Failed to detect metadata for %r with imagemagick. Falling back to ffmpeg.", file, exc_info=True
+                )
 
     if mime not in ["audio", "video", "image"]:
         raise MetadataDetectionException("Unsupported mime type. Must be an audio clip, video, or image.")
