@@ -17,6 +17,7 @@ import typing
 import urllib.parse
 import warnings
 
+import PIL.Image
 import aiofiles
 import aiohttp
 import blurhash
@@ -244,7 +245,7 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
         return f.read()
 
 
-def generate_blur_hash(file: str | pathlib.Path | io.BytesIO, *parts: int) -> str:
+def generate_blur_hash(file: str | pathlib.Path | io.BytesIO | PIL.Image.Image, *parts: int) -> str:
     """
     Creates a blurhash
 
@@ -259,7 +260,7 @@ def generate_blur_hash(file: str | pathlib.Path | io.BytesIO, *parts: int) -> st
     if not parts:
         parts = 4, 3
     file = _to_path(file)
-    if not isinstance(file, io.BytesIO):
+    if not isinstance(file, (io.BytesIO, PIL.Image.Image)):
         with file.open("rb") as fd:
             log.info("Generating blurhash for %s", file)
             start = time.perf_counter()
@@ -720,16 +721,60 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
             await self.get_blurhash()
         return self
 
-    async def get_blurhash(self, quality: typing.Tuple[int, int] = (4, 3)) -> str:
+    @staticmethod
+    def thumbnailify_image(
+        image: PIL.Image.Image | io.BytesIO | str | pathlib.Path,
+        size: typing.Tuple[int, int] = (320, 240),
+        resampling: PIL.Image.Resampling = PIL.Image.Resampling.BICUBIC,
+    ) -> PIL.Image.Image:
+        """
+        Helper function to thumbnail an image.
+
+        This function is blocking - you should use [niobot.utils.run_blocking][] to run it.
+
+        :param image: The image to thumbnail
+        :param size: The size to thumbnail to. Defaults to 320x240, a standard thumbnail size.
+        :param resampling: The resampling filter to use. Defaults to `PIL.Image.BICUBIC`, a high-quality but
+        fast resampling method. For the highest quality, use `PIL.Image.LANCZOS`.
+        :return: The thumbnail
+        """
+        if not isinstance(image, PIL.Image.Image):
+            image = _to_path(image)
+            image = PIL.Image.open(image)
+        image.thumbnail(size, resampling)
+        return image
+
+    async def get_blurhash(
+        self, quality: typing.Tuple[int, int] = (4, 3), file: str | pathlib.Path | io.BytesIO | PIL.Image.Image = None
+    ) -> str:
         """
         Gets the blurhash of the attachment. See: [woltapp/blurhash](https://github.com/woltapp/blurhash)
 
+        !!! tip "You should crop-down your blurhash images."
+            Generating blurhashes can take a long time, *especially* on large images.
+            You should crop-down your images to a reasonable size before generating the blurhash.
+
+            Remember, most image quality is lost - there's very little point in generating a blurhash for a 4K image.
+            Anything over 800x600 is definitely overkill.
+
+            You can easily resize images with Pillow:
+            ```python
+            from PIL import Image
+            my_image = Image.open("my_image.png")
+            my_image.thumbnail((320, 240))
+            attachment = await niobot.ImageAttachment.from_file(my_image, generate_blurhash=False)
+            await attachment.get_blurhash(file=my_image)
+            ```
+            This will generate a roughly 320x240 thumbnail image, and generate the blurhash from that.
+
+
         :param quality: A tuple of the quality to generate the blurhash at. Defaults to (4, 3).
+        :param file: The file to generate the blurhash from. Defaults to the file passed in the constructor.
         :return: The blurhash
         """
         if isinstance(self.xyz_amorgan_blurhash, str):
             return self.xyz_amorgan_blurhash
-        x = await run_blocking(generate_blur_hash, self.file)
+        x = await run_blocking(generate_blur_hash, file=file or self.file, *quality)
         self.xyz_amorgan_blurhash = x
         return x
 
