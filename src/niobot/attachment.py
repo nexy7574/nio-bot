@@ -563,22 +563,22 @@ class BaseAttachment(abc.ABC):
                 response.raise_for_status()
             except aiohttp.ClientResponseError as err:
                 raise MediaDownloadException("Failed to download attachment.", exception=err)
+        
+            file_name = response.headers.get("Content-Disposition")
+            if file_name:
+                file_name = re.search(r"filename=\"(.+)\"", file_name)
+                if file_name:
+                    file_name = file_name.group(1)
+
+            if not file_name:
+                u = urllib.parse.urlparse(url)
+                file_name = os.path.basename(u.path)
             save_path = None
             if force_write is not False:
                 if force_write is True:
                     tempdir = tempfile.gettempdir()
                 elif isinstance(force_write, (os.PathLike, str)):
                     tempdir = pathlib.Path(str(force_write))
-
-                file_name = response.headers.get("Content-Disposition")
-                if file_name:
-                    file_name = re.search(r"filename=\"(.+)\"", file_name)
-                    if file_name:
-                        file_name = file_name.group(1)
-
-                if not file_name:
-                    u = urllib.parse.urlparse(url)
-                    file_name = os.path.basename(u.path)
 
                 if os.path.isdir(tempdir):
                     save_path = os.path.join(tempdir, file_name)
