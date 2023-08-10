@@ -564,7 +564,7 @@ class BaseAttachment(abc.ABC):
             except aiohttp.ClientResponseError as err:
                 raise MediaDownloadException("Failed to download attachment.", exception=err)
             save_path = None
-            if force_write is not None:
+            if force_write is not False:
                 if force_write is True:
                     tempdir = tempfile.gettempdir()
                 elif isinstance(force_write, (os.PathLike, str)):
