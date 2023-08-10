@@ -567,8 +567,8 @@ class BaseAttachment(abc.ABC):
             if force_write is not None:
                 if force_write is True:
                     tempdir = tempfile.gettempdir()
-                elif isinstance(force_write, pathlib.Path):
-                    tempdir = force_write
+                elif isinstance(force_write, (os.PathLike, str)):
+                    tempdir = pathlib.Path(str(force_write))
 
                 file_name = response.headers.get("Content-Disposition")
                 if file_name:
