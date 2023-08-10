@@ -664,6 +664,7 @@ class BaseAttachment(abc.ABC):
         if not isinstance(self.file, io.BytesIO):
             # We can open the file async here, as this will avoid blocking the loop
             async with aiofiles.open(self.file, "rb") as f:
+                log.debug("Using aiofiles to open %r" % self.file)
                 result, keys = await client.upload(
                     f,
                     content_type=self.mime_type,
@@ -678,6 +679,9 @@ class BaseAttachment(abc.ABC):
             # timeit:
             # 47.2 ns ± 0.367 ns per loop (mean ± std. dev. of 7 runs, 10,000,000 loops each)
             # So in reality, it's not going to be a massive problem.
+            pos = self.file.tell()
+            self.file.seek(0)
+            log.debug("Uploading BytesIO object, seeked from position %d to 0, will restore after upload." % pos)
             result, keys = await client.upload(
                 self.file,
                 content_type=self.mime_type,
@@ -685,6 +689,8 @@ class BaseAttachment(abc.ABC):
                 encrypt=encrypted,
                 filesize=size,
             )
+            self.file.seek(pos)
+            log.debug("Uploaded BytesIO, seeked back to position %d." % pos)
         if not isinstance(result, nio.UploadResponse):
             raise MediaUploadException("Upload failed: %r" % result, result)
 
