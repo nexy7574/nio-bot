@@ -31,7 +31,7 @@ time using it.)
 
 ## Installation
 ### Release versions
-You can use the [PyPi](https://pypi.org/project/niobot) releases:
+You can use the [PyPi](https://pypi.org/project/nio-bot) releases:
 ```python
 niobot==1.0.0  # or whatever version
 # Or to install it with extras
