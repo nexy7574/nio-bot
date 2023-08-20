@@ -41,9 +41,9 @@ nio-bot[e2ee,cli]==1.0.0
 ### Development (master branch)
 You should use requirements.txt:
 ```python
-matrix-nio @ git+https://github.com/EEKIM10/niobot.git
+nio-bot @ git+https://github.com/EEKIM10/niobot.git
 # Or with e2ee support (note you will need libolm)
-matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git
+nio-bot[e2ee] @ git+https://github.com/EEKIM10/niobot.git
 ```
 You can figure out how to install it in other ways.
 
