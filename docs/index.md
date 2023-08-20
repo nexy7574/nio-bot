@@ -84,7 +84,7 @@ If you want to get bleeding edge features, or simply build from source, you can 
 For example:
 
 ```bash
-pip install git+https://github.com/EEKIM10/niobot.git@master#egg=niobot[e2ee,cli]
+pip install git+https://github.com/EEKIM10/niobot.git@master#egg=nio-bot[e2ee,cli]
 ```
 
 (replace @master with @branch-name or @tag-name for a specific branch or tag.)
