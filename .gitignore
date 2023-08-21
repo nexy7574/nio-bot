@@ -338,3 +338,4 @@ src/niobot/__version__.py
 # Setuptools tells us to explicitly ignore this
 /niobot
 # ^ I symlink /src/niobot to /niobot for docs so I don't have to remember to `cd` into `src.`
+venv*/
