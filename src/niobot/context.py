@@ -30,7 +30,7 @@ class ContextualResponse:
         return "<ContextualResponse ctx={0.ctx!r} response={0.response!r}>".format(self)
 
     @property
-    def message(self) -> nio.RoomMessageText | None:
+    def message(self) -> typing.Optional[nio.RoomMessageText]:
         """Fetches the current message for this response"""
         result = self.ctx.client.get_cached_message(self._response.event_id)
         if result:

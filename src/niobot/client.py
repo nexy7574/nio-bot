@@ -7,6 +7,7 @@ import re
 import time
 import typing
 from collections import deque
+from typing import Union as U
 
 import marko
 import nio
@@ -95,7 +96,7 @@ class NioBot(nio.AsyncClient):
         if re.match(r"\s", command_prefix):
             raise RuntimeError("Command prefix cannot contain whitespace.")
 
-        self.start_time: float | None = None
+        self.start_time: typing.Optional[float] = None
         help_cmd = Command(
             "help", default_help_command, aliases=["h"], description="Shows a list of commands for this bot"
         )
@@ -138,7 +139,7 @@ class NioBot(nio.AsyncClient):
             # noinspection PyTypeChecker
             self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
 
-    async def sync(self, *args, **kwargs) -> nio.SyncResponse | nio.SyncError:
+    async def sync(self, *args, **kwargs) -> U[nio.SyncResponse, nio.SyncError]:
         sync = await super().sync(*args, **kwargs)
         if isinstance(sync, nio.SyncResponse):
             self._populate_dm_rooms(sync)
@@ -210,8 +211,18 @@ class NioBot(nio.AsyncClient):
             return False
         return start_time - event.server_timestamp / 1000 > 0
 
-    async def update_read_receipts(self, room: str | nio.MatrixRoom, event: nio.Event):
-        """part of spec module 11.6"""
+    async def update_read_receipts(self, room: U[str, nio.MatrixRoom], event: nio.Event):
+        """
+        Moves the read indicator to the given event in the room.
+
+        !!! info "This is automatically done for you."
+            Whenever a message is received, this is automatically called for you.
+            As such, your read receipt will always be the most recent message. You rarely need to call this function.
+
+        :param room: The room to update the read receipt in.
+        :param event: The event to move the read receipt to.
+        :return: Nothing
+        """
         room = self._get_id(room)
         if self.is_old(event):
             self.log.debug("Ignoring event %s, sent before bot started.", event.event_id)
@@ -252,7 +263,10 @@ class NioBot(nio.AsyncClient):
             command = self.get_command(command)
             if command:
                 if command.disabled is True:
-                    raise CommandDisabledError(command)
+                    error = CommandDisabledError(command)
+                    self.dispatch("command_error", command, error)
+                    return
+
                 context = command.construct_context(self, room, event, self.command_prefix + original_command)
                 self.dispatch("command", context)
 
@@ -373,7 +387,7 @@ class NioBot(nio.AsyncClient):
         """
         return self._modules
 
-    def get_command(self, name: str) -> Command | None:
+    def get_command(self, name: str) -> typing.Optional[Command]:
         """Attempts to retrieve an internal command
 
         :param name: The name of the command to retrieve
@@ -451,11 +465,11 @@ class NioBot(nio.AsyncClient):
         room_id: str,
         message_type: str,
         content: dict,
-        tx_id: str | None = None,
+        tx_id: typing.Optional[str] = None,
         ignore_unverified_devices: bool = True,
-    ) -> nio.RoomSendResponse | nio.RoomSendError:
+    ) -> U[nio.RoomSendResponse, nio.RoomSendError]:
         """
-        Send a message to a room. Wrapper. See :meth:`nio.AsyncClient.room_send` for more information.
+        Send a message to a room. Wrapper. See [`nio.AsyncClient.room_send`][] for more information.
         """
         return await super().room_send(
             room_id,
@@ -583,7 +597,7 @@ class NioBot(nio.AsyncClient):
             previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
         return previous
 
-    async def get_dm_room(self, user: nio.MatrixUser | str) -> nio.MatrixRoom:
+    async def get_dm_room(self, user: U[nio.MatrixUser, str]) -> nio.MatrixRoom:
         """
         Gets (or creates) a room that is a private DM room for the given user.
 
@@ -619,10 +633,10 @@ class NioBot(nio.AsyncClient):
 
     async def send_message(
         self,
-        room: nio.MatrixRoom | nio.MatrixUser | str,
+        room: U[nio.MatrixRoom, nio.MatrixUser, str],
         content: str = None,
         file: BaseAttachment = None,
-        reply_to: nio.RoomMessageText | str = None,
+        reply_to: U[nio.RoomMessageText, str] = None,
         message_type: str = None,
         clean_mentions: bool = False,
     ) -> nio.RoomSendResponse:
@@ -700,8 +714,8 @@ class NioBot(nio.AsyncClient):
 
     async def edit_message(
         self,
-        room: nio.MatrixRoom | str,
-        message: nio.Event | str,
+        room: U[nio.MatrixRoom, str],
+        message: U[nio.Event, str],
         content: str,
         *,
         message_type: str = None,
@@ -753,7 +767,7 @@ class NioBot(nio.AsyncClient):
         return response
 
     async def delete_message(
-        self, room: nio.MatrixRoom | str, message_id: nio.RoomMessage | str, reason: str = None
+        self, room: U[nio.MatrixRoom, str], message_id: U[nio.RoomMessage, str], reason: str = None
     ) -> nio.RoomRedactResponse:
         """
         Delete an existing message. You must be the sender of the message.
@@ -772,7 +786,7 @@ class NioBot(nio.AsyncClient):
         return response
 
     async def add_reaction(
-        self, room: nio.MatrixRoom | str, message: nio.RoomMessage | str, emoji: str
+        self, room: U[nio.MatrixRoom, str], message: U[nio.RoomMessage, str], emoji: str
     ) -> nio.RoomSendResponse:
         """
         Adds an emoji "reaction" to a message.
@@ -799,7 +813,7 @@ class NioBot(nio.AsyncClient):
             raise MessageException("Failed to add reaction.", response)
         return response
 
-    async def redact_reaction(self, room: nio.MatrixRoom | str, reaction: nio.RoomSendResponse | str):
+    async def redact_reaction(self, room: U[nio.MatrixRoom, str], reaction: U[nio.RoomSendResponse, str]):
         """Alias for NioBot.delete_message, but more appropriately named for reactions."""
         response = await self.room_redact(
             self._get_id(room),

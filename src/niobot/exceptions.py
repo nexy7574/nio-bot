@@ -40,10 +40,10 @@ class NioBotException(Exception):
     :var original: The original response, or exception if response was not available.
     """
 
-    message: str | None
-    response: nio.ErrorResponse | None
-    exception: BaseException | None
-    original: nio.ErrorResponse | BaseException | None
+    message: typing.Optional[str]
+    response: typing.Optional[nio.ErrorResponse]
+    exception: typing.Optional[BaseException]
+    original: typing.Optional[nio.ErrorResponse, BaseException]
 
     def __init__(
         self,
@@ -63,7 +63,9 @@ class NioBotException(Exception):
         if self.original is None and self.message is None:
             raise ValueError("If there is no error history, at least a human readable message should be provided.")
 
-    def bottom_of_chain(self, other: Exception | nio.ErrorResponse = None) -> BaseException | nio.ErrorResponse:
+    def bottom_of_chain(
+        self, other: typing.Union[Exception, nio.ErrorResponse] = None
+    ) -> typing.Union[BaseException, nio.ErrorResponse]:
         """Recursively checks the `original` attribute of the exception until it reaches the bottom of the chain.
 
         This function finds you the absolute first exception that was raised.

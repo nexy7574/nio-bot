@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "nio-bot"
 description = "Making matrix bots simple"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.11"
+requires-python = ">=3.9,<3.12"
 license = { text = "GNU GPLv3" }
 authors = [
     {name = "Nexus", email = "pip@nexy7574.co.uk"}
@@ -18,6 +18,8 @@ dynamic = ["version", "dependencies"]
 Source = "https://github.com/eekim10/niobot"
 Tracker = "https://github.com/eekim10/niobot/issues"
 Documentation = "https://eekim10.github.io/niobot/"
+"Matrix Room" = "https://matrix.to/#/#niobot:nexy7574.co.uk"
+Funding = "https://ko-fi.com/nexy7574"
 
 
 [project.optional-dependencies]
@@ -33,7 +35,8 @@ dev = [
     'mkdocs-git-revision-date-localized-plugin',
     'isort',
     'build',
-    'pep440'
+    'pep440',
+    'pycodestyle'
 ]
 
 [project.scripts]
@@ -47,7 +50,7 @@ dependencies = {file = "requirements.txt"}
 
 [tool.black]
 line-length = 120
-target-version = ["py311"]
+target-versions = ["py39", "py310", "py311"]
 include = 'src/niobot(/utils)?/.+\.py'
 
 [tool.isort]

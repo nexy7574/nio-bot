@@ -16,13 +16,14 @@ import time
 import typing
 import urllib.parse
 import warnings
+from typing import Union as U
 
-import PIL.Image
 import aiofiles
 import aiohttp
 import blurhash
 import magic
 import nio
+import PIL.Image
 
 from .exceptions import (
     MediaCodecWarning,
@@ -220,7 +221,7 @@ def get_metadata(file: typing.Union[str, pathlib.Path], mime_type: str = None) -
     return r
 
 
-def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
+def first_frame(file: U[str, pathlib.Path], file_format: str = "webp") -> bytes:
     """
     Gets the first frame of a video file.
 
@@ -251,7 +252,7 @@ def first_frame(file: str | pathlib.Path, file_format: str = "webp") -> bytes:
         return f.read()
 
 
-def generate_blur_hash(file: str | pathlib.Path | io.BytesIO | PIL.Image.Image, *parts: int) -> str:
+def generate_blur_hash(file: U[str, pathlib.Path, io.BytesIO, PIL.Image.Image], *parts: int) -> str:
     """
     Creates a blurhash
 
@@ -286,7 +287,7 @@ def generate_blur_hash(file: str | pathlib.Path | io.BytesIO | PIL.Image.Image, 
         return x
 
 
-def _file_okay(file: pathlib.Path | io.BytesIO) -> typing.Literal[True]:
+def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
     """Checks if a file exists, is a file, and can be read."""
     if isinstance(file, io.BytesIO):
         if file.closed:
@@ -307,7 +308,7 @@ def _file_okay(file: pathlib.Path | io.BytesIO) -> typing.Literal[True]:
     return True
 
 
-def _to_path(file: str | pathlib.Path | io.BytesIO) -> typing.Union[pathlib.Path, io.BytesIO]:
+def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> typing.Union[pathlib.Path, io.BytesIO]:
     """Converts a string to a Path object."""
     if not isinstance(file, (str, pathlib.PurePath, io.BytesIO)):
         raise TypeError("File must be a string, BytesIO, or Path object.")
@@ -321,7 +322,7 @@ def _to_path(file: str | pathlib.Path | io.BytesIO) -> typing.Union[pathlib.Path
     return file
 
 
-def _size(file: pathlib.Path | io.BytesIO) -> int:
+def _size(file: U[pathlib.Path, io.BytesIO]) -> int:
     """Gets the size of a file."""
     if isinstance(file, io.BytesIO):
         return len(file.getbuffer())
@@ -329,7 +330,7 @@ def _size(file: pathlib.Path | io.BytesIO) -> int:
 
 
 def which(
-    file: io.BytesIO | pathlib.Path | str, mime_type: str = None
+    file: U[io.BytesIO, pathlib.Path, str], mime_type: str = None
 ) -> typing.Union[
     typing.Type["FileAttachment"],
     typing.Type["ImageAttachment"],
@@ -341,10 +342,12 @@ def which(
 
     This function will provide either Image/Video/Audio attachment where possible, or FileAttachment otherwise.
 
-    For example, `image/png` (from `my_image.png`) will see `image/` and will return [`ImageAttachment`][niobot.ImageAttachment],
-    and `video/mp4` (from `my_video.mp4`) will see `video/` and will return [`VideoAttachment`][niobot.VideoAttachment].
+    For example, `image/png` (from `my_image.png`) will see `image/` and will return
+    [`ImageAttachment`][niobot.ImageAttachment], and `video/mp4` (from `my_video.mp4`) will see `video/` and will
+    return [`VideoAttachment`][niobot.VideoAttachment].
 
-    If the mime type cannot be mapped to an attachment type, this function will return [`FileAttachment`][niobot.FileAttachment].
+    If the mime type cannot be mapped to an attachment type, this function will return
+    [`FileAttachment`][niobot.FileAttachment].
 
     ??? example "Usage"
         ```python
@@ -426,8 +429,8 @@ class BaseAttachment(abc.ABC):
         size: int
         type: AttachmentType
 
-        url: str | None
-        keys: typing.Dict[str, str] | None
+        url: typing.Optional[str]
+        keys: typing.Optional[typing.Dict[str, str]]
 
     def __init__(
         self,
@@ -505,7 +508,7 @@ class BaseAttachment(abc.ABC):
 
     @classmethod
     async def from_mxc(
-        cls, client: "NioBot", url: str, *, force_write: bool | pathlib.Path = False
+        cls, client: "NioBot", url: str, *, force_write: U[bool, pathlib.Path] = False
     ) -> "BaseAttachment":
         """
         Creates an attachment from an MXC URL.
@@ -536,7 +539,7 @@ class BaseAttachment(abc.ABC):
         url: str,
         client_session: aiohttp.ClientSession = None,
         *,
-        force_write: bool | pathlib.Path = False,
+        force_write: U[bool, pathlib.Path] = False,
     ) -> "BaseAttachment":
         """
         Creates an attachment from an HTTP URL.
@@ -563,7 +566,7 @@ class BaseAttachment(abc.ABC):
                 response.raise_for_status()
             except aiohttp.ClientResponseError as err:
                 raise MediaDownloadException("Failed to download attachment.", exception=err)
-        
+
             file_name = response.headers.get("Content-Disposition")
             if file_name:
                 file_name = re.search(r"filename=\"(.+)\"", file_name)
@@ -721,7 +724,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
         cls,
         file: typing.Union[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
-        xyz_amorgan_blurhash: str | bool = None,
+        xyz_amorgan_blurhash: U[str, bool] = None,
     ) -> "SupportXYZAmorganBlurHash":
         file = _to_path(file)
         if isinstance(file, io.BytesIO):
@@ -740,7 +743,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
 
     @staticmethod
     def thumbnailify_image(
-        image: PIL.Image.Image | io.BytesIO | str | pathlib.Path,
+        image: U[PIL.Image.Image, io.BytesIO, str, pathlib.Path],
         size: typing.Tuple[int, int] = (320, 240),
         resampling: PIL.Image.Resampling = PIL.Image.Resampling.BICUBIC,
     ) -> PIL.Image.Image:
@@ -762,7 +765,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
         return image
 
     async def get_blurhash(
-        self, quality: typing.Tuple[int, int] = (4, 3), file: str | pathlib.Path | io.BytesIO | PIL.Image.Image = None
+        self, quality: typing.Tuple[int, int] = (4, 3), file: U[str, pathlib.Path, io.BytesIO, PIL.Image.Image] = None
     ) -> str:
         """
         Gets the blurhash of the attachment. See: [woltapp/blurhash](https://github.com/woltapp/blurhash)
@@ -980,7 +983,7 @@ class VideoAttachment(BaseAttachment):
         duration: int = None,
         height: int = None,
         width: int = None,
-        thumbnail: ImageAttachment | typing.Literal[False] = None,
+        thumbnail: U[ImageAttachment, typing.Literal[False]] = None,
         generate_blurhash: bool = True,
     ) -> "VideoAttachment":
         """

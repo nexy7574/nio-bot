@@ -6,6 +6,7 @@ import re
 import typing
 import urllib.parse as urllib
 from collections import namedtuple
+from typing import Union as U
 
 import nio
 
@@ -143,7 +144,9 @@ async def room_parser(ctx: "Context", arg: "Argument", value: str) -> nio.Matrix
             if value == room.canonical_alias:
                 break
         else:
-            room: nio.RoomResolveAliasResponse | nio.RoomResolveAliasError = await ctx.client.room_resolve_alias(value)
+            room: U[nio.RoomResolveAliasResponse, nio.RoomResolveAliasError] = await ctx.client.room_resolve_alias(
+                value
+            )
             if isinstance(room, nio.RoomResolveAliasError):
                 raise CommandParserError(f"Invalid room alias: {value}.", response=room)
             room = ctx.client.rooms.get(room.room_id)
@@ -188,7 +191,7 @@ def event_parser(
 
         if value.startswith("$"):
             # from raw ID
-            event: nio.RoomGetEventResponse | nio.RoomGetEventError = await ctx.client.room_get_event(room_id, value)
+            event: U[nio.RoomGetEventResponse, nio.RoomGetEventError] = await ctx.client.room_get_event(room_id, value)
             if not isinstance(event, nio.RoomGetEventResponse):
                 raise CommandParserError(f"Invalid event ID: {value}.", response=event)
             event: nio.Event = event.event
@@ -244,7 +247,7 @@ def matrix_to_parser(
                 raise CommandParserError(f"No room with that ID, alias, or matrix.to link found.")
 
             if event_id:
-                event: nio.RoomGetEventResponse | nio.RoomGetEventError = await ctx.client.room_get_event(
+                event: U[nio.RoomGetEventResponse, nio.RoomGetEventError] = await ctx.client.room_get_event(
                     room_id, event_id
                 )
                 if not isinstance(event, nio.RoomGetEventResponse):
