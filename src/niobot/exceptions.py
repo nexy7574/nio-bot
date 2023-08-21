@@ -43,7 +43,7 @@ class NioBotException(Exception):
     message: typing.Optional[str]
     response: typing.Optional[nio.ErrorResponse]
     exception: typing.Optional[BaseException]
-    original: typing.Optional[nio.ErrorResponse, BaseException]
+    original: typing.Union[nio.ErrorResponse, BaseException, None]
 
     def __init__(
         self,
