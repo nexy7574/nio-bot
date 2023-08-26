@@ -555,12 +555,12 @@ class NioBot(nio.AsyncClient):
 
     @staticmethod
     def _get_id(obj) -> str:
+        if hasattr(obj, "event_id"):
+            return obj.event_id
         if hasattr(obj, "room_id"):
             return obj.room_id
         if hasattr(obj, "user_id"):
             return obj.user_id
-        if hasattr(obj, "event_id"):
-            return obj.event_id
         if isinstance(obj, str):
             return obj
         raise ValueError("Unable to determine ID")
