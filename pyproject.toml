@@ -15,9 +15,9 @@ authors = [
 dynamic = ["version", "dependencies"]
 
 [project.urls]
-Source = "https://github.com/eekim10/niobot"
-Tracker = "https://github.com/eekim10/niobot/issues"
-Documentation = "https://eekim10.github.io/niobot/"
+Source = "https://github.com/nexy7574/niobot"
+Tracker = "https://github.com/nexy7574/niobot/issues"
+Documentation = "https://nexy7574.github.io/niobot/"
 "Matrix Room" = "https://matrix.to/#/#niobot:nexy7574.co.uk"
 Funding = "https://ko-fi.com/nexy7574"
 
