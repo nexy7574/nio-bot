@@ -21,12 +21,12 @@ And the following installed on the machine you want to run the bot on:
 ## Installation
 After you've installed and acquired the above, you can install nio-bot with the following command:
 ```bash
-python3 -m pip install git+https://github.com/EEKIM10/nio-bot.git#egg=nio-bot[cli]
+python3 -m pip install git+https://github.com/nexy7574/nio-bot.git#egg=nio-bot[cli]
 # Note that we install the extras for `cli` here - the niobot CLI comes with a bunch of useful tools we'll use.
 ```
 If you would like to install support for end-to-end encryption, you can install the following instead:
 ```bash
-python3 -m pip install git+https://github.com/EEKIM10/nio-bot.git#egg=nio-bot[cli,e2ee]
+python3 -m pip install git+https://github.com/nexy7574/nio-bot.git#egg=nio-bot[cli,e2ee]
 ```
 
 After you've done that, verify everything installed fine by running `niocli version`:

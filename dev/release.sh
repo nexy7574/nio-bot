@@ -30,6 +30,6 @@ git checkout master
 
 printf '\nOpening browser so that you can upload the wheels to the tag\n'
 xdg-open file://"$PWD"/dist &
-xdg-open "https://github.com/EEKIM10/niobot/releases/edit/$VERSION" &
+xdg-open "https://github.com/nexy7574/niobot/releases/edit/$VERSION" &
 
 printf '\nDone!\n'

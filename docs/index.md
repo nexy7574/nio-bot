@@ -23,7 +23,7 @@ it easier for new users to get into Matrix, and to make it easier for them to ma
 own bots.
 
 ??? quote "Creation background and motivations"
-    I ([nex](https://github.com/EEKIM10)) personally come from a discord bot development background, and am used to using discord.py (now [py-cord](https://pypi.org/project/py-cord)),
+    I ([nex](https://github.com/nexy7574)) personally come from a discord bot development background, and am used to using discord.py (now [py-cord](https://pypi.org/project/py-cord)),
     and jumping over to matrix gave me a strong whiplash feeling.
     In fact, it felt so different that I gave up twice making bots.
     This is actually my second public matrix bot framework, with the predecessor being called `matrix.py`
@@ -74,7 +74,7 @@ The package is [nio-bot](https://pypi.org/project/nio-bot/), and can be installe
 
 If you are unable to use PyPi for whatever reason, python wheels and source distributions are available in all github releases.
 
-Just go to [the releases page](https://github.com/EEKIM10/niobot/releases), and download the latest release.
+Just go to [the releases page](https://github.com/nexy7574/niobot/releases), and download the latest release.
 
 You can then `pip install <wheel file>`.
 
@@ -84,7 +84,7 @@ If you want to get bleeding edge features, or simply build from source, you can 
 For example:
 
 ```bash
-pip install git+https://github.com/EEKIM10/niobot.git@master#egg=nio-bot[e2ee,cli]
+pip install git+https://github.com/nexy7574/niobot.git@master#egg=nio-bot[e2ee,cli]
 ```
 
 (replace @master with @branch-name or @tag-name for a specific branch or tag.)

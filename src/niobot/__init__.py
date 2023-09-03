@@ -20,7 +20,7 @@ except ImportError:
 
 __author__ = "Nexus <pip@nexy7574.co.uk>"
 __license__ = "GNU GPLv3"
-__url__ = "https://github.com/EEKIM10/niobot"
+__url__ = "https://github.com/nexy7574/niobot"
 __title__ = "niobot"
 __description__ = "A Matrix bot framework written in Python built on matrix-nio."
 __user_agent__ = f"Mozilla/5.0 {__title__}/{version_meta.__version__} ({__url__})"

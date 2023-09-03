@@ -23,7 +23,7 @@ patches for each individual version just a waste of effort.
 
 ### Releases
 
-Patched releases will then be uploaded to their own [GitHub releases](//github.com/EEKIM10/niobot/releases), which then propagates to
+Patched releases will then be uploaded to their own [GitHub releases](//github.com/nexy7574/niobot/releases), which then propagates to
 [PyPi](https://pypi.org/project/nio-bot). Security releases will be *tagged* with `[URGENT] v<version>`, for example, `[URGENT] v4.7.13`. This means that anyone who happens to visit
 the github page will see that there's a new urgent release, and will upgrade.
 

@@ -116,7 +116,7 @@ def get_metadata_ffmpeg(file: typing.Union[str, pathlib.Path]) -> typing.Dict[st
     """
     Gets metadata for a file via ffprobe.
 
-    [example output (JSON)](https://github.com/EEKIM10/niobot/raw/master/docs/assets/guides/text/example_ffprobe.json)
+    [example output (JSON)](https://github.com/nexy7574/niobot/raw/master/docs/assets/guides/text/example_ffprobe.json)
 
     :param file: The file to get metadata for. **Must be a path-like object**
     :return: A dictionary containing the metadata.
@@ -142,7 +142,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     Only returns a limited subset of the data, such as one stream, which contains the format, and size,
     and the format, which contains the filename, format, and size.
 
-    [example output (JSON)](https://github.com/EEKIM10/niobot/raw/master/docs/assets/guides/text/example_identify.json)
+    [example output (JSON)](https://github.com/nexy7574/niobot/raw/master/docs/assets/guides/text/example_identify.json)
 
     :param file: The file to get metadata for. **Must be a path object**
     :return: A slimmed-down dictionary containing the metadata.

@@ -87,7 +87,7 @@ async def upload_txt(ctx: Context):
 ```
 
 This results in the following:
-![image](https://eekim10.github.io/niobot/assets/guides/images/sending-attachments/file-send.avif)
+![image](https://nexy7574.github.io/niobot/assets/guides/images/sending-attachments/file-send.avif)
 
 You can then click on the file to download it!
 
@@ -110,8 +110,8 @@ having an ugly loading spinner or outright blank space in place of a loading ima
 
 For example:
 
-![pre-blurhash (after loading the image)](https://eekim10.github.io/niobot/assets/guides/images/sending-attachments/blurhash-hashed.avif){ loading=lazy }
-![post-blurhash (after loading the image)](https://eekim10.github.io/niobot/assets/guides/images/sending-attachments/blurhash-dehashed.avif){ loading=lazy }
+![pre-blurhash (after loading the image)](https://nexy7574.github.io/niobot/assets/guides/images/sending-attachments/blurhash-hashed.avif){ loading=lazy }
+![post-blurhash (after loading the image)](https://nexy7574.github.io/niobot/assets/guides/images/sending-attachments/blurhash-dehashed.avif){ loading=lazy }
 
 ??? info "This may slow down your image upload"
     Generating blurhashes, especially for large images, even more especially with a weak CPU, can be very slow.

@@ -10,13 +10,13 @@ Please note that there *will* be teething problems, and as such some advanced fe
 available, as with any client.
 
 ## Need help?
-Take a look at the [docs!](https://eekim10.github.io/niobot), or
+Take a look at the [docs!](https://nexy7574.github.io/niobot), or
 [![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#niobot:nexy7574.co.uk)
 (dedicated support room)
 
 ---
 
-Alternatively, take a look at my [dev bot](https://github.com/EEKIM10/niobot-test), which is a bot that I use to test
+Alternatively, take a look at my [dev bot](https://github.com/nexy7574/niobot-test), which is a bot that I use to test
 features of nio-bot before they're released.
 This bot is very advanced as, since I developed the library, I know exactly how it works, and will have bleeding-edge
 features built into it, which a lot of users may not use yet.
@@ -41,9 +41,9 @@ nio-bot[e2ee,cli]==1.0.0
 ### Development (master branch)
 You should use requirements.txt:
 ```python
-nio-bot @ git+https://github.com/EEKIM10/niobot.git
+nio-bot @ git+https://github.com/nexy7574/niobot.git
 # Or with e2ee support (note you will need libolm)
-nio-bot[e2ee] @ git+https://github.com/EEKIM10/niobot.git
+nio-bot[e2ee] @ git+https://github.com/nexy7574/niobot.git
 ```
 You can figure out how to install it in other ways.
 

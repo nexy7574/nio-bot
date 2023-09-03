@@ -12,7 +12,7 @@ their usage in the command decorator, and a short description in the docstring.
 ??? abstract "An example of the help command with no arguments"
     ??? quote "Source of this sample"
         This is the output of the help command from 
-        [EEKIM10/niobot-test](https://github.com/EEKIM10/niobot-test/tree/f99160/)
+        [nexy7574/niobot-test](https://github.com/nexy7574/niobot-test/tree/f99160/)
     ```
     ?[help|h]: Shows a list of commands for this bot
     ?[ytdl|yt|dl|yl-dl|yt-dlp] <url> [format]: Downloads a video from YouTube
@@ -33,7 +33,7 @@ their usage in the command decorator, and a short description in the docstring.
 ??? abstract "An example of the help command with a specified command name"
     ??? quote "Source of this sample"
         This is the output of the help command from 
-        [EEKIM10/niobot-test](https://github.com/EEKIM10/niobot-test/tree/f99160/)
+        [nexy7574/niobot-test](https://github.com/nexy7574/niobot-test/tree/f99160/)
 
     ```
     ?[help|h]:
