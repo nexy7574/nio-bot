@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import typing
 
 if typing.TYPE_CHECKING:
@@ -6,6 +7,9 @@ if typing.TYPE_CHECKING:
 
 
 __all__ = ("Typing",)
+
+log = logging.getLogger(__name__)
+_TYPING_STATES: typing.Dict[str, "Typing"] = {}
 
 
 class Typing:
@@ -19,6 +23,8 @@ class Typing:
     """
 
     def __init__(self, client: "NioBot", room_id: str, *, timeout: int = 30, persistent: bool = True):
+        if room_id in _TYPING_STATES:
+            log.warning("A typing notification is already active for this room: %s", _TYPING_STATES[room_id])
         self.room_id = room_id
         self.client = client
         self.persistent = persistent
@@ -27,11 +33,15 @@ class Typing:
 
     async def persistence_loop(self):
         while True:
+            _TYPING_STATES[self.room_id] = self
             await self.client.room_typing(self.room_id, True, timeout=self.timeout)
             await asyncio.sleep(self.timeout - 1000)
+            _TYPING_STATES[self.room_id] = self
 
     async def __aenter__(self):
         """Starts the typing notification loop, or sends a single typing notification if not persistent."""
+        if self.room_id in _TYPING_STATES:
+            raise RuntimeError("A typing notification is already active for this room", _TYPING_STATES[self.room_id])
         if not self.persistent:
             await self.client.room_typing(self.room_id, True, timeout=self.timeout)
         else:
@@ -42,3 +52,4 @@ class Typing:
         if self._task:
             self._task.cancel()
         await self.client.room_typing(self.room_id, False)
+        _TYPING_STATES.pop(self.room_id, None)
