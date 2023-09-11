@@ -54,7 +54,7 @@ class NioBot(nio.AsyncClient):
         device_id: str = "nio-bot",
         store_path: str = None,
         *,
-        command_prefix: str,
+        command_prefix: typing.Union[str, re.Pattern],
         case_insensitive: bool = True,
         owner_id: str = None,
         config: nio.AsyncClientConfig = None,
@@ -262,9 +262,19 @@ class NioBot(nio.AsyncClient):
         else:
             content = event.body
 
-        if content.startswith(self.command_prefix):
+        def get_prefix(c) -> typing.Union[str, None]:
+            if isinstance(self.command_prefix, re.Pattern):
+                _m = re.match(self.command_prefix, c)
+                if _m:
+                    return _m.group(0)
+            else:
+                if c.startswith(self.command_prefix):
+                    return self.command_prefix
+
+        _p = get_prefix(content)
+        if get_prefix(content):
             try:
-                command = original_command = content[len(self.command_prefix) :].splitlines()[0].split(" ")[0]
+                command = original_command = content[len(_p) :].splitlines()[0].split(" ")[0]
             except IndexError:
                 self.log.info(
                     "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
