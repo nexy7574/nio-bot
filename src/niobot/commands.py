@@ -136,6 +136,9 @@ class Command:
         For example: `usage="<message> [times]"` will show up as `[p][command] <message> [times]` in the help command.
     :param hidden:
         Whether the command is hidden or not. If hidden, the command will be always hidden on the auto-generated help.
+    :param greedy:
+        When enabled, `CommandArgumentsError` will not be raised if too many arguments are given to the command.
+        This is useful for commands that take a variable amount of arguments, and retrieve them via `Context.args`.
     """
 
     _CTX_ARG = Argument("ctx", Context, description="The context for the command", parser=lambda ctx, *_: ctx)
@@ -149,6 +152,7 @@ class Command:
         description: str = None,
         disabled: bool = False,
         hidden: bool = False,
+        greedy: bool = False,
         **kwargs,
     ):
         self.__runtime_id = os.urandom(16).hex()
@@ -173,6 +177,7 @@ class Command:
                 self.arguments = self.autodetect_args(self.callback)
         self.arguments.insert(0, self._CTX_ARG)
         self.arguments: list[Argument]
+        self.greedy = greedy
 
     @staticmethod
     def autodetect_args(callback) -> list[Argument]:
@@ -265,7 +270,7 @@ class Command:
                     raise CheckFailure(name)
 
         parsed_args = []
-        if len(ctx.args) > (len(self.arguments) - 1):
+        if len(ctx.args) > (len(self.arguments) - 1) and self.greedy is False:
             raise CommandArgumentsError(f"Too many arguments given to command {self.name}")
         for index, argument in enumerate(self.arguments[1:]):
             argument: Argument
@@ -286,6 +291,13 @@ class Command:
             parsed_args.append(parsed_argument)
 
         parsed_args = [ctx, *parsed_args]
+        if len(parsed_args) != len(self.arguments):
+            self.log.warning(
+                "Parsed arguments length does not match registered arguments length. %d processed arguments, %d "
+                "arguments.",
+                len(parsed_args),
+                len(self.arguments),
+            )
         self.log.debug("Arguments to pass: %r", parsed_args)
         if self.module:
             self.log.debug("Will pass module instance")
@@ -294,9 +306,23 @@ class Command:
             return self.callback(*parsed_args)
 
     def construct_context(
-        self, client: "NioBot", room: nio.MatrixRoom, src_event: nio.RoomMessageText, meta: str
+        self, client: "NioBot", room: nio.MatrixRoom, src_event: nio.RoomMessageText, meta: str, cls: type = Context
     ) -> Context:
-        return Context(client, room, src_event, self, invoking_string=meta)
+        """
+        Constructs the context for the current command.
+
+        You will rarely need to do this, the library automatically gives you a Context when a command is run.
+
+        :param client: The current instance of the client.
+        :param room: The room the command was invoked in.
+        :param src_event: The source event that triggered the command. Must be `nio.RoomMessageText`.
+        :param meta: The invoking string (usually the command name, however may be an alias instead)
+        :param cls: The class to construct the context with. Defaults to `Context`.
+        :return: The constructed Context.
+        """
+        if not isinstance(src_event, (nio.RoomMessageText, nio.RoomMessageNotice)):
+            raise TypeError("src_event must be a textual event (i.e. m.text or m.notice).")
+        return cls(client, room, src_event, self, invoking_string=meta)
 
 
 def command(name: str = None, **kwargs) -> callable:
@@ -367,13 +393,29 @@ def event(name: str) -> callable:
 
 
 class Module:
+    """
+    Represents a module.
+
+    A module houses a set of commands and events, and can be used to modularise your bot, and organise commands and
+    their respective code into multiple files and classes for ease of use, development, and maintenance.
+
+    :ivar bot: The bot instance this module is mounted to.
+    :ivar client: Alias for `bot`.
+    """
+
     __is_nio_module__ = True
 
     def __init__(self, bot: "NioBot"):
         self.bot = self.client = bot
-        self.log = logging.getLogger(__name__)
 
-    def list_commands(self):
+    @property
+    def log(self) -> logging.Logger:
+        """deprecated per-module log instance.
+
+        You should instantiate your own logger instead."""
+        return logging.getLogger(self.__class__.__name__)
+
+    def list_commands(self) -> typing.Generator[Command, None, None]:
         for _, potential_command in inspect.getmembers(self):
             if hasattr(potential_command, "__nio_command__"):
                 yield potential_command.__nio_command__

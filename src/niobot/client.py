@@ -22,6 +22,9 @@ from .exceptions import *
 from .utils import Typing, force_await, run_blocking
 from .utils.help_command import default_help_command
 
+if typing.TYPE_CHECKING:
+    from .context import Context
+
 __all__ = ("NioBot",)
 
 
@@ -54,7 +57,15 @@ class NioBot(nio.AsyncClient):
         command_prefix: str,
         case_insensitive: bool = True,
         owner_id: str = None,
-        **kwargs,
+        config: nio.AsyncClientConfig = None,
+        ssl: bool = True,
+        proxy: str = None,
+        help_command: typing.Union[Command, typing.Callable[["Context"], typing.Any]] = None,
+        global_message_type: str = "m.notice",
+        ignore_old_events: bool = True,
+        auto_join_rooms: bool = True,
+        automatic_markdown_renderer: bool = True,
+        max_message_cache: int = 1000,
     ):
         try:
             self.loop = asyncio.get_running_loop()
@@ -69,8 +80,8 @@ class NioBot(nio.AsyncClient):
                 raise FileNotFoundError("Store path %s is not a directory!" % store_path)
 
         if ENCRYPTION_ENABLED:
-            if not kwargs.get("config"):
-                kwargs.setdefault("config", nio.AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True))
+            if not config:
+                config = nio.AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True)
                 self.log.info("Encryption support enabled automatically.")
         else:
             self.log.info("Encryption support is not available (are the e2ee extras installed?)")
@@ -80,9 +91,9 @@ class NioBot(nio.AsyncClient):
             user_id,
             device_id,
             store_path=store_path,
-            config=kwargs.pop("config", None),
-            ssl=kwargs.pop("ssl", True),
-            proxy=kwargs.pop("proxy", None),
+            config=config,
+            ssl=ssl,
+            proxy=proxy,
         )
         self.user_id = user_id
         self.device_id = device_id
@@ -100,8 +111,8 @@ class NioBot(nio.AsyncClient):
         help_cmd = Command(
             "help", default_help_command, aliases=["h"], description="Shows a list of commands for this bot"
         )
-        if kwargs.get("help_command"):
-            cmd = kwargs.pop("help_command")
+        if help_command:
+            cmd = help_command
             if isinstance(cmd, Command):
                 help_cmd = cmd
             elif asyncio.iscoroutinefunction(cmd) or inspect.isfunction(cmd):
@@ -116,10 +127,10 @@ class NioBot(nio.AsyncClient):
         self._modules = {}
         self._events = {}
         self._event_tasks = []
-        self.global_message_type = kwargs.pop("global_message_type", "m.notice")
-        self.ignore_old_events = kwargs.pop("ignore_old_events", True)
-        self.auto_join_rooms = kwargs.pop("auto_join_rooms", True)
-        self.automatic_markdown_renderer = kwargs.pop("automatic_markdown_renderer", True)
+        self.global_message_type = global_message_type
+        self.ignore_old_events = ignore_old_events
+        self.auto_join_rooms = auto_join_rooms
+        self.automatic_markdown_renderer = automatic_markdown_renderer
         # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
         # (In element at least).
 
@@ -129,7 +140,7 @@ class NioBot(nio.AsyncClient):
         self.direct_rooms: typing.Dict[str, nio.MatrixRoom] = {}
 
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
-            maxlen=kwargs.pop("max_message_cache", 1000)
+            maxlen=max_message_cache
         )
         self.is_ready = asyncio.Event()
         self._waiting_events = {}
