@@ -209,7 +209,7 @@ class NioBot(nio.AsyncClient):
             self.log.debug("%r is not in registered events: %s", event_name, self._events)
 
     def is_old(self, event: nio.Event) -> bool:
-        """Checks if an event was sent before the bot started. Always returns False when ignore_old_evens is False"""
+        """Checks if an event was sent before the bot started. Always returns False when ignore_old_events is False"""
         if not self.start_time:
             self.log.warning("have not started yet, using relative age comparison")
             start_time = time.time() - 30  # relative
@@ -242,7 +242,7 @@ class NioBot(nio.AsyncClient):
         else:
             self.log.debug("Updated read receipts for %s to %s.", room, event)
 
-    async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
+    async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText) -> None:
         """Processes a message and runs the command it is trying to invoke if any."""
         self.message_cache.append((room, event))
         self.dispatch("message", room, event)
