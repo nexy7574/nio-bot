@@ -85,7 +85,7 @@ SUPPORTED_IMAGE_CODECS = ["mjpeg", "gif", "png", "av1", "webp"]
 SUPPORTED_CODECS = SUPPORTED_VIDEO_CODECS + SUPPORTED_AUDIO_CODECS + SUPPORTED_IMAGE_CODECS
 
 
-def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
+def detect_mime_type(file: U[str, io.BytesIO, pathlib.Path]) -> str:
     """
     Detect the mime type of a file.
 
@@ -112,7 +112,7 @@ def detect_mime_type(file: typing.Union[str, io.BytesIO, pathlib.Path]) -> str:
         raise TypeError("File must be a string, BytesIO, or Path object.")
 
 
-def get_metadata_ffmpeg(file: typing.Union[str, pathlib.Path]) -> typing.Dict[str, typing.Any]:
+def get_metadata_ffmpeg(file: U[str, pathlib.Path]) -> typing.Dict[str, typing.Any]:
     """
     Gets metadata for a file via ffprobe.
 
@@ -180,7 +180,9 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     return data
 
 
-def get_metadata(file: typing.Union[str, pathlib.Path], mime_type: str = None) -> typing.Dict[str, typing.Any]:
+def get_metadata(
+    file: U[str, pathlib.Path], mime_type: typing.Optional[str] = None
+) -> typing.Dict[str, typing.Any]:
     """
     Gets metadata for a file.
 
@@ -308,7 +310,7 @@ def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
     return True
 
 
-def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> typing.Union[pathlib.Path, io.BytesIO]:
+def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> U[pathlib.Path, io.BytesIO]:
     """Converts a string to a Path object."""
     if not isinstance(file, (str, pathlib.PurePath, io.BytesIO)):
         raise TypeError("File must be a string, BytesIO, or Path object.")
@@ -331,7 +333,7 @@ def _size(file: U[pathlib.Path, io.BytesIO]) -> int:
 
 def which(
     file: U[io.BytesIO, pathlib.Path, str], mime_type: str = None
-) -> typing.Union[
+) -> U[
     typing.Type["FileAttachment"],
     typing.Type["ImageAttachment"],
     typing.Type["AudioAttachment"],
@@ -423,7 +425,7 @@ class BaseAttachment(abc.ABC):
     """
 
     if typing.TYPE_CHECKING:
-        file: typing.Union[pathlib.Path, io.BytesIO]
+        file: U[pathlib.Path, io.BytesIO]
         file_name: str
         mime_type: str
         size: int
@@ -434,7 +436,7 @@ class BaseAttachment(abc.ABC):
 
     def __init__(
         self,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         mime_type: str = None,
         size_bytes: int = None,
@@ -482,7 +484,7 @@ class BaseAttachment(abc.ABC):
     @classmethod
     async def from_file(
         cls,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
     ) -> "BaseAttachment":
         """
@@ -495,11 +497,10 @@ class BaseAttachment(abc.ABC):
         :return: Loaded attachment.
         """
         file = _to_path(file)
-        if isinstance(file, io.BytesIO):
-            if not file_name:
+        if not file_name:
+            if isinstance(file, io.BytesIO):
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
-        else:
-            if not file_name:
+            else:
                 file_name = file.name
 
         mime_type = await run_blocking(detect_mime_type, file)
@@ -588,13 +589,13 @@ class BaseAttachment(abc.ABC):
                 else:
                     save_path = tempdir
 
-            if save_path is not None:
-                async with aiofiles.open(save_path, "wb") as fh:
-                    async for chunk in response.content.iter_chunked(1024):
-                        await fh.write(chunk)
-                return await cls.from_file(save_path, file_name)
-            else:
+            if save_path is None:
                 return await cls.from_file(io.BytesIO(await response.read()), file_name)
+
+            async with aiofiles.open(save_path, "wb") as fh:
+                async for chunk in response.content.iter_chunked(1024):
+                    await fh.write(chunk)
+            return await cls.from_file(save_path, file_name)
 
     @property
     def size_bytes(self) -> int:
@@ -612,7 +613,7 @@ class BaseAttachment(abc.ABC):
             "gb",
             "gib",
         ],
-    ) -> typing.Union[int, float]:
+    ) -> U[int, float]:
         """
         Helper function to convert the size of this attachment into a different unit.
 
@@ -722,7 +723,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
     @classmethod
     async def from_file(
         cls,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         xyz_amorgan_blurhash: U[str, bool] = None,
     ) -> "SupportXYZAmorganBlurHash":
@@ -822,7 +823,7 @@ class FileAttachment(BaseAttachment):
 
     def __init__(
         self,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         mime_type: str = None,
         size_bytes: int = None,
@@ -849,7 +850,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
 
     def __init__(
         self,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         mime_type: str = None,
         size_bytes: int = None,
@@ -877,7 +878,7 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
     @classmethod
     async def from_file(
         cls,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         height: int = None,
         width: int = None,
@@ -956,7 +957,7 @@ class VideoAttachment(BaseAttachment):
 
     def __init__(
         self,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         mime_type: str = None,
         size_bytes: int = None,
@@ -978,7 +979,7 @@ class VideoAttachment(BaseAttachment):
     @classmethod
     async def from_file(
         cls,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         duration: int = None,
         height: int = None,
@@ -1051,7 +1052,7 @@ class VideoAttachment(BaseAttachment):
         return self
 
     @staticmethod
-    async def generate_thumbnail(video: typing.Union[str, pathlib.Path, "VideoAttachment"]) -> ImageAttachment:
+    async def generate_thumbnail(video: U[str, pathlib.Path, "VideoAttachment"]) -> ImageAttachment:
         """
         Generates a thumbnail for a video.
 
@@ -1086,7 +1087,7 @@ class AudioAttachment(BaseAttachment):
 
     def __init__(
         self,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         mime_type: str = None,
         size_bytes: int = None,
@@ -1102,7 +1103,7 @@ class AudioAttachment(BaseAttachment):
     @classmethod
     async def from_file(
         cls,
-        file: typing.Union[str, io.BytesIO, pathlib.Path],
+        file: U[str, io.BytesIO, pathlib.Path],
         file_name: str = None,
         duration: int = None,
     ) -> "AudioAttachment":
