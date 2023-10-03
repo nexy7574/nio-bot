@@ -740,7 +740,7 @@ class NioBot(nio.AsyncClient):
         message: U[nio.Event, str],
         content: str,
         *,
-        message_type: str = None,
+        message_type: typing.Optional[str] = None,
         clean_mentions: bool = False,
     ) -> nio.RoomSendResponse:
         """
@@ -760,7 +760,7 @@ class NioBot(nio.AsyncClient):
             content = content.replace("@", "@\u200b")
         event_id = self._get_id(message)
         message_type = message_type or self.global_message_type
-        content = {
+        content_dict = {
             "msgtype": message_type,
             "body": content,
             "format": "org.matrix.custom.html",
@@ -769,8 +769,8 @@ class NioBot(nio.AsyncClient):
 
         body = {
             "msgtype": message_type,
-            "body": " * %s" % content["body"],
-            "m.new_content": {**content},
+            "body": " * %s" % content_dict["body"],
+            "m.new_content": {**content_dict},
             "m.relates_to": {
                 "rel_type": "m.replace",
                 "event_id": event_id,
@@ -789,7 +789,7 @@ class NioBot(nio.AsyncClient):
         return response
 
     async def delete_message(
-        self, room: U[nio.MatrixRoom, str], message_id: U[nio.RoomMessage, str], reason: str = None
+        self, room: U[nio.MatrixRoom, str], message_id: U[nio.RoomMessage, str], reason: typing.Optional[str] = None
     ) -> nio.RoomRedactResponse:
         """
         Delete an existing message. You must be the sender of the message.
@@ -845,7 +845,12 @@ class NioBot(nio.AsyncClient):
             raise MessageException("Failed to delete reaction.", response)
         return response
 
-    async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:
+    async def start(
+        self,
+        password: typing.Optional[str] = None,
+        access_token: typing.Optional[str] = None,
+        sso_token: typing.Optional[str] = None,
+    ) -> None:
         """Starts the bot, running the sync loop."""
         self.loop = asyncio.get_event_loop()
         if password or sso_token:
@@ -900,7 +905,13 @@ class NioBot(nio.AsyncClient):
             self.log.info("Closing http session and logging out.")
             await self.close()
 
-    def run(self, *, password: str = None, access_token: str = None, sso_token: str = None) -> None:
+    def run(
+        self,
+        *,
+        password: typing.Optional[str] = None,
+        access_token: typing.Optional[str] = None,
+        sso_token: typing.Optional[str] = None,
+    ) -> None:
         """
         Runs the bot, blocking the program until the event loop exists.
         This should be the last function to be called in your script, as once it exits, the bot will stop running.
