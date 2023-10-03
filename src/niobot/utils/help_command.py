@@ -116,7 +116,7 @@ def get_long_description(command: "Command") -> str:
 async def default_help_command(ctx: "Context"):
     """Displays help text"""
     lines = []
-    prefix = ctx.invoking_prefix or "{prefix}"
+    prefix = ctx.invoking_prefix or "[p]"
     if not ctx.args:
         added = []
         # Display global help.
