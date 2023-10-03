@@ -145,7 +145,7 @@ class NioBot(nio.AsyncClient):
         self.is_ready = asyncio.Event()
         self._waiting_events = {}
 
-        if self.auto_join_rooms is True:
+        if self.auto_join_rooms:
             self.log.info("Auto-joining rooms enabled.")
             # noinspection PyTypeChecker
             self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
@@ -537,14 +537,12 @@ class NioBot(nio.AsyncClient):
         value = None
 
         async def event_handler(_room, _event):
-            if room_id:
-                if _room.room_id != room_id:
-                    self.log.debug("Ignoring bubbling message from %r (vs %r)", _room.room_id, room_id)
-                    return False
-            if sender:
-                if _event.sender != sender:
-                    self.log.debug("Ignoring bubbling message from %r (vs %r)", _event.sender, sender)
-                    return False
+            if room_id and _room.room_id != room_id:
+                self.log.debug("Ignoring bubbling message from %r (vs %r)", _room.room_id, room_id)
+                return False
+            if sender and _event.sender != sender:
+                self.log.debug("Ignoring bubbling message from %r (vs %r)", _event.sender, sender)
+                return False
             if check:
                 try:
                     result = await force_await(check, _room, _event)
@@ -864,10 +862,10 @@ class NioBot(nio.AsyncClient):
             login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
             if isinstance(login_response, nio.LoginError):
                 raise LoginException("Failed to log in.", login_response)
-            else:
-                self.log.info("Logged in as %s", login_response.user_id)
-                self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
-                self.start_time = time.time()
+
+            self.log.info("Logged in as %s", login_response.user_id)
+            self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
+            self.start_time = time.time()
         elif access_token:
             self.log.info("Logging in with existing access token.")
             if self.store_path:
