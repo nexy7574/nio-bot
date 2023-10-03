@@ -13,10 +13,7 @@ import marko
 import nio
 from nio.crypto import ENCRYPTION_ENABLED
 
-try:
-    from .attachment import BaseAttachment
-except ImportError:
-    BaseAttachment = None
+from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import *
 from .utils import Typing, force_await, run_blocking
