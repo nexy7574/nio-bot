@@ -83,6 +83,7 @@ class Context:
         event: nio.RoomMessageText,
         command: "Command",
         *,
+        invoking_prefix: typing.Optional[str] = None,
         invoking_string: str = None,
     ):
         self._init_ts = time.time()
@@ -90,8 +91,10 @@ class Context:
         self._room = room
         self._event = event
         self._command = command
+        self.invoking_prefix = invoking_prefix
         self._invoking_string = invoking_string
         to_parse = event.body
+
         if invoking_string:
             try:
                 to_parse = event.body[len(invoking_string) :]

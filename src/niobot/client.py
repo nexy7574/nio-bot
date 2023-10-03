@@ -262,7 +262,7 @@ class NioBot(nio.AsyncClient):
         else:
             content = event.body
 
-        def get_prefix(c) -> typing.Union[str, None]:
+        def get_prefix(c: str) -> typing.Union[str, None]:
             if isinstance(self.command_prefix, re.Pattern):
                 _m = re.match(self.command_prefix, c)
                 if _m:
@@ -271,10 +271,10 @@ class NioBot(nio.AsyncClient):
                 if c.startswith(self.command_prefix):
                     return self.command_prefix
 
-        _p = get_prefix(content)
-        if get_prefix(content):
+        matched_prefix = get_prefix(content)
+        if matched_prefix:
             try:
-                command = original_command = content[len(_p) :].splitlines()[0].split(" ")[0]
+                command = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
             except IndexError:
                 self.log.info(
                     "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
@@ -288,7 +288,13 @@ class NioBot(nio.AsyncClient):
                     self.dispatch("command_error", command, error)
                     return
 
-                context = command.construct_context(self, room, event, self.command_prefix + original_command)
+                context = command.construct_context(
+                    self,
+                    room=room,
+                    src_event=event,
+                    invoking_prefix=matched_prefix,
+                    meta=matched_prefix + original_command,
+                )
                 self.dispatch("command", context)
 
                 def _task_callback(t: asyncio.Task):
