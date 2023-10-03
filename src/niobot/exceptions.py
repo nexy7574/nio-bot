@@ -47,24 +47,24 @@ class NioBotException(Exception):
 
     def __init__(
         self,
-        message: str = None,
-        response: nio.ErrorResponse = None,
+        message: typing.Optional[str] = None,
+        response: typing.Optional[nio.ErrorResponse] = None,
         *,
-        exception: BaseException = None,
-        original: typing.Union[nio.ErrorResponse, BaseException] = None,
+        exception: typing.Optional[BaseException] = None,
+        original: typing.Optional[typing.Union[nio.ErrorResponse, BaseException]] = None,
     ):
         if original:
             warnings.warn(DeprecationWarning("original is deprecated, use response or exception instead"))
         self.original = original or response or exception
         self.response = response
-        self.exception: typing.Union[nio.ErrorResponse, BaseException] = exception
+        self.exception: typing.Optional[typing.Union[nio.ErrorResponse, BaseException]] = exception
         self.message = message
 
         if self.original is None and self.message is None:
             raise ValueError("If there is no error history, at least a human readable message should be provided.")
 
     def bottom_of_chain(
-        self, other: typing.Union[Exception, nio.ErrorResponse] = None
+        self, other: typing.Optional[typing.Union[Exception, nio.ErrorResponse]] = None
     ) -> typing.Union[BaseException, nio.ErrorResponse]:
         """Recursively checks the `original` attribute of the exception until it reaches the bottom of the chain.
 
@@ -200,9 +200,9 @@ class CheckFailure(CommandPreparationError):
 
     def __init__(
         self,
-        check_name: str = None,
-        message: str = None,
-        exception: BaseException = None,
+        check_name: typing.Optional[str] = None,
+        message: typing.Optional[str] = None,
+        exception: typing.Optional[BaseException] = None,
     ):
         if not message:
             message = f"Check {check_name} failed."
@@ -224,7 +224,12 @@ class NotOwner(CheckFailure):
     Exception raised when the command invoker is not the owner of the bot.
     """
 
-    def __init__(self, check_name: str = None, message: str = None, exception: BaseException = None):
+    def __init__(
+        self,
+        check_name: typing.Optional[str] = None,
+        message: typing.Optional[str] = None,
+        exception: typing.Optional[BaseException] = None,
+    ):
         if not message:
             message = "You are not the owner of this bot."
         super().__init__(check_name, message, exception)
@@ -236,7 +241,13 @@ class InsufficientPower(CheckFailure):
     """
 
     def __init__(
-        self, check_name: str = None, message: str = None, exception: BaseException = None, *, needed: int, have: int
+        self,
+        check_name: typing.Optional[str] = None,
+        message: typing.Optional[str] = None,
+        exception: typing.Optional[BaseException] = None,
+        *,
+        needed: int,
+        have: int,
     ):
         if not message:
             message = "Insufficient power level. Needed %d, have %d." % (needed, have)
@@ -248,7 +259,12 @@ class NotADirectRoom(CheckFailure):
     Exception raised when the current room is not `m.direct` (a DM room)
     """
 
-    def __init__(self, check_name: str = None, message: str = None, exception: BaseException = None):
+    def __init__(
+        self,
+        check_name: typing.Optional[str] = None,
+        message: typing.Optional[str] = None,
+        exception: typing.Optional[BaseException] = None,
+    ):
         if not message:
             message = "This command can only be run in a direct message room."
         super().__init__(check_name, message, exception)
