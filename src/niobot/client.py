@@ -131,8 +131,7 @@ class NioBot(nio.AsyncClient):
         # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
         # (In element at least).
 
-        # noinspection PyTypeChecker
-        self.add_event_callback(self.process_message, nio.RoomMessageText)
+        self.add_event_callback(self.process_message, nio.RoomMessageText)  # type: ignore
         self.add_event_callback(self.update_read_receipts, nio.RoomMessage)
         self.direct_rooms: typing.Dict[str, nio.MatrixRoom] = {}
 
@@ -144,8 +143,7 @@ class NioBot(nio.AsyncClient):
 
         if self.auto_join_rooms:
             self.log.info("Auto-joining rooms enabled.")
-            # noinspection PyTypeChecker
-            self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
+            self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)  # type: ignore
 
     async def sync(self, *args, **kwargs) -> U[nio.SyncResponse, nio.SyncError]:
         sync = await super().sync(*args, **kwargs)
@@ -238,12 +236,16 @@ class NioBot(nio.AsyncClient):
         event_id = event.event_id
         result = await self.room_read_markers(room, event_id, event_id)
         if not isinstance(result, nio.RoomReadMarkersResponse):
-            self.log.warning("Failed to update read receipts for %s: %s", room, result.message)
+            msg = result.message if isinstance(result, nio.ErrorResponse) else "?"
+            self.log.warning("Failed to update read receipts for %s: %s", room, msg)
         else:
             self.log.debug("Updated read receipts for %s to %s.", room, event)
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText) -> None:
         """Processes a message and runs the command it is trying to invoke if any."""
+        if self.start_time is None:
+            raise RuntimeError("Bot has not started yet!")
+
         self.message_cache.append((room, event))
         self.dispatch("message", room, event)
         if event.sender == self.user:
@@ -259,7 +261,7 @@ class NioBot(nio.AsyncClient):
         else:
             content = event.body
 
-        def get_prefix(c) -> typing.Union[str, None]:
+        def get_prefix(c: str) -> typing.Union[str, None]:
             if isinstance(self.command_prefix, re.Pattern):
                 _m = re.match(self.command_prefix, c)
                 if _m:
@@ -269,7 +271,7 @@ class NioBot(nio.AsyncClient):
                     return self.command_prefix
 
         _p = get_prefix(content)
-        if get_prefix(content):
+        if _p:
             try:
                 command = original_command = content[len(_p) :].splitlines()[0].split(" ")[0]
             except IndexError:
@@ -285,7 +287,7 @@ class NioBot(nio.AsyncClient):
                     self.dispatch("command_error", command, error)
                     return
 
-                context = command.construct_context(self, room, event, self.command_prefix + original_command)
+                context = command.construct_context(self, room, event, _p + original_command)
                 self.dispatch("command", context)
 
                 def _task_callback(t: asyncio.Task):
