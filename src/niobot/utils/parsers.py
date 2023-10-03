@@ -40,7 +40,7 @@ MatrixMXCUrl = namedtuple("MatrixMXCUrl", ("server", "media_id"), defaults=(None
 
 def boolean_parser(_: "Context", __, value: str) -> bool:
     """
-    Converts a given string into a boolean. Value is lower-cased before being parsed.
+    Converts a given string into a boolean. Value is casefolded before being parsed.
 
     The following resolves to true:
     * 1, y, yes, true, on
@@ -52,7 +52,7 @@ def boolean_parser(_: "Context", __, value: str) -> bool:
 
     :return: The parsed boolean
     """
-    value = value.lower()
+    value = value.casefold()
     if value in {"1", "y", "yes", "true", "on"}:
         return True
     if value in {"0", "n", "no", "false", "off"}:

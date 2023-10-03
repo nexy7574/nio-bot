@@ -34,7 +34,7 @@ class NioBot(nio.AsyncClient):
     :param device_id: The device ID to log in as. e.g. nio-bot
     :param store_path: The path to the store file. Defaults to ./store. Must be a directory.
     :param command_prefix: The prefix to use for commands. e.g. !
-    :param case_insensitive: Whether to ignore case when checking for commands. If True, this lower()s
+    :param case_insensitive: Whether to ignore case when checking for commands. If True, this casefold()s
      incoming messages for parsing.
     :param global_message_type: The message type to default to. Defaults to m.notice
     :param ignore_old_events: Whether to simply discard events before the bot's login.
@@ -255,7 +255,7 @@ class NioBot(nio.AsyncClient):
             return
 
         if self.case_insensitive:
-            content = event.body.lower()
+            content = event.body.casefold()
         else:
             content = event.body
 
