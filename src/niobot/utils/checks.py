@@ -1,6 +1,7 @@
 from ..commands import check
 from ..context import Context
 from ..exceptions import CheckFailure, InsufficientPower, NotOwner
+from typing import Optional
 
 __all__ = (
     "is_owner",
@@ -10,7 +11,7 @@ __all__ = (
 )
 
 
-def is_owner(*extra_owner_ids, name: str = None):
+def is_owner(*extra_owner_ids, name: Optional[str] = None):
     """
     Requires the sender owns the bot ([`NioBot.owner_id`][]), or is in `extra_owner_ids`.
     :param extra_owner_ids: A set of `@localpart:homeserver.tld` strings to check against.
@@ -29,7 +30,7 @@ def is_owner(*extra_owner_ids, name: str = None):
     return check(predicate, name)
 
 
-def is_dm(allow_dual_membership: bool = False, name: str = None):
+def is_dm(allow_dual_membership: bool = False, name: Optional[str] = None):
     """
     Requires that the current room is a DM with the sender.
 
@@ -50,7 +51,7 @@ def is_dm(allow_dual_membership: bool = False, name: str = None):
     return check(predicate, name)
 
 
-def sender_has_power(level: int, room_creator_bypass: bool = False, name: str = None):
+def sender_has_power(level: int, room_creator_bypass: bool = False, name: Optional[str] = None):
     """
     Requires that the sender has a certain power level in the current room before running the command.
 
@@ -70,7 +71,7 @@ def sender_has_power(level: int, room_creator_bypass: bool = False, name: str = 
     return check(predicate, name)
 
 
-def client_has_power(level: int, name: str = None):
+def client_has_power(level: int, name: Optional[str] = None):
     """
     Requires that the bot has a certain power level in the current room before running the command.
 
