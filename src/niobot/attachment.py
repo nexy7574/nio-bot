@@ -17,6 +17,7 @@ import typing
 import urllib.parse
 import warnings
 from typing import Union as U
+from typing import overload
 
 import aiofiles
 import aiohttp
@@ -180,9 +181,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     return data
 
 
-def get_metadata(
-    file: U[str, pathlib.Path], mime_type: typing.Optional[str] = None
-) -> typing.Dict[str, typing.Any]:
+def get_metadata(file: U[str, pathlib.Path], mime_type: typing.Optional[str] = None) -> typing.Dict[str, typing.Any]:
     """
     Gets metadata for a file.
 
@@ -310,9 +309,19 @@ def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
     return True
 
 
+@overload
+def _to_path(file: U[str, pathlib.Path]) -> pathlib.Path:
+    ...
+
+
+@overload
+def _to_path(file: io.BytesIO) -> io.BytesIO:
+    ...
+
+
 def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> U[pathlib.Path, io.BytesIO]:
     """Converts a string to a Path object."""
-    if not isinstance(file, (str, pathlib.PurePath, io.BytesIO)):
+    if not isinstance(file, (str, pathlib.Path, io.BytesIO)):
         raise TypeError("File must be a string, BytesIO, or Path object.")
 
     if isinstance(file, io.BytesIO):
