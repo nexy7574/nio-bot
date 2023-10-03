@@ -24,7 +24,7 @@ class ArgumentView:
         self.source = string
         self.index = 0
 
-        self.arguments = []
+        self.arguments: list[str] = []
 
     def add_arg(self, argument: str) -> None:
         """Adds an argument to the argument list
@@ -65,17 +65,14 @@ class ArgumentView:
                         self.add_arg(reconstructed)
                         reconstructed = ""
                         quote_char = None
+                elif self.index == 0:  # cannot be an escaped string
+                    quote_started = True
+                    quote_char = char
+                elif self.index > 0 and self.source[self.index - 1] != "\\":
+                    quote_started = True
+                    quote_char = char
                 else:
-                    if self.index == 0:  # cannot be an escaped string
-                        quote_started = True
-                        quote_char = char
-                    elif self.index > 0 and self.source[self.index - 1] != "\\":
-                        quote_started = True
-                        quote_char = char
-                    # If it is an escaped quote, we can add it to the string.
-                    else:
-                        reconstructed += char
-            # If the character is a space, we can add the reconstructed string to the arguments list
+                    reconstructed += char
             elif char.isspace():
                 if quote_started:
                     reconstructed += char
@@ -83,7 +80,6 @@ class ArgumentView:
                     self.add_arg(reconstructed)
                     reconstructed = ""
                     quote_char = None
-            # Any other character can be added to the current string
             elif char:  # elif ensures the character isn't null
                 reconstructed += char
             self.index += 1
