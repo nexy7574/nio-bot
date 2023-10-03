@@ -52,15 +52,15 @@ class NioBot(nio.AsyncClient):
         homeserver: str,
         user_id: str,
         device_id: str = "nio-bot",
-        store_path: str = None,
+        store_path: typing.Optional[str] = None,
         *,
         command_prefix: typing.Union[str, re.Pattern],
         case_insensitive: bool = True,
-        owner_id: str = None,
-        config: nio.AsyncClientConfig = None,
+        owner_id: typing.Optional[str] = None,
+        config: typing.Optional[nio.AsyncClientConfig] = None,
         ssl: bool = True,
-        proxy: str = None,
-        help_command: typing.Union[Command, typing.Callable[["Context"], typing.Any]] = None,
+        proxy: typing.Optional[str] = None,
+        help_command: typing.Optional[typing.Union[Command, typing.Callable[["Context"], typing.Any]]] = None,
         global_message_type: str = "m.notice",
         ignore_old_events: bool = True,
         auto_join_rooms: bool = True,
@@ -104,7 +104,7 @@ class NioBot(nio.AsyncClient):
 
         if command_prefix == "/":
             self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
-        if re.match(r"\s", command_prefix):
+        if isinstance(command_prefix, str) and re.match(r"\s", command_prefix):
             raise RuntimeError("Command prefix cannot contain whitespace.")
 
         self.start_time: typing.Optional[float] = None
@@ -184,7 +184,7 @@ class NioBot(nio.AsyncClient):
             await self._auto_join_room_callback(room, event)
 
     @staticmethod
-    def latency(event: nio.Event, *, received_at: float = None) -> float:
+    def latency(event: nio.Event, *, received_at: typing.Optional[float] = None) -> float:
         """Returns the latency for a given event in milliseconds
 
         :param event: The event to measure latency with
@@ -238,8 +238,8 @@ class NioBot(nio.AsyncClient):
         if self.is_old(event):
             self.log.debug("Ignoring event %s, sent before bot started.", event.event_id)
             return
-        event = event.event_id
-        result = await self.room_read_markers(room, event, event)
+        event_id = event.event_id
+        result = await self.room_read_markers(room, event_id, event_id)
         if not isinstance(result, nio.RoomReadMarkersResponse):
             self.log.warning("Failed to update read receipts for %s: %s", room, result.message)
         else:
@@ -443,7 +443,7 @@ class NioBot(nio.AsyncClient):
         for alias in command.aliases:
             self.log.debug("Removed command %r from the register.", self._commands.pop(alias, None))
 
-    def command(self, name: str = None, **kwargs):
+    def command(self, name: typing.Optional[str] = None, **kwargs):
         """Registers a command with the bot."""
         cls = kwargs.pop("cls", Command)
 
@@ -461,15 +461,15 @@ class NioBot(nio.AsyncClient):
         self._events[event_type].append(func)
         self.log.debug("Added event listener %r for %r", func, event_type)
 
-    def on_event(self, event_type: str = None):
+    def on_event(self, event_type: typing.Optional[str] = None):
         """Wrapper that allows you to register an event handler"""
-        if event_type.startswith("on_"):
-            self.log.warning("No events start with 'on_' - stripping prefix")
-            event_type = event_type[3:]
 
         def wrapper(func):
             nonlocal event_type
             event_type = event_type or func.__name__
+            if event_type.startswith("on_"):
+                self.log.warning("No events start with 'on_' - stripping prefix")
+                event_type = event_type[3:]
             self.add_event_listener(event_type, func)
             return func
 
@@ -524,11 +524,11 @@ class NioBot(nio.AsyncClient):
 
     async def wait_for_message(
         self,
-        room_id: str = None,
-        sender: str = None,
-        check: typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any] = None,
+        room_id: typing.Optional[str] = None,
+        sender: typing.Optional[str] = None,
+        check: typing.Optional[typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any]] = None,
         *,
-        timeout: float = None,
+        timeout: typing.Optional[float] = None,
     ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]]:
         """Waits for a message, optionally with a filter.
 
@@ -606,7 +606,7 @@ class NioBot(nio.AsyncClient):
         )
 
     async def _recursively_upload_attachments(
-        self, base: "BaseAttachment", encrypted: bool = False, __previous: list = None
+        self, base: "BaseAttachment", encrypted: bool = False, __previous: typing.Optional[list] = None
     ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, type(None)]]:
         """Recursively uploads attachments."""
         previous = (__previous or []).copy()
@@ -646,20 +646,21 @@ class NioBot(nio.AsyncClient):
             if not isinstance(room, nio.RoomCreateResponse):
                 raise NioBotException("Unable to create DM room for %r: %r" % (user_id, room), response=room)
             self.log.debug("Created DM room for %r: %r", user_id, room)
-            room = self.rooms.get(room.room_id)
+            room_id = room.room_id
+            room = self.rooms.get(room_id)
             if not room:
-                raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room.room_id)
+                raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room_id)
             self.direct_rooms[user_id] = room
         return room
 
     async def send_message(
         self,
         room: U[nio.MatrixRoom, nio.MatrixUser, str],
-        content: str = None,
-        file: BaseAttachment = None,
-        reply_to: U[nio.RoomMessageText, str] = None,
-        message_type: str = None,
-        clean_mentions: bool = False,
+        content: typing.Optional[str] = None,
+        file: typing.Optional[BaseAttachment] = None,
+        reply_to: typing.Optional[U[nio.RoomMessageText, str]] = None,
+        message_type: typing.Optional[str] = None,
+        clean_mentions: typing.Optional[bool] = False,
     ) -> nio.RoomSendResponse:
         """
         Sends a message.
