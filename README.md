@@ -61,7 +61,7 @@ bot = Bot(
     homeserver="https://matrix.org",  # your homeserver
     user_id="@__example__:matrix.org",  # the user ID to log in as (Fully qualified)
     command_prefix="!",  # the prefix to respond to (case sensitive, must be lowercase if below is True)
-    case_insensitive=True,  # messages will be lower()cased before being handled. This is recommended.
+    case_insensitive=True,  # messages will be casefold()ed before being handled. This is recommended.
     owner_id="@owner:homeserver.com"  # The user ID who owns this bot. Optional, but required for bot.is_owner(...).
 )
 
