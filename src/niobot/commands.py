@@ -237,16 +237,15 @@ class Command:
         """Returns the usage string for this command, auto-resolved if not pre-defined"""
         if self.usage:
             return self.usage
-        else:
-            usage = []
-            req = "<{!s}>"
-            opt = "[{!s}]"
-            for arg in self.arguments[1:]:
-                if arg.required:
-                    usage.append(req.format(arg.name))
-                else:
-                    usage.append(opt.format(arg.name))
-            return " ".join(usage)
+        usage = []
+        req = "<{!s}>"
+        opt = "[{!s}]"
+        for arg in self.arguments[1:]:
+            if arg.required:
+                usage.append(req.format(arg.name))
+            else:
+                usage.append(opt.format(arg.name))
+        return " ".join(usage)
 
     async def invoke(self, ctx: Context) -> typing.Coroutine:
         """
@@ -279,9 +278,8 @@ class Command:
             if index >= len(ctx.args):
                 if argument.required:
                     raise CommandArgumentsError(f"Missing required argument {argument.name}")
-                else:
-                    parsed_args.append(argument.default)
-                    continue
+                parsed_args.append(argument.default)
+                continue
 
             self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
             try:
