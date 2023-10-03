@@ -99,9 +99,7 @@ def integer_parser(
     return __parser
 
 
-def json_parser(
-    _: "Context", __: "Argument", value: str
-) -> typing.Union[list, dict, str, int, float, type(None), bool]:
+def json_parser(_: "Context", __: "Argument", value: str) -> typing.Union[list, dict, str, int, float, None, bool]:
     """
     Converts a given string into a JSON object.
 
@@ -161,7 +159,7 @@ async def room_parser(ctx: "Context", arg: "Argument", value: str) -> nio.Matrix
         raise CommandParserError(f"Invalid room ID, alias, or matrix.to link: {value!r}.")
 
     if room is None:
-        raise CommandParserError(f"No room with that ID, alias, or matrix.to link found.")
+        raise CommandParserError("No room with that ID, alias, or matrix.to link found.")
     return room
 
 
@@ -244,7 +242,7 @@ def matrix_to_parser(
                 room = ctx.client.rooms.get(room_id)
 
             if room is None:
-                raise CommandParserError(f"No room with that ID, alias, or matrix.to link found.")
+                raise CommandParserError("No room with that ID, alias, or matrix.to link found.")
 
             if event_id:
                 event: U[nio.RoomGetEventResponse, nio.RoomGetEventError] = await ctx.client.room_get_event(
