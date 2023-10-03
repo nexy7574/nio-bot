@@ -2,11 +2,14 @@ import asyncio
 import functools
 import typing
 from typing import Any
+from collections.abc import Callable
 
 __all__ = ("run_blocking", "force_await")
 
+T = typing.TypeVar("T")
 
-async def run_blocking(function: typing.Callable, *args: Any, **kwargs: Any) -> Any:
+
+async def run_blocking(function: Callable[..., T], *args: Any, **kwargs: Any) -> T:
     """
     Takes a blocking function and runs it in a thread, returning the result.
 

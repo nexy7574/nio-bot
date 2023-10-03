@@ -1063,8 +1063,10 @@ class VideoAttachment(BaseAttachment):
             if isinstance(self.thumbnail, ImageAttachment):
                 await self.thumbnail.get_blurhash()
             elif isinstance(file, pathlib.Path) and original_thumbnail is not False:
-                thumbnail = await run_blocking(first_frame, file)
-                self.thumbnail = await ImageAttachment.from_file(io.BytesIO(thumbnail), file_name="thumbnail.webp")
+                thumbnail_bytes = await run_blocking(first_frame, file)
+                self.thumbnail = await ImageAttachment.from_file(
+                    io.BytesIO(thumbnail_bytes), file_name="thumbnail.webp"
+                )
         return self
 
     @staticmethod
