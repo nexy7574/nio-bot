@@ -270,10 +270,10 @@ class NioBot(nio.AsyncClient):
                 if c.startswith(self.command_prefix):
                     return self.command_prefix
 
-        _p = get_prefix(content)
-        if _p:
+        matched_prefix = get_prefix(content)
+        if matched_prefix:
             try:
-                command = original_command = content[len(_p) :].splitlines()[0].split(" ")[0]
+                command = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
             except IndexError:
                 self.log.info(
                     "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
@@ -287,7 +287,13 @@ class NioBot(nio.AsyncClient):
                     self.dispatch("command_error", command, error)
                     return
 
-                context = command.construct_context(self, room, event, _p + original_command)
+                context = command.construct_context(
+                    self,
+                    room=room,
+                    src_event=event,
+                    invoking_prefix=matched_prefix,
+                    meta=matched_prefix + original_command,
+                )
                 self.dispatch("command", context)
 
                 def _task_callback(t: asyncio.Task):

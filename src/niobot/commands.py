@@ -305,7 +305,13 @@ class Command:
             return self.callback(*parsed_args)
 
     def construct_context(
-        self, client: "NioBot", room: nio.MatrixRoom, src_event: nio.RoomMessageText, meta: str, cls: type = Context
+        self,
+        client: "NioBot",
+        room: nio.MatrixRoom,
+        src_event: nio.RoomMessageText,
+        invoking_prefix: str,
+        meta: str,
+        cls: type = Context,
     ) -> Context:
         """
         Constructs the context for the current command.
@@ -315,13 +321,14 @@ class Command:
         :param client: The current instance of the client.
         :param room: The room the command was invoked in.
         :param src_event: The source event that triggered the command. Must be `nio.RoomMessageText`.
+        :param invoking_prefix: The prefix that triggered the command.
         :param meta: The invoking string (usually the command name, however may be an alias instead)
         :param cls: The class to construct the context with. Defaults to `Context`.
         :return: The constructed Context.
         """
         if not isinstance(src_event, (nio.RoomMessageText, nio.RoomMessageNotice)):
             raise TypeError("src_event must be a textual event (i.e. m.text or m.notice).")
-        return cls(client, room, src_event, self, invoking_string=meta)
+        return cls(client, room, src_event, self, invoking_prefix=invoking_prefix, invoking_string=meta)
 
 
 def command(name: typing.Optional[str] = None, **kwargs) -> Callable:

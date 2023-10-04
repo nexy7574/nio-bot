@@ -118,6 +118,7 @@ def get_long_description(command: "Command") -> str:
 async def default_help_command(ctx: "Context"):
     """Displays help text"""
     lines = []
+    prefix = ctx.invoking_prefix or "[p]"
     if not ctx.args:
         added = []
         # Display global help.
@@ -125,7 +126,7 @@ async def default_help_command(ctx: "Context"):
         for command in ctx.client._commands.values():
             if command in added or command.disabled is True:
                 continue
-            display = format_command_line(ctx.client.command_prefix, command)
+            display = format_command_line(prefix, command)
             description = get_short_description(command)
             lines.append("* `{}`: {}".format(display, description))
             added.append(command)
@@ -135,7 +136,7 @@ async def default_help_command(ctx: "Context"):
         if not command:
             return await ctx.respond("No command with that name found!")
 
-        display = format_command_line(ctx.client.command_prefix, command)
+        display = format_command_line(prefix, command)
         description = get_long_description(command)
         lines = ["* {}:".format(display), *description.splitlines()]
         await ctx.respond(clean_output("\n".join(lines)))
