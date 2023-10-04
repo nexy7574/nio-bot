@@ -113,7 +113,7 @@ def detect_mime_type(file: U[str, io.BytesIO, pathlib.Path]) -> str:
         raise TypeError("File must be a string, BytesIO, or Path object.")
 
 
-def get_metadata_ffmpeg(file: U[str, pathlib.Path]) -> typing.Dict[str, typing.Any]:
+def get_metadata_ffmpeg(file: U[str, pathlib.Path]) -> dict[str, typing.Any]:
     """
     Gets metadata for a file via ffprobe.
 
@@ -137,7 +137,7 @@ def get_metadata_ffmpeg(file: U[str, pathlib.Path]) -> typing.Dict[str, typing.A
     return data
 
 
-def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]:
+def get_metadata_imagemagick(file: pathlib.Path) -> dict[str, typing.Any]:
     """The same as `get_metadata_ffmpeg` but for ImageMagick.
 
     Only returns a limited subset of the data, such as one stream, which contains the format, and size,
@@ -181,7 +181,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> typing.Dict[str, typing.Any]
     return data
 
 
-def get_metadata(file: U[str, pathlib.Path], mime_type: typing.Optional[str] = None) -> typing.Dict[str, typing.Any]:
+def get_metadata(file: U[str, pathlib.Path], mime_type: typing.Optional[str] = None) -> dict[str, typing.Any]:
     """
     Gets metadata for a file.
 
@@ -441,7 +441,7 @@ class BaseAttachment(abc.ABC):
         type: AttachmentType
 
         url: typing.Optional[str]
-        keys: typing.Optional[typing.Dict[str, str]]
+        keys: typing.Optional[dict[str, str]]
 
     def __init__(
         self,

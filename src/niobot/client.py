@@ -133,7 +133,7 @@ class NioBot(nio.AsyncClient):
 
         self.add_event_callback(self.process_message, nio.RoomMessageText)  # type: ignore
         self.add_event_callback(self.update_read_receipts, nio.RoomMessage)
-        self.direct_rooms: typing.Dict[str, nio.MatrixRoom] = {}
+        self.direct_rooms: dict[str, nio.MatrixRoom] = {}
 
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
             maxlen=max_message_cache
@@ -355,7 +355,7 @@ class NioBot(nio.AsyncClient):
             populated), but the event loop will be running.
 
         :param import_path: The import path (such as modules.file), which would be ./modules/file.py in a file tree.
-        :returns: Optional[List[Command]] - A list of commands mounted. None if the module's setup() was called.
+        :returns: Optional[list[Command]] - A list of commands mounted. None if the module's setup() was called.
         :raise ImportError: The module path is incorrect of there was another error while importing
         :raise TypeError: The module was not a subclass of Module.
         :raise ValueError: There was an error registering a command (e.g. name conflict)
@@ -390,7 +390,7 @@ class NioBot(nio.AsyncClient):
         return added
 
     @property
-    def commands(self) -> typing.Dict[str, Command]:
+    def commands(self) -> dict[str, Command]:
         """Returns the internal command register.
 
         !!! warning
@@ -405,7 +405,7 @@ class NioBot(nio.AsyncClient):
         return self._commands
 
     @property
-    def modules(self) -> typing.Dict[typing.Type[Module], Module]:
+    def modules(self) -> dict[typing.Type[Module], Module]:
         """Returns the internal module register.
 
         !!! warning
