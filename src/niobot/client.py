@@ -580,21 +580,10 @@ class NioBot(nio.AsyncClient):
     @staticmethod
     def _get_id(obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, typing.Any]) -> str:
         """Gets the id of most objects as a string.
-
-        Parameters
-        ----------
-        obj : typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, Any]
-            The object who's id to get, or the ID itself.
-
-        Returns
-        -------
-        str
-            The id of the objet.
-
-        Raises
-        ------
-        ValueError
-            The objet doesn't have an ID.
+        :param obj: The object who's ID to get, or the ID itself.
+        :type obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, Any]
+        :returns: the ID of the object
+        :raises: ValueError - the Object doesn't have an ID
         """
         if hasattr(obj, "event_id"):
             return obj.event_id
