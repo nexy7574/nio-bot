@@ -776,6 +776,8 @@ class NioBot(nio.AsyncClient):
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
+        room = self._get_id(room)
+
         if clean_mentions:
             content = content.replace("@", "@\u200b")
         event_id = self._get_id(message)
@@ -796,16 +798,16 @@ class NioBot(nio.AsyncClient):
                 "event_id": event_id,
             },
         }
-        async with Typing(self, room.room_id):
+        async with Typing(self, room):
             response = await self.room_send(
-                self._get_id(room),
+                room,
                 "m.room.message",
                 body,
             )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to edit message.", response)
         # Forcefully clear typing
-        await self.room_typing(room.room_id, False)
+        await self.room_typing(room, False)
         return response
 
     async def delete_message(
