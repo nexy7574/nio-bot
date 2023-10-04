@@ -1,11 +1,12 @@
 import asyncio
 import datetime
-import importlib.metadata
 import logging
 import os
 import pathlib
 import re
 import sys
+import packaging.version
+import typing
 
 import niobot
 
@@ -15,9 +16,22 @@ try:
 except ImportError:
     print("Missing CLI dependencies. Did you install CLI extras?", file=sys.stderr)
     sys.exit(1)
-import subprocess
 
 logger = logging.getLogger("cli")
+
+
+def versions(package_name: str) -> typing.List[packaging.version.Version]:
+    response = httpx.get(
+        "https://pypi.org/simple/%s/" % package_name,
+        headers={
+            "User-Agent": "nio-bot (CLI, https://github.com/nexy7574/niobot)",
+            "Accept": "application/vnd.pypi.simple.v1+json",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "application/vnd.pypi.simple.v1+json"
+    return list(map(packaging.version.parse, response.json()["versions"]))
+
 
 DEFAULT_BOT_TEMPLATE = """#!/usr/bin/env python3
 \"\"\"
@@ -90,68 +104,59 @@ def version(ctx, no_colour: bool):
     """Shows version information."""
     logger.info("Gathering version info...")
     import platform
-
+    import importlib.metadata
     from nio.crypto import ENCRYPTION_ENABLED
 
-    logger.debug("Attempting to resolve matrix-nio via importlib...")
-    nio_version = None
     try:
         nio_version = importlib.metadata.version("matrix-nio")
-    except importlib.metadata.PackageNotFoundError:
-        logger.critical("Failed to resolve nio version information via importlib.")
+        nio_version = packaging.version.parse(nio_version)
+    except (importlib.metadata.PackageNotFoundError, packaging.version.InvalidVersion) as e:
+        logger.critical("Failed to resolve matrix-nio version information", exc_info=e)
+        nio_version = packaging.version.Version("0.0.0")
 
-    if not nio_version:
-        logger.debug("Attempting to resolve matrix-nio version information via pip...")
-        command = ["pip", "show", "matrix-nio"]
-        result = subprocess.run(command, capture_output=True, text=True)
-        if result.returncode != 0:
-            logger.critical("Failed to resolve nio version information via pip.")
-            nio_version = "0.0.0"
-        else:
-            logger.debug("Successfully resolved nio version information via pip.")
-            nio_version = result.stdout.splitlines()[1].split(": ")[1]
+    try:
+        niobot_version = importlib.metadata.version("nio-bot")
+        niobot_version = packaging.version.parse(niobot_version)
 
-    t = ctx.obj["version_tuple"]
-    if len(t) > 3:
-        t3 = t[3] or "gN/A.d%s" % (datetime.datetime.now().strftime("%Y%m%d"))
-        try:
-            t3_commit, t3_date_raw = t3.split(".", 1)
-        except ValueError:
-            t3_commit = t3
-            t3_date = datetime.datetime.now()
-            t3_date_raw = t3_date.strftime("%Y%m%d")
-        t3_date = datetime.datetime.strptime(t3_date_raw[1:], "%Y%m%d")
-    else:
-        t3_commit = "<release>"
-        mtime = pathlib.Path(__file__).stat().st_mtime
-        t3_date = datetime.datetime.fromtimestamp(mtime)
+        # Check for updates
+        niobot_versions = versions("nio-bot")
+        newest = tuple(filter(lambda v: v.pre is None and v.dev is None, niobot_versions))[-1]
+        if newest > niobot_version:
+            logging.warning("There is an update to nio-bot available: %s", niobot_version)
+    except (importlib.metadata.PackageNotFoundError, packaging.version.InvalidVersion) as e:
+        logger.critical("Failed to resolve nio-bot version information", exc_info=e)
+        niobot_version = packaging.version.Version("0.0.0")
 
-    bot_version_deep = {"version": "%d.%d" % (t[0], t[1]), "build": t[2], "commit": t3_commit, "date": t3_date}
-
-    bot_version = "%s (Version %s, build %s, commit %r, built %r)" % (
-        ctx.obj["version_info"],
-        bot_version_deep["version"],
-        bot_version_deep["build"],
-        bot_version_deep["commit"][1:],
-        bot_version_deep["date"].strftime("%d/%m/%Y"),
+    is_release_version = not any(
+        (niobot_version.is_devrelease, niobot_version.is_prerelease, niobot_version.is_postrelease)
     )
+    niobot_version_pretty = niobot_version.public
+    if not is_release_version:
+        build = niobot_version.base_version
+        dev_build = niobot_version.dev or "N/A"
+        post = niobot_version.post or "N/A"
+        pre = "".join(map(str, niobot_version.pre or ("N/A",)))
+        commit = niobot_version.local or "N/A"
+
+        niobot_version_pretty += f" (v{build}, build {dev_build}, pre {pre}, post {post}, commit {commit})"
 
     _os = platform.platform()
-    if hasattr(platform, "freedesktop_os_release"):
-        try:
-            _os_info = platform.freedesktop_os_release()
-        except OSError:
-            pass
-        else:
-            _os += " ({0}/{1} - {2})".format(
-                _os_info.get("NAME", "Unknown"),
-                _os_info.get("VERSION", "Unknown"),
-                _os_info.get("PRETTY_NAME", "Unknown"),
-            )
+    if sys.version_info > (3, 9):
+        if hasattr(platform, "freedesktop_os_release"):
+            try:
+                _os_info = platform.freedesktop_os_release()
+            except OSError:
+                pass
+            else:
+                _os += " ({0}/{1} - {2})".format(
+                    _os_info.get("NAME", "Unknown"),
+                    _os_info.get("VERSION", "Unknown"),
+                    _os_info.get("PRETTY_NAME", "Unknown"),
+                )
 
     lines = [
-        ["NioBot version", bot_version, lambda x: True],
-        ["matrix-nio version", nio_version, lambda x: x.startswith(("0.20", "0.21"))],
+        ["NioBot version", niobot_version_pretty, lambda x: True],
+        ["matrix-nio version", nio_version, lambda x: x.public.startswith(("0.20", "0.21"))],
         ["Python version", platform.python_version(), lambda x: x.split(".")[0] == "3" and int(x.split(".")[1]) >= 9],
         ["Python implementation", platform.python_implementation(), lambda x: x == "CPython"],
         ["Operating System", _os, lambda val: val.startswith(("Windows", "Linux"))],
