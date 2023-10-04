@@ -7,6 +7,7 @@ import nio
 
 from .context import Context
 from .exceptions import *
+from collections.abc import Callable
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -46,7 +47,7 @@ class Argument:
         name: str,
         arg_type: _T,
         *,
-        description: str = None,
+        description: typing.Optional[str] = None,
         default: typing.Any = ...,
         required: bool = ...,
         parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
@@ -146,10 +147,10 @@ class Command:
     def __init__(
         self,
         name: str,
-        callback: callable,
+        callback: Callable,
         *,
-        aliases: list[str] = None,
-        description: str = None,
+        aliases: typing.Optional[list[str]] = None,
+        description: typing.Optional[str] = None,
         disabled: bool = False,
         hidden: bool = False,
         greedy: bool = False,
@@ -236,16 +237,15 @@ class Command:
         """Returns the usage string for this command, auto-resolved if not pre-defined"""
         if self.usage:
             return self.usage
-        else:
-            usage = []
-            req = "<{!s}>"
-            opt = "[{!s}]"
-            for arg in self.arguments[1:]:
-                if arg.required:
-                    usage.append(req.format(arg.name))
-                else:
-                    usage.append(opt.format(arg.name))
-            return " ".join(usage)
+        usage = []
+        req = "<{!s}>"
+        opt = "[{!s}]"
+        for arg in self.arguments[1:]:
+            if arg.required:
+                usage.append(req.format(arg.name))
+            else:
+                usage.append(opt.format(arg.name))
+        return " ".join(usage)
 
     async def invoke(self, ctx: Context) -> typing.Coroutine:
         """
@@ -278,9 +278,8 @@ class Command:
             if index >= len(ctx.args):
                 if argument.required:
                     raise CommandArgumentsError(f"Missing required argument {argument.name}")
-                else:
-                    parsed_args.append(argument.default)
-                    continue
+                parsed_args.append(argument.default)
+                continue
 
             self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
             try:
@@ -332,7 +331,7 @@ class Command:
         return cls(client, room, src_event, self, invoking_prefix=invoking_prefix, invoking_string=meta)
 
 
-def command(name: str = None, **kwargs) -> callable:
+def command(name: typing.Optional[str] = None, **kwargs) -> Callable:
     """
     Allows you to register commands later on, by loading modules.
 
@@ -356,8 +355,8 @@ def command(name: str = None, **kwargs) -> callable:
 
 def check(
     function: typing.Callable[[Context], typing.Union[bool, typing.Coroutine[None, None, bool]]],
-    name: str = None,
-) -> callable:
+    name: typing.Optional[str] = None,
+) -> Callable:
     """
     Allows you to register checks in modules.
 
@@ -384,7 +383,7 @@ def check(
     return decorator
 
 
-def event(name: str) -> callable:
+def event(name: str) -> Callable:
     """
     Allows you to register event listeners in modules.
 

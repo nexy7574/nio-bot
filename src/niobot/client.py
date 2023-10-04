@@ -13,10 +13,7 @@ import marko
 import nio
 from nio.crypto import ENCRYPTION_ENABLED
 
-try:
-    from .attachment import BaseAttachment
-except ImportError:
-    BaseAttachment = None
+from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import *
 from .utils import Typing, force_await, run_blocking
@@ -37,7 +34,7 @@ class NioBot(nio.AsyncClient):
     :param device_id: The device ID to log in as. e.g. nio-bot
     :param store_path: The path to the store file. Defaults to ./store. Must be a directory.
     :param command_prefix: The prefix to use for commands. e.g. !
-    :param case_insensitive: Whether to ignore case when checking for commands. If True, this lower()s
+    :param case_insensitive: Whether to ignore case when checking for commands. If True, this casefold()s
      incoming messages for parsing.
     :param global_message_type: The message type to default to. Defaults to m.notice
     :param ignore_old_events: Whether to simply discard events before the bot's login.
@@ -52,15 +49,15 @@ class NioBot(nio.AsyncClient):
         homeserver: str,
         user_id: str,
         device_id: str = "nio-bot",
-        store_path: str = None,
+        store_path: typing.Optional[str] = None,
         *,
         command_prefix: typing.Union[str, re.Pattern],
         case_insensitive: bool = True,
-        owner_id: str = None,
-        config: nio.AsyncClientConfig = None,
+        owner_id: typing.Optional[str] = None,
+        config: typing.Optional[nio.AsyncClientConfig] = None,
         ssl: bool = True,
-        proxy: str = None,
-        help_command: typing.Union[Command, typing.Callable[["Context"], typing.Any]] = None,
+        proxy: typing.Optional[str] = None,
+        help_command: typing.Optional[typing.Union[Command, typing.Callable[["Context"], typing.Any]]] = None,
         global_message_type: str = "m.notice",
         ignore_old_events: bool = True,
         auto_join_rooms: bool = True,
@@ -104,7 +101,7 @@ class NioBot(nio.AsyncClient):
 
         if command_prefix == "/":
             self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
-        if re.match(r"\s", command_prefix):
+        if isinstance(command_prefix, str) and re.match(r"\s", command_prefix):
             raise RuntimeError("Command prefix cannot contain whitespace.")
 
         self.start_time: typing.Optional[float] = None
@@ -134,10 +131,9 @@ class NioBot(nio.AsyncClient):
         # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
         # (In element at least).
 
-        # noinspection PyTypeChecker
-        self.add_event_callback(self.process_message, nio.RoomMessageText)
+        self.add_event_callback(self.process_message, nio.RoomMessageText)  # type: ignore
         self.add_event_callback(self.update_read_receipts, nio.RoomMessage)
-        self.direct_rooms: typing.Dict[str, nio.MatrixRoom] = {}
+        self.direct_rooms: dict[str, nio.MatrixRoom] = {}
 
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
             maxlen=max_message_cache
@@ -145,10 +141,9 @@ class NioBot(nio.AsyncClient):
         self.is_ready = asyncio.Event()
         self._waiting_events = {}
 
-        if self.auto_join_rooms is True:
+        if self.auto_join_rooms:
             self.log.info("Auto-joining rooms enabled.")
-            # noinspection PyTypeChecker
-            self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)
+            self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)  # type: ignore
 
     async def sync(self, *args, **kwargs) -> U[nio.SyncResponse, nio.SyncError]:
         sync = await super().sync(*args, **kwargs)
@@ -184,7 +179,7 @@ class NioBot(nio.AsyncClient):
             await self._auto_join_room_callback(room, event)
 
     @staticmethod
-    def latency(event: nio.Event, *, received_at: float = None) -> float:
+    def latency(event: nio.Event, *, received_at: typing.Optional[float] = None) -> float:
         """Returns the latency for a given event in milliseconds
 
         :param event: The event to measure latency with
@@ -212,7 +207,7 @@ class NioBot(nio.AsyncClient):
             self.log.debug("%r is not in registered events: %s", event_name, self._events)
 
     def is_old(self, event: nio.Event) -> bool:
-        """Checks if an event was sent before the bot started. Always returns False when ignore_old_evens is False"""
+        """Checks if an event was sent before the bot started. Always returns False when ignore_old_events is False"""
         if not self.start_time:
             self.log.warning("have not started yet, using relative age comparison")
             start_time = time.time() - 30  # relative
@@ -238,15 +233,19 @@ class NioBot(nio.AsyncClient):
         if self.is_old(event):
             self.log.debug("Ignoring event %s, sent before bot started.", event.event_id)
             return
-        event = event.event_id
-        result = await self.room_read_markers(room, event, event)
+        event_id = event.event_id
+        result = await self.room_read_markers(room, event_id, event_id)
         if not isinstance(result, nio.RoomReadMarkersResponse):
-            self.log.warning("Failed to update read receipts for %s: %s", room, result.message)
+            msg = result.message if isinstance(result, nio.ErrorResponse) else "?"
+            self.log.warning("Failed to update read receipts for %s: %s", room, msg)
         else:
             self.log.debug("Updated read receipts for %s to %s.", room, event)
 
-    async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText):
+    async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText) -> None:
         """Processes a message and runs the command it is trying to invoke if any."""
+        if self.start_time is None:
+            raise RuntimeError("Bot has not started yet!")
+
         self.message_cache.append((room, event))
         self.dispatch("message", room, event)
         if event.sender == self.user:
@@ -258,7 +257,7 @@ class NioBot(nio.AsyncClient):
             return
 
         if self.case_insensitive:
-            content = event.body.lower()
+            content = event.body.casefold()
         else:
             content = event.body
 
@@ -356,7 +355,7 @@ class NioBot(nio.AsyncClient):
             populated), but the event loop will be running.
 
         :param import_path: The import path (such as modules.file), which would be ./modules/file.py in a file tree.
-        :returns: Optional[List[Command]] - A list of commands mounted. None if the module's setup() was called.
+        :returns: Optional[list[Command]] - A list of commands mounted. None if the module's setup() was called.
         :raise ImportError: The module path is incorrect of there was another error while importing
         :raise TypeError: The module was not a subclass of Module.
         :raise ValueError: There was an error registering a command (e.g. name conflict)
@@ -391,7 +390,7 @@ class NioBot(nio.AsyncClient):
         return added
 
     @property
-    def commands(self) -> typing.Dict[str, Command]:
+    def commands(self) -> dict[str, Command]:
         """Returns the internal command register.
 
         !!! warning
@@ -406,7 +405,7 @@ class NioBot(nio.AsyncClient):
         return self._commands
 
     @property
-    def modules(self) -> typing.Dict[typing.Type[Module], Module]:
+    def modules(self) -> dict[typing.Type[Module], Module]:
         """Returns the internal module register.
 
         !!! warning
@@ -449,7 +448,7 @@ class NioBot(nio.AsyncClient):
         for alias in command.aliases:
             self.log.debug("Removed command %r from the register.", self._commands.pop(alias, None))
 
-    def command(self, name: str = None, **kwargs):
+    def command(self, name: typing.Optional[str] = None, **kwargs):
         """Registers a command with the bot."""
         cls = kwargs.pop("cls", Command)
 
@@ -467,15 +466,15 @@ class NioBot(nio.AsyncClient):
         self._events[event_type].append(func)
         self.log.debug("Added event listener %r for %r", func, event_type)
 
-    def on_event(self, event_type: str = None):
+    def on_event(self, event_type: typing.Optional[str] = None):
         """Wrapper that allows you to register an event handler"""
-        if event_type.startswith("on_"):
-            self.log.warning("No events start with 'on_' - stripping prefix")
-            event_type = event_type[3:]
 
         def wrapper(func):
             nonlocal event_type
             event_type = event_type or func.__name__
+            if event_type.startswith("on_"):
+                self.log.warning("No events start with 'on_' - stripping prefix")
+                event_type = event_type[3:]
             self.add_event_listener(event_type, func)
             return func
 
@@ -530,11 +529,11 @@ class NioBot(nio.AsyncClient):
 
     async def wait_for_message(
         self,
-        room_id: str = None,
-        sender: str = None,
-        check: typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any] = None,
+        room_id: typing.Optional[str] = None,
+        sender: typing.Optional[str] = None,
+        check: typing.Optional[typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any]] = None,
         *,
-        timeout: float = None,
+        timeout: typing.Optional[float] = None,
     ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]]:
         """Waits for a message, optionally with a filter.
 
@@ -543,14 +542,12 @@ class NioBot(nio.AsyncClient):
         value = None
 
         async def event_handler(_room, _event):
-            if room_id:
-                if _room.room_id != room_id:
-                    self.log.debug("Ignoring bubbling message from %r (vs %r)", _room.room_id, room_id)
-                    return False
-            if sender:
-                if _event.sender != sender:
-                    self.log.debug("Ignoring bubbling message from %r (vs %r)", _event.sender, sender)
-                    return False
+            if room_id and _room.room_id != room_id:
+                self.log.debug("Ignoring bubbling message from %r (vs %r)", _room.room_id, room_id)
+                return False
+            if sender and _event.sender != sender:
+                self.log.debug("Ignoring bubbling message from %r (vs %r)", _event.sender, sender)
+                return False
             if check:
                 try:
                     result = await force_await(check, _room, _event)
@@ -581,7 +578,13 @@ class NioBot(nio.AsyncClient):
         return rendered
 
     @staticmethod
-    def _get_id(obj) -> str:
+    def _get_id(obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, typing.Any]) -> str:
+        """Gets the id of most objects as a string.
+        :param obj: The object who's ID to get, or the ID itself.
+        :type obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, Any]
+        :returns: the ID of the object
+        :raises: ValueError - the Object doesn't have an ID
+        """
         if hasattr(obj, "event_id"):
             return obj.event_id
         if hasattr(obj, "room_id"):
@@ -612,8 +615,8 @@ class NioBot(nio.AsyncClient):
         )
 
     async def _recursively_upload_attachments(
-        self, base: "BaseAttachment", encrypted: bool = False, __previous: list = None
-    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, type(None)]]:
+        self, base: "BaseAttachment", encrypted: bool = False, __previous: typing.Optional[list] = None
+    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, None]]:
         """Recursively uploads attachments."""
         previous = (__previous or []).copy()
         if not base.url:
@@ -652,20 +655,21 @@ class NioBot(nio.AsyncClient):
             if not isinstance(room, nio.RoomCreateResponse):
                 raise NioBotException("Unable to create DM room for %r: %r" % (user_id, room), response=room)
             self.log.debug("Created DM room for %r: %r", user_id, room)
-            room = self.rooms.get(room.room_id)
+            room_id = room.room_id
+            room = self.rooms.get(room_id)
             if not room:
-                raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room.room_id)
+                raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room_id)
             self.direct_rooms[user_id] = room
         return room
 
     async def send_message(
         self,
         room: U[nio.MatrixRoom, nio.MatrixUser, str],
-        content: str = None,
-        file: BaseAttachment = None,
-        reply_to: U[nio.RoomMessageText, str] = None,
-        message_type: str = None,
-        clean_mentions: bool = False,
+        content: typing.Optional[str] = None,
+        file: typing.Optional[BaseAttachment] = None,
+        reply_to: typing.Optional[U[nio.RoomMessageText, str]] = None,
+        message_type: typing.Optional[str] = None,
+        clean_mentions: typing.Optional[bool] = False,
     ) -> nio.RoomSendResponse:
         """
         Sends a message.
@@ -696,7 +700,7 @@ class NioBot(nio.AsyncClient):
 
         self.log.debug("Send message resolved room to %r", room)
 
-        body = {
+        body: dict[str, typing.Any] = {
             "msgtype": message_type or self.global_message_type,
         }
 
@@ -711,7 +715,7 @@ class NioBot(nio.AsyncClient):
 
             body = file.as_body(content)
         else:
-            if clean_mentions:
+            if clean_mentions and content:
                 content = content.replace("@", "@\u200b")
             body["body"] = content
             if self.automatic_markdown_renderer:
@@ -745,7 +749,7 @@ class NioBot(nio.AsyncClient):
         message: U[nio.Event, str],
         content: str,
         *,
-        message_type: str = None,
+        message_type: typing.Optional[str] = None,
         clean_mentions: bool = False,
     ) -> nio.RoomSendResponse:
         """
@@ -761,11 +765,13 @@ class NioBot(nio.AsyncClient):
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
+        room = self._get_id(room)
+
         if clean_mentions:
             content = content.replace("@", "@\u200b")
         event_id = self._get_id(message)
         message_type = message_type or self.global_message_type
-        content = {
+        content_dict = {
             "msgtype": message_type,
             "body": content,
             "format": "org.matrix.custom.html",
@@ -774,27 +780,27 @@ class NioBot(nio.AsyncClient):
 
         body = {
             "msgtype": message_type,
-            "body": " * %s" % content["body"],
-            "m.new_content": {**content},
+            "body": " * %s" % content_dict["body"],
+            "m.new_content": {**content_dict},
             "m.relates_to": {
                 "rel_type": "m.replace",
                 "event_id": event_id,
             },
         }
-        async with Typing(self, room.room_id):
+        async with Typing(self, room):
             response = await self.room_send(
-                self._get_id(room),
+                room,
                 "m.room.message",
                 body,
             )
         if isinstance(response, nio.RoomSendError):
             raise MessageException("Failed to edit message.", response)
         # Forcefully clear typing
-        await self.room_typing(room.room_id, False)
+        await self.room_typing(room, False)
         return response
 
     async def delete_message(
-        self, room: U[nio.MatrixRoom, str], message_id: U[nio.RoomMessage, str], reason: str = None
+        self, room: U[nio.MatrixRoom, str], message_id: U[nio.RoomMessage, str], reason: typing.Optional[str] = None
     ) -> nio.RoomRedactResponse:
         """
         Delete an existing message. You must be the sender of the message.
@@ -850,7 +856,12 @@ class NioBot(nio.AsyncClient):
             raise MessageException("Failed to delete reaction.", response)
         return response
 
-    async def start(self, password: str = None, access_token: str = None, sso_token: str = None) -> None:
+    async def start(
+        self,
+        password: typing.Optional[str] = None,
+        access_token: typing.Optional[str] = None,
+        sso_token: typing.Optional[str] = None,
+    ) -> None:
         """Starts the bot, running the sync loop."""
         self.loop = asyncio.get_event_loop()
         if password or sso_token:
@@ -864,10 +875,10 @@ class NioBot(nio.AsyncClient):
             login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
             if isinstance(login_response, nio.LoginError):
                 raise LoginException("Failed to log in.", login_response)
-            else:
-                self.log.info("Logged in as %s", login_response.user_id)
-                self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
-                self.start_time = time.time()
+
+            self.log.info("Logged in as %s", login_response.user_id)
+            self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
+            self.start_time = time.time()
         elif access_token:
             self.log.info("Logging in with existing access token.")
             if self.store_path:
@@ -905,7 +916,13 @@ class NioBot(nio.AsyncClient):
             self.log.info("Closing http session and logging out.")
             await self.close()
 
-    def run(self, *, password: str = None, access_token: str = None, sso_token: str = None) -> None:
+    def run(
+        self,
+        *,
+        password: typing.Optional[str] = None,
+        access_token: typing.Optional[str] = None,
+        sso_token: typing.Optional[str] = None,
+    ) -> None:
         """
         Runs the bot, blocking the program until the event loop exists.
         This should be the last function to be called in your script, as once it exits, the bot will stop running.

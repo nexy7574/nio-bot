@@ -194,7 +194,7 @@ def test_homeserver(homeserver: str):
     parsed = urllib.parse.urlparse(homeserver)
     if not parsed.scheme:
         logger.info("No scheme found, assuming HTTPS.")
-        parsed = urllib.parse.urlparse("https://" + homeserver)
+        parsed = urllib.parse.urlparse(f"https://{homeserver}")
 
     if not parsed.netloc:
         logger.critical("No netloc found, cannot continue.")
@@ -205,7 +205,7 @@ def test_homeserver(homeserver: str):
     logger.info("Trying well-known of %r...", parsed.netloc)
     base_url = None
     try:
-        response = httpx.get("https://%s/.well-known/matrix/client" % parsed.netloc, timeout=30)
+        response = httpx.get(f"https://{parsed.netloc}/.well-known/matrix/client", timeout=30)
     except httpx.HTTPError as e:
         logger.critical("Failed to get well-known: %r", e)
         return
@@ -238,13 +238,13 @@ def test_homeserver(homeserver: str):
 
     if not base_url:
         logger.info("No well-known found. Assuming %r as homeserver.", parsed.netloc)
-        base_url = urllib.parse.urlparse("https://" + parsed.netloc)
+        base_url = urllib.parse.urlparse(f"https://{parsed.netloc}")
 
     base_url = base_url.geturl()
     logger.info("Using %r as homeserver.", base_url)
     logger.info("Validating homeserver...")
     try:
-        response = httpx.get(base_url + "/_matrix/client/versions", timeout=30)
+        response = httpx.get(f"{base_url}/_matrix/client/versions", timeout=30)
     except httpx.HTTPError as e:
         logger.critical("Failed to get versions: %r", e)
         return
@@ -310,7 +310,7 @@ def get_access_token(ctx, username: str, password: str, homeserver: str, device_
     status_code = None
     try:
         response = httpx.post(
-            homeserver + "/_matrix/client/r0/login",
+            f"{homeserver}/_matrix/client/r0/login",
             json={
                 "type": "m.login.password",
                 "identifier": {"type": "m.id.user", "user": username},
@@ -327,10 +327,10 @@ def get_access_token(ctx, username: str, password: str, homeserver: str, device_
         response.raise_for_status()
     except httpx.HTTPError as e:
         click.secho("Failed!", fg="red", nl=False)
-        click.secho(" (%s)" % status_code or str(e), bg="red")
+        click.secho(f" ({status_code or str(e)})", bg="red")
     else:
         click.secho("OK", fg="green")
-        click.secho("Access token: %s" % response.json()["access_token"], fg="green")
+        click.secho(f'Access token: {response.json()["access_token"]}', fg="green")
 
 
 @cli_root.group()

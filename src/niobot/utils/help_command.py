@@ -27,7 +27,7 @@ def clean_output(
     escape_room_references: bool = False,
     escape_all_periods: bool = False,
     escape_all_at_signs: bool = False,
-    escape_method: typing.Callable[[str], str] = None,
+    escape_method: typing.Optional[typing.Callable[[str], str]] = None,
 ) -> str:
     """
     Escapes given text and sanitises it, ready for outputting to the user.
@@ -51,8 +51,10 @@ def clean_output(
     """
     if escape_method is None:
 
-        def escape_method(x: str) -> str:
+        def default_escape_method(x: str) -> str:
             return "\u200b".join(x.split())
+
+        escape_method = default_escape_method
 
     if escape_user_mentions:
         text = re.sub(r"@([A-Za-z0-9\-_=+./]+):([A-Za-z0-9\-_=+./]+)", escape_method("@\\1:\\2"), text)
@@ -79,7 +81,7 @@ def format_command_name(command: "Command") -> str:
 def format_command_line(prefix: str, command: "Command") -> str:
     """Formats a command line, including name(s) & usage."""
     name = format_command_name(command)
-    start = "{}{}".format(prefix, name)
+    start = f"{prefix}{name}"
     start += " " + command.display_usage.strip().replace("\n", "")
 
     return start

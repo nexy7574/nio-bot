@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
 __all__ = ("Typing",)
 
 log = logging.getLogger(__name__)
-_TYPING_STATES: typing.Dict[str, "Typing"] = {}
+_TYPING_STATES: dict[str, "Typing"] = {}
 
 
 class Typing:

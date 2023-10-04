@@ -63,7 +63,7 @@ class ContextualResponse:
         await self.ctx.client.edit_message(self.ctx.room, self._response.event_id, content, **kwargs)
         return self
 
-    async def delete(self, reason: str = None) -> None:
+    async def delete(self, reason: typing.Optional[str] = None) -> None:
         """
         Redacts the current response.
 
@@ -84,7 +84,7 @@ class Context:
         command: "Command",
         *,
         invoking_prefix: typing.Optional[str] = None,
-        invoking_string: str = None,
+        invoking_string: typing.Optional[str] = None,
     ):
         self._init_ts = time.time()
         self._client = _client
@@ -152,7 +152,9 @@ class Context:
         """Returns the current event's latency in milliseconds."""
         return self.client.latency(self.event, received_at=self._init_ts)
 
-    async def respond(self, content: str = None, file: "BaseAttachment" = None) -> ContextualResponse:
+    async def respond(
+        self, content: typing.Optional[str] = None, file: typing.Optional["BaseAttachment"] = None
+    ) -> ContextualResponse:
         """
         Responds to the current event.
 

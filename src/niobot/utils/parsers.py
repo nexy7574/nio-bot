@@ -40,7 +40,7 @@ MatrixMXCUrl = namedtuple("MatrixMXCUrl", ("server", "media_id"), defaults=(None
 
 def boolean_parser(_: "Context", __, value: str) -> bool:
     """
-    Converts a given string into a boolean. Value is lower-cased before being parsed.
+    Converts a given string into a boolean. Value is casefolded before being parsed.
 
     The following resolves to true:
     * 1, y, yes, true, on
@@ -52,10 +52,10 @@ def boolean_parser(_: "Context", __, value: str) -> bool:
 
     :return: The parsed boolean
     """
-    value = value.lower()
-    if value in ("1", "y", "yes", "true", "on"):
+    value = value.casefold()
+    if value in {"1", "y", "yes", "true", "on"}:
         return True
-    if value in ("0", "n", "no", "false", "off"):
+    if value in {"0", "n", "no", "false", "off"}:
         return False
     raise CommandParserError(f"Invalid boolean value: {value}. Should be a sensible value, such as 1, yes, false.")
 
@@ -99,9 +99,7 @@ def integer_parser(
     return __parser
 
 
-def json_parser(
-    _: "Context", __: "Argument", value: str
-) -> typing.Union[list, dict, str, int, float, type(None), bool]:
+def json_parser(_: "Context", __: "Argument", value: str) -> typing.Union[list, dict, str, int, float, None, bool]:
     """
     Converts a given string into a JSON object.
 
@@ -161,7 +159,7 @@ async def room_parser(ctx: "Context", arg: "Argument", value: str) -> nio.Matrix
         raise CommandParserError(f"Invalid room ID, alias, or matrix.to link: {value!r}.")
 
     if room is None:
-        raise CommandParserError(f"No room with that ID, alias, or matrix.to link found.")
+        raise CommandParserError("No room with that ID, alias, or matrix.to link found.")
     return room
 
 
@@ -222,42 +220,42 @@ def matrix_to_parser(
     """
 
     async def internal(ctx: "Context", _, value: str) -> MatrixToLink:
-        if m := MATRIX_TO_REGEX.match(value):
-            # matrix.to link
-            groups = m.groupdict()
-            event_id = groups.get("event_id", "")
-            room_id = groups.get("room_id", "")
-            event_id = urllib.unquote(event_id)
-            room_id = urllib.unquote(room_id)
-
-            if require_room and not room_id:
-                raise CommandParserError(f"Invalid matrix.to link: {value} (no room).")
-            if require_event and not event_id:
-                raise CommandParserError(f"Invalid matrix.to link: {value} (no event).")
-
-            if room_id.startswith("@") and not allow_user_as_room:
-                raise CommandParserError(f"Invalid matrix.to link: {value} (expected room, got user).")
-
-            if room_id.startswith("@"):
-                room = await ctx.client.get_dm_room(room_id)
-            else:
-                room = ctx.client.rooms.get(room_id)
-
-            if room is None:
-                raise CommandParserError(f"No room with that ID, alias, or matrix.to link found.")
-
-            if event_id:
-                event: U[nio.RoomGetEventResponse, nio.RoomGetEventError] = await ctx.client.room_get_event(
-                    room_id, event_id
-                )
-                if not isinstance(event, nio.RoomGetEventResponse):
-                    raise CommandParserError(f"Invalid event ID: {event_id}.", response=event)
-                event: nio.Event = event.event
-            else:
-                event: None = None
-            return MatrixToLink(room, event, groups.get("qs"))
-        else:
+        if not (m := MATRIX_TO_REGEX.match(value)):
             raise CommandParserError(f"Invalid matrix.to link: {value!r}.")
+
+        # matrix.to link
+        groups = m.groupdict()
+        event_id = groups.get("event_id", "")
+        room_id = groups.get("room_id", "")
+        event_id = urllib.unquote(event_id)
+        room_id = urllib.unquote(room_id)
+
+        if require_room and not room_id:
+            raise CommandParserError(f"Invalid matrix.to link: {value} (no room).")
+        if require_event and not event_id:
+            raise CommandParserError(f"Invalid matrix.to link: {value} (no event).")
+
+        if room_id.startswith("@") and not allow_user_as_room:
+            raise CommandParserError(f"Invalid matrix.to link: {value} (expected room, got user).")
+
+        if room_id.startswith("@"):
+            room = await ctx.client.get_dm_room(room_id)
+        else:
+            room = ctx.client.rooms.get(room_id)
+
+        if room is None:
+            raise CommandParserError("No room with that ID, alias, or matrix.to link found.")
+
+        if event_id:
+            event: U[nio.RoomGetEventResponse, nio.RoomGetEventError] = await ctx.client.room_get_event(
+                room_id, event_id
+            )
+            if not isinstance(event, nio.RoomGetEventResponse):
+                raise CommandParserError(f"Invalid event ID: {event_id}.", response=event)
+            event: nio.Event = event.event
+        else:
+            event: None = None
+        return MatrixToLink(room, event, groups.get("qs"))
 
     return internal
 

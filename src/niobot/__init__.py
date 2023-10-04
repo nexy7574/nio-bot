@@ -9,7 +9,7 @@ from .exceptions import *
 from .utils import *
 
 try:
-    import __version__ as version_meta
+    import __version__ as version_meta  # type: ignore
 except ImportError:
 
     class __VersionMeta:
