@@ -84,7 +84,7 @@ class Context:
         command: "Command",
         *,
         invoking_prefix: typing.Optional[str] = None,
-        invoking_string: str = None,
+        invoking_string: typing.Optional[str] = None,
     ):
         self._init_ts = time.time()
         self._client = _client
