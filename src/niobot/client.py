@@ -610,7 +610,7 @@ class NioBot(nio.AsyncClient):
 
     async def _recursively_upload_attachments(
         self, base: "BaseAttachment", encrypted: bool = False, __previous: typing.Optional[list] = None
-    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, type(None)]]:
+    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, None]]:
         """Recursively uploads attachments."""
         previous = (__previous or []).copy()
         if not base.url:
@@ -694,7 +694,7 @@ class NioBot(nio.AsyncClient):
 
         self.log.debug("Send message resolved room to %r", room)
 
-        body = {
+        body: dict[str, typing.Any] = {
             "msgtype": message_type or self.global_message_type,
         }
 
@@ -709,7 +709,7 @@ class NioBot(nio.AsyncClient):
 
             body = file.as_body(content)
         else:
-            if clean_mentions:
+            if clean_mentions and content:
                 content = content.replace("@", "@\u200b")
             body["body"] = content
             if self.automatic_markdown_renderer:
