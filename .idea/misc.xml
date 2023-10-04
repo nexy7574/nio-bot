@@ -3,7 +3,7 @@
   <component name="Black">
     <option name="enabledOnReformat" value="true" />
     <option name="enabledOnSave" value="true" />
-    <option name="sdkUUID" value="811e90fa-779c-4f9f-8ec0-bb41da48b3f8" />
+    <option name="sdkName" value="Python 3.11 (nio-bot)" />
   </component>
   <component name="DiscordProjectSettings">
     <option name="show" value="ASK" />
