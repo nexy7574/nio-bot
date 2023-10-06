@@ -2,12 +2,12 @@ import inspect
 import logging
 import os
 import typing
+from collections.abc import Callable
 
 import nio
 
 from .context import Context
 from .exceptions import *
-from collections.abc import Callable
 
 if typing.TYPE_CHECKING:
     from .client import NioBot

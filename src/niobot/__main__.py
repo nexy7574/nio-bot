@@ -5,8 +5,9 @@ import os
 import pathlib
 import re
 import sys
-import packaging.version
 import typing
+
+import packaging.version
 
 import niobot
 
@@ -103,8 +104,9 @@ def cli_root(ctx, log_level: str):
 def version(ctx, no_colour: bool):
     """Shows version information."""
     logger.info("Gathering version info...")
-    import platform
     import importlib.metadata
+    import platform
+
     from nio.crypto import ENCRYPTION_ENABLED
 
     try:

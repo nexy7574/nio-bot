@@ -1,8 +1,8 @@
 import asyncio
 import functools
 import typing
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
 __all__ = ("run_blocking", "force_await")
 

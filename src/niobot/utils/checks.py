@@ -1,7 +1,8 @@
+from typing import Optional
+
 from ..commands import check
 from ..context import Context
 from ..exceptions import CheckFailure, InsufficientPower, NotOwner
-from typing import Optional
 
 __all__ = (
     "is_owner",
