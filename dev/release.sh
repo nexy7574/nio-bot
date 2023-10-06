@@ -22,6 +22,7 @@ printf '\nBuilding python wheel & source dist...\n'
 python3 -m build
 
 printf '\nFinalising & pushing release...\n'
+read -r
 git push origin "release/$VERSION_P"  # push the release branch
 git push --tags origin "$VERSION_P"  # push the tag itself
 
@@ -30,6 +31,6 @@ git checkout master
 
 printf '\nOpening browser so that you can upload the wheels to the tag\n'
 xdg-open file://"$PWD"/dist &
-xdg-open "https://github.com/nexy7574/niobot/releases/edit/$VERSION" &
+xdg-open "https://github.com/nexy7574/niobot/releases/" &
 
 printf '\nDone!\n'
