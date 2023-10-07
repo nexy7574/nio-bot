@@ -20,6 +20,7 @@ Tracker = "https://github.com/nexy7574/niobot/issues"
 Documentation = "https://nexy7574.github.io/niobot/"
 "Matrix Room" = "https://matrix.to/#/#niobot:nexy7574.co.uk"
 Funding = "https://ko-fi.com/nexy7574"
+Homepage = "https://nio-bot.dev"
 
 
 [project.optional-dependencies]
@@ -36,7 +37,8 @@ dev = [
     'isort',
     'build',
     'pep440',
-    'pycodestyle'
+    'pycodestyle',
+    'pytest'
 ]
 
 [project.scripts]
@@ -56,3 +58,13 @@ include = 'src/niobot(/utils)?/.+\.py'
 [tool.isort]
 profile = "black"
 src_paths = ["src/niobot"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "src",
+]
+filterwarnings = [
+    'ignore::DeprecationWarning:nio.*',
+    'ignore::DeprecationWarning:future.*',
+    # These warnings seem to be raised from matrix-nio, which we can't really fix via this project.
+]
