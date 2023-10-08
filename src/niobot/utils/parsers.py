@@ -280,7 +280,7 @@ def mxc_url_parser(_, __, value: str) -> MatrixMXCUrl:
 BUILTIN_MAPPING = {
     bool: boolean_parser,
     float: float_parser,
-    int: integer_parser,
+    int: integer_parser(),
     list: json_parser,
     dict: json_parser,
     nio.RoomMessageText: event_parser("m.room.message"),
