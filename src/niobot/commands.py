@@ -2,6 +2,7 @@ import inspect
 import logging
 import os
 import typing
+import warnings
 from collections.abc import Callable
 
 import nio
@@ -64,6 +65,7 @@ class Argument:
             self.default = None
         self.extra = kwargs
         self.parser = parser
+
         if self.parser is ...:
             from .utils import BUILTIN_MAPPING
 
@@ -79,6 +81,24 @@ class Argument:
                 else:
                     log.info("Using default parser for %s", self.type)
                     self.parser = self.internal_parser
+        else:
+            from .utils import BUILTIN_MAPPING
+
+            if self.parser not in BUILTIN_MAPPING:
+                from .utils import Parser
+
+                # not a basic type (such as int, str, etc.) - ensure it subclasses Parser.
+                if not issubclass(type(self.parser), Parser):
+                    # raise TypeError(
+                    #     "parser must be a subclass of niobot.utils.Parser, or a builtin type (e.g. str, int, etc.)"
+                    # )
+                    warnings.warn(
+                        DeprecationWarning(
+                            "custom parsers must be a subclass of niobot.utils.Parser. The old parsing methods have"
+                            " been deprecated in favour of uniform ABC-inherited parsers. This will be an error after"
+                            " v1.2.0"
+                        )
+                    )
 
     def __repr__(self):
         return (
@@ -142,8 +162,6 @@ class Command:
         This is useful for commands that take a variable amount of arguments, and retrieve them via `Context.args`.
     """
 
-    _CTX_ARG = Argument("ctx", Context, description="The context for the command", parser=lambda ctx, *_: ctx)
-
     def __init__(
         self,
         name: str,
@@ -176,7 +194,8 @@ class Command:
                 self.arguments = []
             else:
                 self.arguments = self.autodetect_args(self.callback)
-        self.arguments.insert(0, self._CTX_ARG)
+        _CTX_ARG = Argument("ctx", Context, description="The context for the command", parser=lambda ctx, *_: ctx)
+        self.arguments.insert(0, _CTX_ARG)
         self.arguments: list[Argument]
         self.greedy = greedy
 
@@ -208,7 +227,12 @@ class Command:
             if parameter.annotation is inspect.Parameter.empty:
                 a = Argument(parameter.name, str, default=parameter.default)
             else:
-                a = Argument(parameter.name, parameter.annotation)
+                annotation = parameter.annotation
+                if typing.get_origin(annotation) is typing.Annotated:
+                    real_type, type_parser = typing.get_args(annotation)
+                    a = Argument(parameter.name, real_type, default=parameter.default, parser=type_parser)
+                else:
+                    a = Argument(parameter.name, parameter.annotation)
 
             if parameter.default is not inspect.Parameter.empty:
                 a.default = parameter.default

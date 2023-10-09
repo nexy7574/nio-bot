@@ -2,7 +2,6 @@
 <project version="4">
   <component name="Black">
     <option name="enabledOnReformat" value="true" />
-    <option name="enabledOnSave" value="true" />
     <option name="sdkName" value="Python 3.11 (nio-bot)" />
   </component>
   <component name="DiscordProjectSettings">

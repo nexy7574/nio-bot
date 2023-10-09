@@ -38,7 +38,8 @@ dev = [
     'build',
     'pep440',
     'pycodestyle',
-    'pytest'
+    'pytest',
+    'pytest-asyncio'
 ]
 
 [project.scripts]
