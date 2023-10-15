@@ -439,11 +439,13 @@ class Module:
         self.bot = self.client = bot
 
     @property
-    def log(self) -> logging.Logger:
-        """deprecated per-module log instance.
+    def client(self) -> "NioBot":
+        warnings.warn(DeprecationWarning("Module.client is deprecated. Please use Module.bot instead."))
+        return self.bot
 
-        You should instantiate your own logger instead."""
-        return logging.getLogger(self.__class__.__name__)
+    @client.setter
+    def client(self, value: "NioBot"):
+        self.bot = value
 
     def list_commands(self) -> typing.Generator[Command, None, None]:
         for _, potential_command in inspect.getmembers(self):
