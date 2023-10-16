@@ -398,14 +398,15 @@ class NioBot(nio.AsyncClient):
                     self.log.debug("%r does not appear to be a niobot module", item)
         return added
 
-    def unmount_module(self, import_path: str) -> None:
+    def unmount_module(self, module: Module) -> None:
         """
         Does the opposite of mounting the module.
         This will remove any commands that have been added to the bot from the given module.
 
-        :param import_path:
-        :return:
+        :param module: The module to unmount
         """
+        self.log.debug("Unmounting module %r", module)
+        module.__teardown__()
 
     @property
     def commands(self) -> dict[str, Command]:
