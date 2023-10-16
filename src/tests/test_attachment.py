@@ -1,6 +1,8 @@
-import niobot
-import pytest
 import pathlib
+
+import pytest
+
+import niobot
 
 ASSETS = pathlib.Path(__file__).parent / "assets"
 
