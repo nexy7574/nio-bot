@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import sys
+import shutil
 import typing
 
 import packaging.version
@@ -14,6 +15,7 @@ import niobot
 try:
     import click
     import httpx
+    import psutil
 except ImportError:
     print("Missing CLI dependencies. Did you install CLI extras?", file=sys.stderr)
     sys.exit(1)
@@ -59,8 +61,7 @@ def cli_root(ctx, log_level: str):
 
 @cli_root.command()
 @click.option("--no-colour", "--no-color", "-C", is_flag=True, default=False)
-@click.pass_context
-def version(ctx, no_colour: bool):
+def version(no_colour: bool):
     """Shows version information."""
     logger.info("Gathering version info...")
     import importlib.metadata
@@ -115,14 +116,26 @@ def version(ctx, no_colour: bool):
                     _os_info.get("PRETTY_NAME", "Unknown"),
                 )
 
+    space = {"total": 0}
+    for mount in psutil.disk_partitions():
+        try:
+            usage = shutil.disk_usage(mount.mountpoint)
+            free_percent = (usage.free / usage.total) * 100
+            space["total"] += usage.free
+            space[mount.mountpoint] = round(free_percent, 2)
+        except PermissionError:
+            pass
+    space_total = space.pop("total")
+
     lines = [
         ["NioBot version", niobot_version_pretty, lambda x: True],
-        ["matrix-nio version", nio_version, lambda x: x.public.startswith(("0.20", "0.21"))],
+        ["matrix-nio version", nio_version, lambda x: x.public.startswith(("0.20", "0.21", "0.22"))],
         ["Python version", platform.python_version(), lambda x: x.split(".")[0] == "3" and int(x.split(".")[1]) >= 9],
         ["Python implementation", platform.python_implementation(), lambda x: x == "CPython"],
         ["Operating System", _os, lambda val: val.startswith(("Windows", "Linux"))],
         ["Architecture", platform.machine(), lambda x: x == "x86_64"],
         ["OLM Installed", "Yes" if ENCRYPTION_ENABLED else "No", lambda x: x != "No"],
+        ["Free Disk Space", " ".join(f"{k} ({v}%)" for k, v in space.items()), lambda x: space_total > 1024**3],
     ]
 
     _docker_path = pathlib.Path("/.dockerenv")

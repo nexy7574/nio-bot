@@ -25,7 +25,7 @@ Homepage = "https://nio-bot.dev"
 
 [project.optional-dependencies]
 e2ee = ['matrix-nio[e2e]']
-cli = ['httpx', 'click']
+cli = ['httpx', 'click', 'psutil']
 dev = [
     'mkdocs',
     'mkdocs-material',
