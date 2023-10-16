@@ -172,6 +172,8 @@ class Command:
         disabled: bool = False,
         hidden: bool = False,
         greedy: bool = False,
+        usage: typing.Optional[str] = None,
+        arguments: typing.Optional[list[Argument]] = None,
         **kwargs,
     ):
         self.__runtime_id = os.urandom(16).hex()
@@ -186,9 +188,9 @@ class Command:
             for check_func in self.callback.__nio_checks__.keys():
                 self.checks.append(check_func)
         self.hidden = hidden
-        self.usage = kwargs.pop("usage", None)
+        self.usage = usage or None
         self.module = kwargs.pop("module", None)
-        self.arguments = kwargs.pop("arguments", None)
+        self.arguments = arguments or None
         if not self.arguments:
             if self.arguments is False:  # do not autodetect arguments
                 self.arguments = []

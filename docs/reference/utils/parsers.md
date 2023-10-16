@@ -74,4 +74,4 @@ These are a handful of built-in parsers that you can use with `niobot.Argument`.
 Creating custom parsers for nio-bot is really simple. All you need to do is subclass either 
 [Parser][niobot.utils.parsers] or [StatelessParser][niobot.utils.parsers] and implement the `parse` method.
 
-However, if you want some detailed information, seek [the guide](/guides/creating-custom-parsers/)
+However, if you want some detailed information, seek [the guide](../../guides/004-creating-custom-parsers.md/)

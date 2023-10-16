@@ -567,8 +567,8 @@ class BaseAttachment(abc.ABC):
         :param force_write: Whether to force stream the download to the file system, instead of into memory.
             See: [niobot.BaseAttachment.from_mxc][]
         :return: The downloaded and probed attachment.
-        :raises: niobot.MediaDownloadException if the download failed.
-        :raises: aiohttp.ClientError if the download failed.
+        :raises niobot.MediaDownloadException: if the download failed.
+        :raises aiohttp.ClientError: if the download failed.
         :raises niobot.MediaDetectionException: if the MIME type could not be detected.
         """
         if not client_session:

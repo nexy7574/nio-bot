@@ -108,11 +108,8 @@ class StatelessParser(Parser, abc.ABC):
         r"""Parses the given value using this parser without needing to call \_\_init\_\_() first.
 
         :param ctx: The context instance
-        :type ctx: niobot.context.Context
         :param arg: The argument instance
-        :type arg: niobot.commands.Argument
         :param value: The value to parse
-        :type value: str
         :return: The parsed value
         :rtype: typing.Optional[typing.Any]"""
         return cls()(ctx, arg, value)
@@ -130,7 +127,7 @@ class BooleanParser(StatelessParser):
 
     The following will raise a command argument error: anything else
 
-    :returns: The parsed boolean
+    :return: A parsed boolean
     :rtype: bool
     """
 
@@ -259,7 +256,6 @@ class EventParser(Parser):
     Parses an event reference from either its ID, or matrix.to link.
 
     :param event_type: The event type to expect (such as m.room.message). If None, any event type is allowed.
-    :type event_type: str
     :return: The actual internal (async) parser.
     :rtype: typing.Coroutine
     """
