@@ -154,7 +154,7 @@ def test_homeserver(homeserver: str):
     logger.debug("Parsing given input %r as a URL...", homeserver)
     parsed = urllib.parse.urlparse(homeserver)
     if not parsed.scheme:
-        logger.info("No scheme found, assuming HTTPS.")
+        logger.debug("No scheme found, assuming HTTPS.")
         parsed = urllib.parse.urlparse(f"https://{homeserver}")
 
     if not parsed.netloc:
@@ -166,7 +166,8 @@ def test_homeserver(homeserver: str):
     logger.info("Trying well-known of %r...", parsed.netloc)
     base_url = None
     try:
-        response = httpx.get(f"https://{parsed.netloc}/.well-known/matrix/client", timeout=30)
+        response = httpx.get(f"https://{parsed.netloc}/.well-known/matrix/client", timeout=30, follow_redirects=True)
+        response.raise_for_status()
     except httpx.HTTPError as e:
         logger.critical("Failed to get well-known: %r", e)
         return
@@ -235,8 +236,10 @@ def test_homeserver(homeserver: str):
     default=None,
     help="The device ID to use (will be prompted if not given)",
 )
-@click.pass_context
-def get_access_token(ctx, username: str, password: str, homeserver: str, device_id: str):
+@click.option(
+    "--output", "-o", "-O", default="-", help="The file to output the results to.", type=click.Path(allow_dash=True)
+)
+def get_access_token(path: str, username: str, password: str, homeserver: str, device_id: str):
     """Fetches your access token from your homeserver."""
     if not username:
         username = ""
@@ -291,7 +294,12 @@ def get_access_token(ctx, username: str, password: str, homeserver: str, device_
         click.secho(f" ({status_code or str(e)})", bg="red")
     else:
         click.secho("OK", fg="green")
-        click.secho(f'Access token: {response.json()["access_token"]}', fg="green")
+        if path != "-":
+            click.secho(f'Access token: {response.json()["access_token"]}', fg="green")
+            with click.open_file(path, "w+") as f:
+                f.write(response.json()["access_token"])
+        else:
+            click.echo(response.json()["access_token"])
 
 
 if __name__ == "__main__":
