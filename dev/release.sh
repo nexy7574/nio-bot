@@ -23,8 +23,9 @@ python3 -m build
 
 printf '\nFinalising & pushing release...\n'
 read -r
-git push --all origin "release/$VERSION_P"  # push the release branch
+git push origin "release/$VERSION_P"  # push the release branch
 git push --tags origin  # push the tag itself
+git push --all
 
 printf '\nSwitching back to master for further development...\n'
 git checkout master
