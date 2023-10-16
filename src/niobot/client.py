@@ -6,6 +6,7 @@ import os
 import re
 import time
 import typing
+import warnings
 from collections import deque
 from typing import Union as U
 
@@ -42,6 +43,7 @@ class NioBot(nio.AsyncClient):
     :param automatic_markdown_renderer: Whether to automatically render markdown in messages when sending/editing.
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     :param max_message_cache: The maximum number of messages to cache. Defaults to 1000.
+    :param ignore_self: Whether to ignore messages sent by the bot itself. Defaults to False. Useful for self-bots.
     """
 
     def __init__(
@@ -58,12 +60,20 @@ class NioBot(nio.AsyncClient):
         ssl: bool = True,
         proxy: typing.Optional[str] = None,
         help_command: typing.Optional[typing.Union[Command, typing.Callable[["Context"], typing.Any]]] = None,
-        global_message_type: str = "m.notice",
+        global_message_type: typing.Literal["m.text", "m.notice"] = "m.notice",
         ignore_old_events: bool = True,
         auto_join_rooms: bool = True,
         automatic_markdown_renderer: bool = True,
         max_message_cache: int = 1000,
+        ignore_self: bool = True,
     ):
+        if user_id == owner_id and ignore_self is True:
+            warnings.warn(
+                UserWarning(
+                    "User ID and owner ID are the same, but ignore_self is True, meaning no owner systems can be used."
+                    " This is probably not what you want."
+                )
+            )
         try:
             self.loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -98,6 +108,7 @@ class NioBot(nio.AsyncClient):
         self.case_insensitive = case_insensitive
         self.command_prefix = command_prefix
         self.owner_id = owner_id
+        self.ignore_self = ignore_self
 
         if command_prefix == "/":
             self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
@@ -128,8 +139,6 @@ class NioBot(nio.AsyncClient):
         self.ignore_old_events = ignore_old_events
         self.auto_join_rooms = auto_join_rooms
         self.automatic_markdown_renderer = automatic_markdown_renderer
-        # NOTE: `m.notice` prevents bot messages sending off room notifications, and shows darker text
-        # (In element at least).
 
         self.add_event_callback(self.process_message, nio.RoomMessageText)  # type: ignore
         self.add_event_callback(self.update_read_receipts, nio.RoomMessage)
@@ -248,7 +257,7 @@ class NioBot(nio.AsyncClient):
 
         self.message_cache.append((room, event))
         self.dispatch("message", room, event)
-        if event.sender == self.user:
+        if event.sender == self.user and self.ignore_self is True:
             self.log.debug("Ignoring message sent by self.")
             return
         if self.is_old(event):
@@ -388,6 +397,15 @@ class NioBot(nio.AsyncClient):
                 else:
                     self.log.debug("%r does not appear to be a niobot module", item)
         return added
+
+    def unmount_module(self, import_path: str) -> None:
+        """
+        Does the opposite of mounting the module.
+        This will remove any commands that have been added to the bot from the given module.
+
+        :param import_path:
+        :return:
+        """
 
     @property
     def commands(self) -> dict[str, Command]:
