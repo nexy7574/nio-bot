@@ -1,20 +1,19 @@
 # NioBot
-A simple, easy to use python Matrix bot library, based on the excellent 
+
+A simple, easy to use python Matrix bot library, based on the excellent
 [matrix-nio](https://pypi.org/project/matrix-nio/) library.
 
 NioBot is designed to have a similar (as similar as reasonably possible) design and feel to the
 [discord.py](https://pypi.org/project/discord.py) library, which should hopefully give it a familiar feel if you're
 coming from a discord background.
 
-Please note that there *will* be teething problems, and as such some advanced features may not be
-available, as with any client.
-
 ## Need help?
-Take a look at the [docs!](https://eekim10.github.io/niobot)
+
+Take a look at the [docs!](https://docs.nio-bot.dev)
 
 ---
 
-Alternatively, take a look at my [dev bot](https://github.com/EEKIM10/niobot-test), which is a bot that I use to test
+Alternatively, take a look at my [dev bot](https://github.com/nexy7574/niobot-test), which is a bot that I use to test
 features of nio-bot before they're released.
 This bot is very advanced as, since I developed the library, I know exactly how it works, and will have bleeding-edge
 features built into it, which a lot of users may not use yet.
@@ -25,47 +24,49 @@ You can see it live [here](https://matrix.to/#/@jimmy-bot:nexy7574.co.uk)
 (DM it, the prefix is ?, and full end-to-end encryption is supported. Average response time is ~300-500ms)
 
 ## Installation
-### Versions
-NioBot uses SemVer (semantic versioning) for versioning. This means that the version number is split into three parts:
-`Major`, `Minor` and `Patch`. As per the versioning, `Major` versions are not guaranteed to be backwards compatible,
-however `Minor` and `Patch` versions are.
-
-This means that there will always be a new `Major` increment when a backwards incompatible change is made, and a new
-`Minor` increment when a backwards compatible change is made. `Patch` versions are almost always bug fixes, and are
-always backwards compatible. If a bug fix is not backwards compatible, a new `Major` version will be released.
-
-Major changes may be pushed into their own branches for "feature previews". These branches will be prefixed with
-`feature/`, and will be merged into `master` when they are ready for release. For example, `feature/my-thing`,
-which means you can install it using `niobot @ git+https://github.com/EEKIM10/niobot.git@feature/my-thing`.
-This minimises the number of breaking releases.
 
 ### Release versions
-You can use the [PyPi](https://pypi.org/project/niobot) releases:
+
+You can use the [PyPi](https://pypi.org/project/nio-bot) releases:
+
 ```python
-niobot==1.0.0  # or whatever version
+nio-bot==1.0.0  # or whatever version
 # Or to install it with extras
-niobot[e2ee,cli]==1.0.0
+nio-bot[e2ee,cli]==1.0.0
+```
+
+### Pre-releases
+
+Pre-releases are published on [PyPi](https://pypi.org/project/nio-bot):
+
+```shell
+pip install --pre nio-bot  # install the latest alpha/beta/rc release.
 ```
 
 ### Development (master branch)
+
 You should use requirements.txt:
+
 ```python
-matrix-nio @ git+https://github.com/EEKIM10/niobot.git
+nio-bot @ git+https://github.com/EEKIM10/niobot.git
 # Or with e2ee support (note you will need libolm)
-matrix-nio[e2ee] @ git+https://github.com/EEKIM10/niobot.git
+nio-bot[e2ee] @ git+https://github.com/EEKIM10/niobot.git
 ```
+
 You can figure out how to install it in other ways.
 
 ## Features
+
 NioBot aims to be as easy to use as possible, so form is preferred over function.
-Some features you'd normally expect may not be implemented (yet, feel free to open a pull request!) or may not work as 
+Some features you'd normally expect may not be implemented (yet, feel free to open a pull request!) or may not work as
 intended or how you'd expect, however as with any matrix client.
 
-However, like any good client, NioBot tries to adhere to the 
-[Matrix Spec](https://spec.matrix.org/v1.7/client-server-api) (in terms of design at least, all the hard work is 
+However, like any good client, NioBot tries to adhere to the
+[Matrix Spec](https://spec.matrix.org/v1.7/client-server-api) (in terms of design at least, all the hard work is
 done by matrix-nio)
 
 ## Quickstart
+
 ```python
 import time
 from niobot import Bot, Context
@@ -101,13 +102,15 @@ bot.run(access_token="my_token") # starts the bot with a login token.
 ```
 
 ### With modules
+
 Eventually, you will want to split your code up into several "modules" to make your code easier to read, and also
 modular. You can do this using the `NioBot.mount_module` function.
 
 > Note: Once a module is loaded, you cannot "reload" it. You can unload it, but there is no way to refresh code yet.
 
 Let's assume this file tree:
-```
+
+```py
 project_root
 |- main.py  (your bot file, the bit that runs your bot)
 |- modules
@@ -115,6 +118,7 @@ project_root
 ```
 
 In main.py, you'll put some similar code:
+
 ```python
 import niobot
 
@@ -127,16 +131,17 @@ bot.run(password="password")
 When you call `mount_module`, it effectively calls `import module` under the hood, and then does one of the following:
 
 1. Calls the `module.setup(bot)` function, if it exists
-2. Discovers all classes that subclass `niolib.Module` in the module, and calls their `__setup__`, adding all commands
+2. Discovers all classes that subclass `niobot.Module` in the module, and calls their `__setup__`, adding all commands
 registered under that class
 
 Take the following file as ping.py:
+
 ```python
 import niobot
 
 
-class MyPingModule(niolib.Module):
-    # This class is a subclass of niolib.Module, so it will be automatically discovered and loaded
+class MyPingModule(niobot.Module):
+    # This class is a subclass of niobot.Module, so it will be automatically discovered and loaded
     # It also has two attributes defined that you can use:
     # * self.bot: the instance of the bot
     # * self.log: An instance of logging.Logger, which you can use to log messages to the console or log file.
@@ -144,19 +149,19 @@ class MyPingModule(niolib.Module):
     
     # Now we will define a command
     @niobot.command()
-    async def ping(self, ctx: niolib.Context):
+    async def ping(self, ctx: niobot.Context):
         """Shows the latency"""
         roundtrip = (time.time() * 1000 - ctx.event.server_timestamp)
         await ctx.reply("Pong! Took {:,.2f}ms".format(roundtrip))
 ```
 
-Notice how here, we use `@niolib.command`, instead of `@bot.command`? They work the same, however
-`niolib.command` is designed to be loaded in a module context, where you usually don't have the bot instance at runtime
+Notice how here, we use `@niobot.command`, instead of `@bot.command`? They work the same, however
+`niobot.command` is designed to be loaded in a module context, where you usually don't have the bot instance at runtime
 (since that is injected by `NioBot.mount_module`). If you do have the bot instance, you can use `@bot.command` instead,
 which will register your command instantly.
 
 Once `mount_module` is called, it will scan through `ping.py`. It will find `MyPingModule`, realise it is a subclass
-of `Module`, and will automatically add any commands defined by `@niolib.command`.
+of `Module`, and will automatically add any commands defined by `@niobot.command`.
 
 After all of this, `[prefix]ping` is now available!
 
@@ -165,7 +170,7 @@ After all of this, `[prefix]ping` is now available!
 You can customise the behaviour of the loading process at two-levels:
 
 1. By overriding `Module.__setup__`, you can customise how the module is loaded. By default, it will scan through the
-class' functions and detect any that're annotated with `@niolib.command`, and register them. You can override this
+class' functions and detect any that're annotated with `@niobot.command`, and register them. You can override this
 to do whatever you want.
 2. Providing a `setup(niobot)` function in your module. This will be called when the module is loaded, and you can
 do whatever you want in here. This is useful if you want to do something that isn't related to commands, such as
