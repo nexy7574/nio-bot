@@ -1,6 +1,5 @@
 from nio import *
 
-from . import utils
 from .attachment import *
 from .client import *
 from .commands import *

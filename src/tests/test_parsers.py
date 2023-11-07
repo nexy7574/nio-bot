@@ -4,7 +4,6 @@ import pytest
 
 from niobot.commands import Argument
 from niobot.context import Context
-from niobot.exceptions import CommandParserError
 from niobot.utils.parsers import *
 
 EXAMPLE_MXC = "mxc://nexy7574.co.uk/6cefe7e807bb846ec44e1a5ec4fdbd5703e932bd46ad500012c16d4d44a79c32"
