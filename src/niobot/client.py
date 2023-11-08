@@ -689,6 +689,8 @@ class NioBot(nio.AsyncClient):
         reply_to: typing.Optional[U[nio.RoomMessageText, str]] = None,
         message_type: typing.Optional[str] = None,
         clean_mentions: typing.Optional[bool] = False,
+        *,
+        override: typing.Optional[dict] = None,
     ) -> nio.RoomSendResponse:
         """
         Sends a message.
@@ -705,6 +707,7 @@ class NioBot(nio.AsyncClient):
         :param message_type: The message type to send. If none, defaults to NioBot.global_message_type,
         which itself is `m.notice` by default.
         :param clean_mentions: Whether to escape all mentions
+        :param override: A dictionary containing additional properties to pass to the body. Overrides existing properties.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
@@ -752,6 +755,9 @@ class NioBot(nio.AsyncClient):
 
         if reply_to:
             body["m.relates_to"] = {"m.in_reply_to": {"event_id": self._get_id(reply_to)}}
+
+        if override:
+            body.update(override)
         async with Typing(self, self._get_id(room)):
             response = await self.room_send(
                 self._get_id(room),
@@ -770,6 +776,7 @@ class NioBot(nio.AsyncClient):
         *,
         message_type: typing.Optional[str] = None,
         clean_mentions: bool = False,
+        override: typing.Optional[dict] = None,
     ) -> nio.RoomSendResponse:
         """
         Edit an existing message. You must be the sender of the message.
@@ -781,6 +788,7 @@ class NioBot(nio.AsyncClient):
         :param content: The new content of the message.
         :param message_type: The new type of the message (i.e. m.text, m.notice. Defaults to client.global_message_type)
         :param clean_mentions: Whether to escape all mentions
+        :param override: A dictionary containing additional properties to pass to the body. Overrides existing properties.
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
@@ -806,6 +814,8 @@ class NioBot(nio.AsyncClient):
                 "event_id": event_id,
             },
         }
+        if override:
+            body.update(override)
         async with Typing(self, room):
             response = await self.room_send(
                 room,
