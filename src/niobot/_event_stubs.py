@@ -32,8 +32,8 @@ async def event_loop_running() -> t.Optional[t.Any]:
                     await self.db.execute(...)
                     await self.db.commit
             ```
-    :return:
     """
+    ...
 
 
 async def ready(result: "SyncResponse") -> t.Optional[t.Any]:
