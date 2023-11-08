@@ -6,6 +6,36 @@ if t.TYPE_CHECKING:
     from . import CommandError, Context, MatrixRoom, RoomMessageText, SyncResponse
 
 
+async def event_loop_running() -> t.Optional[t.Any]:
+    """
+    An event that is fired once the event loop is running.
+
+    !!! tip "You should use this event to perform any startup tasks."
+        This event is fired before the bot logs in, and before the first `sync()` is performed.
+
+        This means that if, for example, you wanted to initialise a database, or make some HTTP request in a module,
+        You can @[nio]bot.event("event_loop_running") do it here.
+
+        ??? example "Initialising a database in a module"
+            ```python
+            import niobot
+            import aiosqlite
+
+            class MyModule(niobot.Module):
+                def __init__(self, bot):
+                    super().__init__(bot)
+                    self.db = None
+
+                @niobot.event("event_loop_running")
+                async def event_loop_running(self):
+                    self.db = await aiosqlite.connect("mydb.db")
+                    await self.db.execute(...)
+                    await self.db.commit
+            ```
+    :return:
+    """
+
+
 async def ready(result: "SyncResponse") -> t.Optional[t.Any]:
     """
     An event that is fired when the bot's first `sync()` is completed.

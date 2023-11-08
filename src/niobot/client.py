@@ -883,6 +883,7 @@ class NioBot(nio.AsyncClient):
     ) -> None:
         """Starts the bot, running the sync loop."""
         self.loop = asyncio.get_event_loop()
+        self.dispatch("event_loop_ready")
         if password or sso_token:
             if password:
                 self.log.critical(
