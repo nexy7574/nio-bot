@@ -220,11 +220,7 @@ class Command:
         for n, parameter in enumerate(inspect.signature(callback).parameters.values()):
             # If it has a parent class and this is the first parameter, skip it.
             if n == 0 and parameter.name == "self":
-                log.debug(
-                    "Found 'self' parameter (%r) at position %d, skipping argument detection.",
-                    parameter,
-                    n
-                )
+                log.debug("Found 'self' parameter (%r) at position %d, skipping argument detection.", parameter, n)
                 continue
 
             if parameter.name in ["ctx", "context"] or parameter.annotation is Context:

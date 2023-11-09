@@ -157,7 +157,7 @@ def version(no_colour: bool):
         python_version_supported = False
     else:
         python_version_supported = True
-    
+
     nio_versions_raw = ""
     for version in importlib.metadata.requires("nio-bot"):
         if version.startswith("matrix-nio"):

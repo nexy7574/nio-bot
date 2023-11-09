@@ -70,7 +70,7 @@ class NioBot(nio.AsyncClient):
         automatic_markdown_renderer: bool = True,
         max_message_cache: int = 1000,
         ignore_self: bool = True,
-        import_keys: typing.Tuple[os.PathLike, typing.Optional[str]] = None
+        import_keys: typing.Tuple[os.PathLike, typing.Optional[str]] = None,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
