@@ -54,6 +54,8 @@ class Argument:
         parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
         **kwargs,
     ):
+        if default is inspect.Parameter.default:
+            default = ...
         log = logging.getLogger(__name__)
         self.name = name
         self.type = arg_type
@@ -70,16 +72,16 @@ class Argument:
             from .utils import BUILTIN_MAPPING
 
             if self.type in BUILTIN_MAPPING:
-                log.info("Using builtin parser %r for %r", self.type, self)
+                log.debug("Using builtin parser %r for %r", self.type, self)
                 self.parser = BUILTIN_MAPPING[self.type]
             else:
                 for base in inspect.getmro(self.type):
                     if base in BUILTIN_MAPPING:
-                        log.info("Using builtin parser %r for %s due to being a subclass", base, self.type)
+                        log.debug("Using builtin parser %r for %s due to being a subclass", base, self.type)
                         self.parser = BUILTIN_MAPPING[base]
                         break
                 else:
-                    log.info("Using default parser for %s", self.type)
+                    log.debug("Using default parser for %s", self.type)
                     self.parser = self.internal_parser
         else:
             from .utils import BUILTIN_MAPPING
@@ -213,33 +215,54 @@ class Command:
         # If it has a default value, assign that default value to the Argument.
         # If the parameter is `self`, ignore it.
         # If the parameter is `ctx`, use the `Context` type.
+        log = logging.getLogger(__name__)
         args = []
         for n, parameter in enumerate(inspect.signature(callback).parameters.values()):
             # If it has a parent class and this is the first parameter, skip it.
             if n == 0 and parameter.name == "self":
+                log.debug(
+                    "Found 'self' parameter (%r) at position %d, skipping argument detection.",
+                    parameter,
+                    n
+                )
                 continue
 
             if parameter.name in ["ctx", "context"] or parameter.annotation is Context:
+                log.debug(
+                    "Found 'context' parameter (%r) at position %d, skipping argument detection.",
+                    parameter,
+                    n,
+                )
                 continue
 
             # Disallow *args and **kwargs
             if parameter.kind in [inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD]:
+                # Perhaps support *args as a way to take a greedy string?
                 raise CommandArgumentsError("Cannot use *args or **kwargs in command callback (argument No. %d)" % n)
 
             if parameter.annotation is inspect.Parameter.empty:
+                log.debug("Found argument %r, however no type was specified. Assuming string.", parameter)
                 a = Argument(parameter.name, str, default=parameter.default)
             else:
                 annotation = parameter.annotation
                 if typing.get_origin(annotation) is typing.Annotated:
                     real_type, type_parser = typing.get_args(annotation)
+                    log.debug(
+                        "Resolved Annotated[...] (%r) to real type %r with parser %r",
+                        annotation,
+                        real_type,
+                        type_parser,
+                    )
                     a = Argument(parameter.name, real_type, default=parameter.default, parser=type_parser)
                 else:
+                    log.debug("Found argument %r with type %r", parameter, parameter.annotation)
                     a = Argument(parameter.name, parameter.annotation)
 
             if parameter.default is not inspect.Parameter.empty:
                 a.default = parameter.default
                 a.required = False
             args.append(a)
+        log.debug("Automatically detected the following arguments: %r", args)
         return args
 
     def __hash__(self):
@@ -409,7 +432,7 @@ def check(
     return decorator
 
 
-def event(name: str) -> Callable:
+def event(name: str = None) -> Callable:
     """
     Allows you to register event listeners in modules.
 
@@ -418,6 +441,8 @@ def event(name: str) -> Callable:
     """
 
     def decorator(func):
+        nonlocal name
+        name = name or func.__name__
         func.__nio_event__ = {"function": func, "name": name, "_module_instance": None}
         return func
 
@@ -432,13 +457,12 @@ class Module:
     their respective code into multiple files and classes for ease of use, development, and maintenance.
 
     :ivar bot: The bot instance this module is mounted to.
-    :ivar client: Alias for `bot`.
     """
 
     __is_nio_module__ = True
 
     def __init__(self, bot: "NioBot"):
-        self.bot = self.client = bot
+        self.bot = bot
 
     @property
     def client(self) -> "NioBot":
