@@ -40,7 +40,7 @@ Homepage = "https://nio-bot.dev"
 
 
 [project.optional-dependencies]
-e2ee = ['matrix-nio[e2e]>=0.20.0,<0.23.0']
+e2ee = ["python-olm", "peewee", "cachetools", "atomicwrites"]
 cli = ['httpx>=0.25', 'click>=8.1.7', 'psutil>=5.9.6', "packaging>=23.1"]
 dev = [
     'mkdocs',
