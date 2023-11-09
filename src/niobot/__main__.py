@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import logging
 import os
 import pathlib
@@ -7,8 +6,10 @@ import re
 import sys
 import shutil
 import typing
+import importlib.metadata
 
 import packaging.version
+import packaging.specifiers
 
 import niobot
 
@@ -20,7 +21,7 @@ except ImportError:
     print("Missing CLI dependencies. Did you install CLI extras?", file=sys.stderr)
     sys.exit(1)
 
-logger = logging.getLogger("cli")
+logger = logging.getLogger("niobot.cli")
 
 
 def versions(package_name: str) -> typing.List[packaging.version.Version]:
@@ -36,9 +37,46 @@ def versions(package_name: str) -> typing.List[packaging.version.Version]:
     return list(map(packaging.version.parse, response.json()["versions"]))
 
 
+@typing.overload
+def get_installed_version(package_name: str, default_to_0_0_0: bool = True, *, parse: typing.Literal[False]) -> str:
+    ...
+
+
+@typing.overload
+def get_installed_version(
+    package_name: str, default_to_0_0_0: bool = True, *, parse: typing.Literal[True]
+) -> packaging.version.Version:
+    ...
+
+
+def get_installed_version(
+    package_name: str, default_to_0_0_0: bool = True, *, parse: bool = False
+) -> typing.Union[str, packaging.version.Version]:
+    """
+    Fetches a package version via importlib.metadata.
+
+    :param package_name: The name of the package to fetch.
+    :param default_to_0_0_0: Whether to default to "0.0.0" if the package is not installed or not found.
+    :return: The package version identifier or packaging version
+    """
+    try:
+        version = importlib.metadata.version(package_name)
+    except importlib.metadata.PackageNotFoundError:
+        if default_to_0_0_0:
+            version = "0.0.0"
+        raise
+
+    if parse:
+        version = packaging.version.parse(version)
+    return version
+
+
 @click.group()
 @click.option(
-    "--log-level", "-L", type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]), default="WARNING"
+    "--log-level",
+    "-L",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], case_sensitive=False),
+    default="WARNING",
 )
 @click.pass_context
 def cli_root(ctx, log_level: str):
@@ -47,38 +85,24 @@ def cli_root(ctx, log_level: str):
         level=getattr(logging, log_level),
     )
 
-    try:
-        from .__version__ import __version__, __version_tuple__
-    except ImportError:
-        logger.warning("Failed to import version metadata.")
-        __version__ = "unknown"
-        __version_tuple__ = (0, 0, "unknown", "gunknown.d19991231")
-    else:
-        logger.debug("Version: %s", __version__)
-
-    ctx.obj = {"timestamp": datetime.datetime.now(), "version_info": __version__, "version_tuple": __version_tuple__}
-
 
 @cli_root.command()
 @click.option("--no-colour", "--no-color", "-C", is_flag=True, default=False)
 def version(no_colour: bool):
     """Shows version information."""
     logger.info("Gathering version info...")
-    import importlib.metadata
     import platform
 
     from nio.crypto import ENCRYPTION_ENABLED
 
     try:
-        nio_version = importlib.metadata.version("matrix-nio")
-        nio_version = packaging.version.parse(nio_version)
+        nio_version = get_installed_version("matrix-nio", parse=True)
     except (importlib.metadata.PackageNotFoundError, packaging.version.InvalidVersion) as e:
         logger.critical("Failed to resolve matrix-nio version information", exc_info=e)
         nio_version = packaging.version.Version("0.0.0")
 
     try:
-        niobot_version = importlib.metadata.version("nio-bot")
-        niobot_version = packaging.version.parse(niobot_version)
+        niobot_version = get_installed_version("nio-bot", parse=True)
 
         # Check for updates
         niobot_versions = versions("nio-bot")
@@ -127,10 +151,28 @@ def version(no_colour: bool):
             pass
     space_total = space.pop("total")
 
+    supported_python_versions_raw = importlib.metadata.metadata("nio-bot")["Requires-Python"]
+    supported_python_versions = packaging.specifiers.SpecifierSet(supported_python_versions_raw)
+    if not supported_python_versions.contains(platform.python_version()):
+        python_version_supported = False
+    else:
+        python_version_supported = True
+    
+    nio_versions_raw = ""
+    for version in importlib.metadata.requires("nio-bot"):
+        if version.startswith("matrix-nio"):
+            nio_versions_raw = version.split(" ")[1]
+            break
+    nio_versions = packaging.specifiers.SpecifierSet(nio_versions_raw)
+    if not nio_versions.contains(nio_version):
+        nio_version_supported = False
+    else:
+        nio_version_supported = True
+
     lines = [
         ["NioBot version", niobot_version_pretty, lambda x: True],
-        ["matrix-nio version", nio_version, lambda x: x.public.startswith(("0.20", "0.21", "0.22"))],
-        ["Python version", platform.python_version(), lambda x: x.split(".")[0] == "3" and int(x.split(".")[1]) >= 9],
+        ["matrix-nio version", nio_version, lambda x: nio_version_supported],
+        ["Python version", platform.python_version(), lambda x: python_version_supported],
         ["Python implementation", platform.python_implementation(), lambda x: x == "CPython"],
         ["Operating System", _os, lambda val: val.startswith(("Windows", "Linux"))],
         ["Architecture", platform.machine(), lambda x: x == "x86_64"],
