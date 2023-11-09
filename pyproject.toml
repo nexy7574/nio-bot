@@ -55,7 +55,8 @@ dev = [
     'pep440',
     'pycodestyle',
     'pytest',
-    'pytest-asyncio'
+    'pytest-asyncio',
+    'ruff'
 ]
 
 [project.scripts]
