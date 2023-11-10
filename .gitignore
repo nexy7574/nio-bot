@@ -339,3 +339,8 @@ src/niobot/__version__.py
 /niobot
 # ^ I symlink /src/niobot to /niobot for docs so I don't have to remember to `cd` into `src.`
 venv*/
+examples/**/*.ini
+examples/**/*.env
+examples/**/.env
+examples/**/.toml
+examples/**/config.*
