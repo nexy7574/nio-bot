@@ -1,4 +1,8 @@
 # Creating custom parsers
+
+!!! tip "New in version 1.1.0b1"
+    This feature was added in version 1.1.0b1 - `pip install niobot>=1.1.0b1`
+
 NioBot is loaded with some sane defaults for basic types. If you were to pass the following function as a command:
 ```python
 async def my_command(ctx: Context, arg1: int, arg2: float, arg3: str):

@@ -21,7 +21,7 @@ __all__ = (
     "CheckFailure",
     "NotOwner",
     "InsufficientPower",
-    "GenericMatrixError"
+    "GenericMatrixError",
 )
 
 
@@ -94,6 +94,7 @@ class GenericMatrixError(NioBotException):
     """
     Exception for generic matrix errors where a valid response was expected, but got an ErrorResponse instead.
     """
+
     def __init__(self, message: typing.Optional[str] = None, *, response: nio.ErrorResponse):
         super().__init__(message=message, response=response)
 

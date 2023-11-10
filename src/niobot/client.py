@@ -15,6 +15,7 @@ from typing import Union as U
 
 import marko
 import nio
+from .patches.nio__responses import DirectRoomsErrorResponse, DirectRoomsResponse
 from nio.crypto import ENCRYPTION_ENABLED
 
 from .attachment import BaseAttachment
@@ -525,10 +526,10 @@ class NioBot(nio.AsyncClient):
                 self.log.debug("Removed %r from event %r", function, event_type)
 
     async def set_room_nickname(
-            self,
-            room: U[str, nio.MatrixRoom],
-            new_nickname: str = None,
-            user: typing.Optional[U[str, nio.MatrixUser]] = None,
+        self,
+        room: U[str, nio.MatrixRoom],
+        new_nickname: str = None,
+        user: typing.Optional[U[str, nio.MatrixUser]] = None,
     ) -> nio.RoomPutStateResponse:
         """
         Changes the user's nickname in the given room.
@@ -694,40 +695,73 @@ class NioBot(nio.AsyncClient):
             previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
         return previous
 
-    async def get_dm_room(self, user: U[nio.MatrixUser, str]) -> nio.MatrixRoom:
+    @typing.overload
+    async def get_dm_rooms(self) -> typing.Dict[str, typing.List[str]]:
         """
-        Gets (or creates) a room that is a private DM room for the given user.
+        Gets all DM rooms stored in account data.
 
-        !!! danger "Unreliable detection"
-            Due to an [issue in `matrix-nio`](https://github.com/poljar/matrix-nio/issues/421), some clients
-            (as per the matrix spec) do not issue the flag that indicates a room is a DM room while inviting users.
+        :return: A dictionary containing user IDs as keys, and lists of room IDs as values.
+        """
+        ...
 
-            Due to the lack of a native solution in matrix-nio, `niobot` has a very hacky workaround that hooks into
-            the timeline for rooms, and manually detects DM rooms.
-            Due to this being a workaround, not a full solution, this may be unreliable. You should not rely on this
-            function to reliably return an existing DM room, or a valid DM room at all.
+    @typing.overload
+    async def get_dm_rooms(self, user: U[nio.MatrixUser, str]) -> typing.List[str]:
+        """
+        Gets DM rooms for a specific user.
 
-        :param user: The User or user ID to fetch a DM room for.
-        :return: The DM room, either pre-existing, or a new one.
-        :raises NioBotException: A room could not be created.
-        :raises RuntimeError: The room was created, but was not in the internal cache.
+        :param user: The user to fetch DM rooms for.
+        :return: A list of room IDs
+        """
+        ...
+
+    async def get_dm_rooms(
+        self,
+        user: typing.Optional[U[nio.MatrixUser, str]] = None,
+    ) -> typing.Union[typing.Dict[str, typing.List[str]], typing.List[str]]:
+        """
+        Gets DM rooms, optionally for a specific user.
+
+        If no user is given, this returns a dictionary of user IDs to lists of rooms.
+
+        :param user: The user ID or object to get DM rooms for.
+        :return: A dictionary of user IDs to lists of rooms, or a list of rooms.
+        """
+        # When https://github.com/poljar/matrix-nio/pull/451/ is merged in the next version of matrix-nio,
+        # this function should be changed to use Api.list_direct_rooms.
+        # For now, I'll just pull the code from the PR and whack it in here.
+        # It's ugly, but it's better than what we had before:
+        # https://github.com/nexy7574/niobot/blob/216509/src/niobot/client.py#L668-L701
+
+        result = await self._send(
+            DirectRoomsResponse,
+            "GET",
+            nio.Api._build_path(["user", self.user_id, "account_data", "m.direct"]),
+        )
+        if isinstance(result, DirectRoomsErrorResponse):
+            raise GenericMatrixError("Failed to get DM rooms", response=result)
+        if user:
+            user_id = self._get_id(user)
+            return result.rooms.get(user_id, [])
+        return result.rooms
+
+    async def create_dm_room(
+        self,
+        user: U[nio.MatrixUser, str],
+    ) -> nio.RoomCreateResponse:
+        """
+        Creates a DM room with a given user.
+
+        :param user: The user to create a DM room with.
+        :return: The response from the server.
         """
         user_id = self._get_id(user)
-        if user_id in self.direct_rooms:
-            room = self.direct_rooms[user_id]
-            self.log.debug("%r already has a DM room: %r. Returning that.", user_id, room)
-        else:
-            self.log.debug("%r does not have a DM room. Creating one.", user_id)
-            room = await self.room_create(is_direct=True, invite=[user_id])
-            if not isinstance(room, nio.RoomCreateResponse):
-                raise NioBotException("Unable to create DM room for %r: %r" % (user_id, room), response=room)
-            self.log.debug("Created DM room for %r: %r", user_id, room)
-            room_id = room.room_id
-            room = self.rooms.get(room_id)
-            if not room:
-                raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room_id)
-            self.direct_rooms[user_id] = room
-        return room
+        result = await self.room_create(
+            is_direct=True,
+            invitees=[user_id],
+        )
+        if isinstance(result, nio.RoomCreateError):
+            raise GenericMatrixError("Failed to create DM room", response=result)
+        return result
 
     async def send_message(
         self,
@@ -755,7 +789,8 @@ class NioBot(nio.AsyncClient):
         :param message_type: The message type to send. If none, defaults to NioBot.global_message_type,
         which itself is `m.notice` by default.
         :param clean_mentions: Whether to escape all mentions
-        :param override: A dictionary containing additional properties to pass to the body. Overrides existing properties.
+        :param override: A dictionary containing additional properties to pass to the body.
+        Overrides existing properties.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
@@ -766,7 +801,12 @@ class NioBot(nio.AsyncClient):
             raise ValueError("You must specify either content or file.")
 
         if isinstance(room, nio.MatrixUser) or (isinstance(room, str) and room.startswith("@")):
-            room = await self.get_dm_room(room)
+            _user = room
+            rooms = await self.get_dm_rooms(_user)
+            if rooms:
+                room = rooms[0]
+            else:
+                room = await self.create_dm_room(_user)
 
         self.log.debug("Send message resolved room to %r", room)
 

@@ -13,7 +13,7 @@ You will need the following in general:
 
 And the following installed on the machine you want to run the bot on:
 
-* Python 3.11 or higher with sqlite support
+* Python with sqlite support
 * `libolm` (use your system package manager, like apt or pacman) in order to use end-to-end encryption.
 * A decent network connection (at *least* a few megabits a second, preferably more)
 * At least 100mb free storage space (for the database and other files)
@@ -21,24 +21,27 @@ And the following installed on the machine you want to run the bot on:
 ## Installation
 After you've installed and acquired the above, you can install nio-bot with the following command:
 ```bash
-python3 -m pip install git+https://github.com/nexy7574/nio-bot.git#egg=nio-bot[cli]
+python3 -m pip install nio-bot[cli]
 # Note that we install the extras for `cli` here - the niobot CLI comes with a bunch of useful tools we'll use.
 ```
 If you would like to install support for end-to-end encryption, you can install the following instead:
 ```bash
-python3 -m pip install git+https://github.com/nexy7574/nio-bot.git#egg=nio-bot[cli,e2ee]
+python3 -m pip install nio-bot[cli,e2ee]
 ```
 
 After you've done that, verify everything installed fine by running `niocli version`:
 ```bash
 (venv) [me@host test-niobot]$ niocli version
-NioBot version: 0.1.dev115+g5af233e (Version 0.1, build dev115, commit '5af233e', built '04/07/230')
-matrix-nio version: 0.20.2
-Python version: 3.11.3
+
+NioBot version: 1.1.0b1.post2.dev18 (v1.1.0, build 18, pre b2, commit g38dc914)
+matrix-nio version: 0.22.1
+Python version: 3.11.5
 Python implementation: CPython
-Operating System: Linux-6.4.1-arch1-1-x86_64-with-glibc2.37
+Operating System: Linux-6.6.1-arch1-1-x86_64-with-glibc2.38 (Arch Linux/Unknown - Arch Linux)
 Architecture: x86_64
 OLM Installed: Yes
+Free Disk Space: / (38.3%) /boot (66.02%)
+
 ```
 
 !!! info
