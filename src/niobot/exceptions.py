@@ -21,6 +21,7 @@ __all__ = (
     "CheckFailure",
     "NotOwner",
     "InsufficientPower",
+    "GenericMatrixError"
 )
 
 
@@ -82,11 +83,19 @@ class NioBotException(Exception):
 
     def __str__(self) -> str:
         """Returns a human-readable version of the exception."""
-        return self.message or str(self.original)
+        return self.message or repr(self.original)
 
     def __repr__(self) -> str:
         """Returns a developer-readable version of the exception."""
         return f"<{self.__class__.__name__} message={self.message!r} original={self.original!r}>"
+
+
+class GenericMatrixError(NioBotException):
+    """
+    Exception for generic matrix errors where a valid response was expected, but got an ErrorResponse instead.
+    """
+    def __init__(self, message: typing.Optional[str] = None, *, response: nio.ErrorResponse):
+        super().__init__(message=message, response=response)
 
 
 class MessageException(NioBotException):

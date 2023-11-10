@@ -524,6 +524,38 @@ class NioBot(nio.AsyncClient):
                 self._events[event_type].remove(function)
                 self.log.debug("Removed %r from event %r", function, event_type)
 
+    async def set_room_nickname(
+            self,
+            room: U[str, nio.MatrixRoom],
+            new_nickname: str = None,
+            user: typing.Optional[U[str, nio.MatrixUser]] = None,
+    ) -> nio.RoomPutStateResponse:
+        """
+        Changes the user's nickname in the given room.
+
+        :param room: The room to change the nickname in.
+        :param new_nickname: The new nickname. If None, defaults to the user's display name.
+        :param user: The user to update. Defaults to the bot's user.
+        :return: The response from the server.
+        :raises: GenericMatrixError - The request failed.
+        """
+        room_id = self._get_id(room)
+        user = user or self.user_id
+        user_id = self._get_id(user)
+        profile = await self.get_profile(user_id)
+        if isinstance(profile, nio.ProfileGetError):
+            raise GenericMatrixError("Failed to get profile", response=profile)
+
+        result = await self.room_put_state(
+            room_id,
+            "m.room.member",
+            {"membership": "join", "displayname": new_nickname, "avatar_url": profile.avatar_url},
+            user_id,
+        )
+        if isinstance(result, nio.RoomPutStateError):
+            raise GenericMatrixError("Failed to set nickname", response=result)
+        return result
+
     async def room_send(
         self,
         room_id: str,
@@ -532,9 +564,6 @@ class NioBot(nio.AsyncClient):
         tx_id: typing.Optional[str] = None,
         ignore_unverified_devices: bool = True,
     ) -> U[nio.RoomSendResponse, nio.RoomSendError]:
-        """
-        Send a message to a room. Wrapper. See [`nio.AsyncClient.room_send`][] for more information.
-        """
         return await super().room_send(
             room_id,
             message_type,
