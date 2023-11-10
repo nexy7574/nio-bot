@@ -347,10 +347,12 @@ class MatrixDotToParser(Parser):
             room = room_id
         else:
             if room_id.startswith("@"):
-                room = await ctx.client.get_dm_room(room_id)
-            else:
-                room = ctx.client.rooms.get(room_id)
-
+                dm_rooms = await ctx.client.get_dm_rooms(room_id)
+                if not dm_rooms:
+                    new_dm_room = await ctx.client.create_dm_room(room_id)
+                    dm_rooms.append(new_dm_room.room_id)
+                room_id = dm_rooms[0]
+            room = ctx.client.rooms.get(room_id)
             if room is None:
                 raise CommandParserError("No room with that ID, alias, or matrix.to link found.")
 
@@ -398,6 +400,22 @@ class MXCParser(StatelessParser):
         return MatrixMXCUrl(parsed.netloc, parsed.path[1:])
 
 
+class MatrixUserParser(StatelessParser):
+    """
+    Parses a string into a MatrixUser instance from matrix-nio.
+    """
+
+    def __call__(self, ctx, arg, value):
+        if not value.startswith("@"):
+            raise CommandParserError(f"Invalid matrix user ID: {value!r}.")
+
+        # Check the local room for the user
+        for member in ctx.room.users.values():
+            if member.user_id == value:
+                return member
+        raise CommandParserError(f"Invalid matrix user ID: {value!r} (not in room).")
+
+
 BUILTIN_MAPPING = {
     bool: BooleanParser(),
     float: FloatParser(),
@@ -407,6 +425,7 @@ BUILTIN_MAPPING = {
     nio.RoomMessageText: EventParser("m.room.message"),
     nio.Event: EventParser(),
     nio.MatrixRoom: RoomParser(),
+    nio.MatrixUser: MatrixUserParser(),
     MatrixToLink: MatrixDotToParser,
 }
 # Now add the aliases for backward compatability with <1.1.0
