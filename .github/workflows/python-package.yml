@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt- install ffmpeg imagemagick
+        sudo apt-get install ffmpeg imagemagick
         python -m pip install --upgrade pip wheel setuptools
         pip install .[e2ee,dev,cli]
     - name: Run tests
