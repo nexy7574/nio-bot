@@ -116,6 +116,8 @@ class NioBot(nio.AsyncClient):
         self.owner_id = owner_id
         self.ignore_self = ignore_self
 
+        if not isinstance(command_prefix, (str, re.Pattern)):
+            raise TypeError("Command prefix must be a string or a regex pattern.")
         if command_prefix == "/":
             self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
         if isinstance(command_prefix, str) and re.search(r"\s", command_prefix):
