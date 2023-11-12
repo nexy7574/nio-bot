@@ -1087,9 +1087,7 @@ class VideoAttachment(BaseAttachment):
                     if stream["codec_type"] == "video":
                         if stream["codec_name"].lower() not in SUPPORTED_VIDEO_CODECS or not stream[
                             "codec_name"
-                        ].startswith(
-                            "pcm_"
-                        ):  # usually, pcm is supported.
+                        ].startswith("pcm_"):  # usually, pcm is supported.
                             warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_VIDEO_CODECS)
                             warnings.warn(warning)
                         height = stream["height"]

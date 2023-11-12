@@ -39,13 +39,13 @@ def test_mimetype_detection(file_path: pathlib.Path, expected: str):
     [
         (ASSETS / "sample-15s.ogg", niobot.AudioAttachment, {"duration": 19.18 * 1000}),
         (
-                ASSETS / "sample-5s-compressed.mp4",
-                niobot.VideoAttachment,
-                {
-                    "duration": 5758,
-                    "height": 1080,
-                    "width": 1920,
-                }
+            ASSETS / "sample-5s-compressed.mp4",
+            niobot.VideoAttachment,
+            {
+                "duration": 5758,
+                "height": 1080,
+                "width": 1920,
+            },
         ),
         (
             ASSETS / "sample-clouds.webp",
@@ -53,9 +53,9 @@ def test_mimetype_detection(file_path: pathlib.Path, expected: str):
             {
                 "height": 300,
                 "width": 400,
-            }
-        )
-    ]
+            },
+        ),
+    ],
 )
 @pytest.mark.asyncio
 async def test_rich_data_detection(file_path: pathlib.Path, expected_type, expected_values: dict[str, typing.Any]):

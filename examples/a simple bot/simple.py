@@ -66,7 +66,7 @@ bot = niobot.NioBot(
     device_id=device_id,
     store_path=config["niobot"].get("store_path"),
     command_prefix=prefix,
-    owner_id=owner_id
+    owner_id=owner_id,
 )
 
 
@@ -75,7 +75,7 @@ async def on_ready(_):
     print(f"Logged in as {bot.user_id}")
     print(f"Prefix: {bot.command_prefix}")
     if config["niobot"].get("password"):
-        print(f"Removing password in config in favour of access token.")
+        print("Removing password in config in favour of access token.")
         config["niobot"].pop("password")
         config["niobot"]["token"] = bot.access_token
         with CONFIG_PATH.open("w") as file:
