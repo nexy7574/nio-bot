@@ -1,9 +1,8 @@
 import pathlib
 import typing
 
-import pytest
-
 import niobot
+import pytest
 
 ASSETS = pathlib.Path(__file__).parent / "assets"
 

@@ -1,8 +1,8 @@
 # Pull from https://github.com/poljar/matrix-nio/pull/451 temporarily.
 from dataclasses import dataclass, field
-from nio.responses import ErrorResponse, Response
-from typing import Dict, List, Any, Union
+from typing import Any, Dict, List, Union
 
+from nio.responses import ErrorResponse, Response
 
 __all__ = (
     "DirectRoomsErrorResponse",

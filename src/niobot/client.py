@@ -15,12 +15,12 @@ from typing import Union as U
 
 import marko
 import nio
-from .patches.nio__responses import DirectRoomsErrorResponse, DirectRoomsResponse
 from nio.crypto import ENCRYPTION_ENABLED
 
 from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import *
+from .patches.nio__responses import DirectRoomsErrorResponse, DirectRoomsResponse
 from .utils import Typing, force_await, run_blocking
 from .utils.help_command import default_help_command
 
@@ -878,7 +878,8 @@ class NioBot(nio.AsyncClient):
         :param content: The new content of the message.
         :param message_type: The new type of the message (i.e. m.text, m.notice. Defaults to client.global_message_type)
         :param clean_mentions: Whether to escape all mentions
-        :param override: A dictionary containing additional properties to pass to the body. Overrides existing properties.
+        :param override: A dictionary containing additional properties to pass to the body.
+        Overrides existing properties.
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """

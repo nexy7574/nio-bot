@@ -6,11 +6,12 @@ So, make sure you've got an interactive session on first run.
 
 This example was written in nio-bot version 1.1.0b2.
 """
-import niobot
 import getpass
 from base64 import b16decode, b16encode
-from pathlib import Path
 from configparser import ConfigParser
+from pathlib import Path
+
+import niobot
 
 __author__ = "nexy7574 (@nex:nex7574.co.uk)"
 __version__ = "1.1.0b2"

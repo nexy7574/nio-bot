@@ -1,15 +1,15 @@
 import asyncio
+import importlib.metadata
 import logging
 import os
 import pathlib
 import re
-import sys
 import shutil
+import sys
 import typing
-import importlib.metadata
 
-import packaging.version
 import packaging.specifiers
+import packaging.version
 
 import niobot
 

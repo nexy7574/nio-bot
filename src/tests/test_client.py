@@ -4,7 +4,6 @@ import typing
 import niobot
 import pytest
 
-
 DEFAULT_HELP_COMMAND = niobot.Command(
     "help",
     niobot.default_help_command,

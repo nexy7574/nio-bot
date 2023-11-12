@@ -95,6 +95,11 @@ target-version = "py311"
 line-length = 120
 indent-width = 4
 respect-gitignore = true
+select = [
+    "E",     # pycodestyle
+    "F",     # Pyflakes
+    "I001",  # isort
+]
 
 [tool.ruff.lint]
 fixable = ["ALL"]
