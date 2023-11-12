@@ -64,6 +64,7 @@ async def test_rich_data_detection(file_path: pathlib.Path, expected_type, expec
 
     for key, value in expected_values.items():
         attr = getattr(instance, key)
-        if isinstance(value, (range, list, tuple, set)):
+        if isinstance(value, typing.Iterable):
             assert attr in value, f"{key} is not in iterable (expected {value!r}, got {attr!r})"
-        assert attr == value, f"{key} does not match (expected {value!r}, got {attr!r})"
+        else:
+            assert attr == value, f"{key} does not match (expected {value!r}, got {attr!r})"
