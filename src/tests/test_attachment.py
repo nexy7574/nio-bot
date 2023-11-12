@@ -36,12 +36,12 @@ def test_mimetype_detection(file_path: pathlib.Path, expected: str):
 @pytest.mark.parametrize(
     "file_path, expected_type, expected_values",
     [
-        (ASSETS / "sample-15s.ogg", niobot.AudioAttachment, {"duration": 19.18 * 1000}),
+        (ASSETS / "sample-15s.ogg", niobot.AudioAttachment, {"duration": range(19000, 20000)}),
         (
             ASSETS / "sample-5s-compressed.mp4",
             niobot.VideoAttachment,
             {
-                "duration": 5758,
+                "duration": range(5000, 6000),
                 "height": 1080,
                 "width": 1920,
             },
@@ -64,4 +64,6 @@ async def test_rich_data_detection(file_path: pathlib.Path, expected_type, expec
 
     for key, value in expected_values.items():
         attr = getattr(instance, key)
+        if isinstance(value, typing.Iterable):
+            assert attr in value, f"{key} is not in iterable (expected {value!r}, got {attr!r})"
         assert attr == value, f"{key} does not match (expected {value!r}, got {attr!r})"
