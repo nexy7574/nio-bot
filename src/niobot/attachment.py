@@ -892,6 +892,24 @@ class ImageAttachment(SupportXYZAmorganBlurHash):
         }
         self.thumbnail = thumbnail
 
+    @property
+    def height(self) -> typing.Optional[int]:
+        """The height of this image in pixels"""
+        return self.info["h"]
+
+    @height.setter
+    def height(self, value: typing.Optional[int]):
+        self.info["h"] = value
+
+    @property
+    def width(self) -> typing.Optional[int]:
+        """The width of this image in pixels"""
+        return self.info["w"]
+
+    @width.setter
+    def width(self, value: typing.Optional[int]):
+        self.info["w"] = value
+
     @classmethod
     async def from_file(
         cls,
@@ -985,13 +1003,40 @@ class VideoAttachment(BaseAttachment):
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.VIDEO)
         self.info = {
-            "duration": round(duration * 1000) if duration else None,
+            "duration": duration,
             "h": height,
             "w": width,
             "mimetype": mime_type,
             "size": size_bytes,
         }
         self.thumbnail = thumbnail
+
+    @property
+    def duration(self) -> typing.Optional[int]:
+        """The duration of this video in milliseconds"""
+        return self.info["duration"]
+
+    @duration.setter
+    def duration(self, value: typing.Optional[int]):
+        self.info["duration"] = value
+
+    @property
+    def height(self) -> typing.Optional[int]:
+        """The height of this image in pixels"""
+        return self.info["h"]
+
+    @height.setter
+    def height(self, value: typing.Optional[int]):
+        self.info["h"] = value
+
+    @property
+    def width(self) -> typing.Optional[int]:
+        """The width of this image in pixels"""
+        return self.info["w"]
+
+    @width.setter
+    def width(self, value: typing.Optional[int]):
+        self.info["w"] = value
 
     @classmethod
     async def from_file(
@@ -1042,7 +1087,9 @@ class VideoAttachment(BaseAttachment):
                     if stream["codec_type"] == "video":
                         if stream["codec_name"].lower() not in SUPPORTED_VIDEO_CODECS or not stream[
                             "codec_name"
-                        ].startswith("pcm_"):  # usually, pcm is supported.
+                        ].startswith(
+                            "pcm_"
+                        ):  # usually, pcm is supported.
                             warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_VIDEO_CODECS)
                             warnings.warn(warning)
                         height = stream["height"]
@@ -1112,10 +1159,19 @@ class AudioAttachment(BaseAttachment):
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.AUDIO)
         self.info = {
-            "duration": round(duration * 1000) if duration else None,
+            "duration": duration,
             "mimetype": mime_type,
             "size": size_bytes,
         }
+
+    @property
+    def duration(self) -> typing.Optional[int]:
+        """The duration of this audio in milliseconds"""
+        return self.info["duration"]
+
+    @duration.setter
+    def duration(self, value: typing.Optional[int]):
+        self.info["duration"] = value
 
     @classmethod
     async def from_file(
