@@ -38,10 +38,7 @@ if typing.TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
-_CT = typing.TypeVar(
-    "_CT",
-    bound=U[str, bytes, pathlib.Path, typing.IO[bytes]]
-)
+_CT = typing.TypeVar("_CT", bound=U[str, bytes, pathlib.Path, typing.IO[bytes]])
 
 
 __all__ = (
@@ -393,27 +390,27 @@ def which(
 
 @typing.overload
 def convert_image(
-        file: U[io.BytesIO, pathlib.Path, str, PIL.Image.Image],
-        output_file: _CT,
+    file: U[io.BytesIO, pathlib.Path, str, PIL.Image.Image],
+    output_file: _CT,
 ) -> _CT:
     ...
 
 
 @typing.overload
 def convert_image(
-        file: U[pathlib.Path, str, PIL.Image.Image],
-        output_file: io.BytesIO,
-        *,
-        output_format: str,
+    file: U[pathlib.Path, str, PIL.Image.Image],
+    output_file: io.BytesIO,
+    *,
+    output_format: str,
 ) -> io.BytesIO:
     ...
 
 
 def convert_image(
-        file: U[io.BytesIO, pathlib.Path, str, PIL.Image.Image],
-        output_file: _CT,
-        *,
-        output_format: typing.Optional[str] = None,
+    file: U[io.BytesIO, pathlib.Path, str, PIL.Image.Image],
+    output_file: _CT,
+    *,
+    output_format: typing.Optional[str] = None,
 ) -> _CT:
     """
     Converts an image to another format.

@@ -1,12 +1,15 @@
+import io
 import pathlib
 import typing
 
 import niobot
 import pytest
+from niobot.attachment import _CT
 
 ASSETS = pathlib.Path(__file__).parent / "assets"
 
 
+@pytest.mark.dependency(name="test_which")
 @pytest.mark.parametrize(
     "file_path, expected",
     [
@@ -18,6 +21,11 @@ ASSETS = pathlib.Path(__file__).parent / "assets"
 )
 def test_which(file_path: pathlib.Path, expected):
     assert niobot.which(file_path) == expected
+
+
+@pytest.mark.dependency(depends=["test_which"])
+def test_which_benchmark(benchmark):
+    benchmark(niobot.which, ASSETS / "sample-5s-compressed.mp4")
 
 
 @pytest.mark.parametrize(
@@ -68,3 +76,18 @@ async def test_rich_data_detection(file_path: pathlib.Path, expected_type, expec
             assert attr in value, f"{key} is not in iterable (expected {value!r}, got {attr!r})"
         else:
             assert attr == value, f"{key} does not match (expected {value!r}, got {attr!r})"
+
+
+@pytest.mark.parametrize(
+    "file_path, expected_value",
+    [
+        (ASSETS / "sample-clouds.webp", "image/webp"),
+        (io.BytesIO((ASSETS / "sample-jpeg.jpg").read_bytes()), "image/png"),
+    ],
+)
+def test_image_converter(file_path: _CT, expected_value: str):
+    _, t = expected_value.split("/")
+    x = io.BytesIO()
+    out = niobot.convert_image(file_path, x, output_format=t)
+    assert niobot.detect_mime_type(out) == expected_value
+    assert niobot.detect_mime_type(x) == expected_value

@@ -50,7 +50,7 @@ DEFAULT_HELP_COMMAND = niobot.Command(
 def test_client_init(
     kwargs,
     expected_error: typing.Optional[type(Exception)],
-    expected_attrs: typing.Union[dict[str, typing.Any], Ellipsis],
+    expected_attrs: typing.Union[dict[str, typing.Any], type(Ellipsis)],
 ):
     if expected_error is not None:
         with pytest.raises(expected_error):

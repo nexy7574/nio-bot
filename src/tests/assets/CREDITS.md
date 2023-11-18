@@ -7,3 +7,4 @@ modifications are noted.
 * `src/tests/assets/sample-15s.ogg` - https://samplelib.com, test audio. Compressed, modified source.
 * `src/tests/assets/sample-clouds.avif` - https://samplelib.com, test image. Compressed, modified source.
 * `src/tests/assets/sample-ipsum-10.txt` - https://samplelib.com, test text.
+* `stc/tests/assets/sample-jpeg.jpg` - [Photo by Anna Shvets from Pexels (unmodified)](https://www.pexels.com/photo/workplace-of-artist-with-paper-drafts-and-paint-tubes-5641889/) 
