@@ -1,4 +1,4 @@
-matrix-nio>=0.20.0,<0.23.0
+matrix-nio>=0.20.0,<0.24.0
 marko==2.*
 python-magic>=0.4.27
 aiofiles>=23.1.0
