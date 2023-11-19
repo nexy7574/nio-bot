@@ -426,7 +426,7 @@ BUILTIN_MAPPING = {
     nio.Event: EventParser(),
     nio.MatrixRoom: RoomParser(),
     nio.MatrixUser: MatrixUserParser(),
-    MatrixToLink: MatrixDotToParser,
+    MatrixToLink: MatrixDotToParser(),
 }
 # Now add the aliases for backward compatability with <1.1.0
 # These will be removed in 1.2.0.

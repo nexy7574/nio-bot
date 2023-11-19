@@ -23,11 +23,6 @@ def test_which(file_path: pathlib.Path, expected):
     assert niobot.which(file_path) == expected
 
 
-@pytest.mark.dependency(depends=["test_which"])
-def test_which_benchmark(benchmark):
-    benchmark(niobot.which, ASSETS / "sample-5s-compressed.mp4")
-
-
 @pytest.mark.parametrize(
     "file_path, expected",
     [

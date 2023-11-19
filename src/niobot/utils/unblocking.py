@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import typing
+import inspect
 from collections.abc import Callable
 from typing import Any
 
@@ -34,6 +35,8 @@ async def run_blocking(function: Callable[..., T], *args: Any, **kwargs: Any) ->
     :param kwargs: The keyword arguments to pass to the function.
     :returns: The result of the function.
     """
+    if asyncio.iscoroutinefunction(function):
+        raise TypeError("Cannot run a coroutine function in a thread.")
     obj = functools.partial(function, *args, **kwargs)
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, obj)
@@ -59,7 +62,7 @@ async def force_await(function: typing.Union[typing.Callable, typing.Coroutine],
     """
     if asyncio.iscoroutinefunction(function):
         return await function(*args, **kwargs)
-    elif asyncio.iscoroutine(function):
+    elif inspect.isawaitable(function):
         return await function
     else:
         return await run_blocking(function, *args, **kwargs)

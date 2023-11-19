@@ -1,3 +1,4 @@
+import functools
 import inspect
 import logging
 import os
@@ -328,7 +329,9 @@ class Command:
 
             self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
             try:
-                parsed_argument = await force_await(argument.parser, ctx, argument, ctx.args[index])
+                parsed_argument = argument.parser(ctx, argument, ctx.args[index])
+                if inspect.iscoroutine(parsed_argument):
+                    parsed_argument = await parsed_argument
             except Exception as e:
                 error = f"Error while parsing argument {argument.name}: {e}"
                 raise CommandArgumentsError(error) from e
