@@ -49,7 +49,6 @@ __all__ = (
     "generate_blur_hash",
     "first_frame",
     "which",
-    "convert_image",
     "BaseAttachment",
     "FileAttachment",
     "ImageAttachment",
