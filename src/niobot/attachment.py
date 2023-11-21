@@ -388,48 +388,6 @@ def which(
     return values.get(mime_start, FileAttachment)
 
 
-@typing.overload
-def convert_image(
-    file: U[io.BytesIO, pathlib.Path, str, PIL.Image.Image],
-    output_file: _CT,
-) -> _CT:
-    ...
-
-
-@typing.overload
-def convert_image(
-    file: U[pathlib.Path, str, PIL.Image.Image],
-    output_file: io.BytesIO,
-    *,
-    output_format: str,
-) -> io.BytesIO:
-    ...
-
-
-def convert_image(
-    file: U[io.BytesIO, pathlib.Path, str, PIL.Image.Image],
-    output_file: _CT,
-    *,
-    output_format: typing.Optional[str] = None,
-) -> _CT:
-    """
-    Converts an image to another format.
-
-    :param file: The file to convert
-    :param output_file: The output file to write to
-    :param output_format: The output format to write to (if output is BytesIO)
-    :return: None
-    """
-    if not isinstance(file, PIL.Image.Image):
-        file = _to_path(file)
-        file = PIL.Image.open(file)
-    file.save(
-        output_file,
-        format=output_format,
-    )
-    return output_file
-
-
 class AttachmentType(enum.Enum):
     """
     Enumeration containing the different types of media.
