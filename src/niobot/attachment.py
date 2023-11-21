@@ -785,6 +785,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
         self,
         quality: typing.Tuple[int, int] = (4, 3),
         file: typing.Optional[U[str, pathlib.Path, io.BytesIO, PIL.Image.Image]] = None,
+        disable_auto_crop: bool = False
     ) -> str:
         """
         Gets the blurhash of the attachment. See: [woltapp/blurhash](https://github.com/woltapp/blurhash)
@@ -806,13 +807,27 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
 
             This will generate a roughly 320x240 thumbnail image, and generate the blurhash from that.
 
+            !!! tip "New!"
+                Unless you pass `disable_auto_crop=True`, this function will automatically crop the image down to
+                a reasonable size, before generating a blurhash.
+
 
         :param quality: A tuple of the quality to generate the blurhash at. Defaults to (4, 3).
         :param file: The file to generate the blurhash from. Defaults to the file passed in the constructor.
+        :param disable_auto_crop: Whether to disable automatic cropping of the image. Defaults to False.
         :return: The blurhash
         """
         if isinstance(self.xyz_amorgan_blurhash, str):
             return self.xyz_amorgan_blurhash
+
+        file = file or self.file
+        if not isinstance(file, PIL.Image.Image):
+            file = _to_path(file)
+            file = PIL.Image.open(file)
+
+        if disable_auto_crop is False and (file.width > 800 or file.height > 600):
+            log.debug("Cropping image down from {0.width}x{0.height} to 800x600 for faster blurhashing".format(file))
+            file.thumbnail((800, 600), PIL.Image.BICUBIC)
         x = await run_blocking(generate_blur_hash, file or self.file, *quality)
         self.xyz_amorgan_blurhash = x
         return x
