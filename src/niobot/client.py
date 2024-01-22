@@ -44,6 +44,7 @@ class NioBot(nio.AsyncClient):
     :param global_message_type: The message type to default to. Defaults to m.notice
     :param ignore_old_events: Whether to simply discard events before the bot's login.
     :param auto_join_rooms: Whether to automatically join rooms the bot is invited to.
+    :param auto_read_messages: Whether to automatically mark messages as read 
     :param automatic_markdown_renderer: Whether to automatically render markdown in messages when sending/editing.
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     :param max_message_cache: The maximum number of messages to cache. Defaults to 1000.
