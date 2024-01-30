@@ -38,15 +38,13 @@ def versions(package_name: str) -> typing.List[packaging.version.Version]:
 
 
 @typing.overload
-def get_installed_version(package_name: str, default_to_0_0_0: bool = True, *, parse: typing.Literal[False]) -> str:
-    ...
+def get_installed_version(package_name: str, default_to_0_0_0: bool = True, *, parse: typing.Literal[False]) -> str: ...
 
 
 @typing.overload
 def get_installed_version(
     package_name: str, default_to_0_0_0: bool = True, *, parse: typing.Literal[True]
-) -> packaging.version.Version:
-    ...
+) -> packaging.version.Version: ...
 
 
 def get_installed_version(

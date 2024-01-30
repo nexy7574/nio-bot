@@ -1,6 +1,7 @@
 """
 This utility modules contains a handful of simple off-the-shelf parser for some basic python types.
 """
+
 import abc
 import re
 import typing
@@ -69,8 +70,7 @@ class Parser(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __call__(self, ctx: "Context", arg: "Argument", value: str) -> typing.Optional[typing.Any]:
-        ...
+    def __call__(self, ctx: "Context", arg: "Argument", value: str) -> typing.Optional[typing.Any]: ...
 
 
 class StatelessParser(Parser, abc.ABC):
