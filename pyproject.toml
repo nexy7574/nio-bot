@@ -75,7 +75,7 @@ dependencies = {file = "requirements.txt"}
 
 [tool.black]
 line-length = 120
-target-versions = ["py39", "py310", "py311", "py312"]
+target-version = ["py39", "py310", "py311", "py312"]
 include = 'src/niobot(/utils)?/.+\.py'
 
 [tool.isort]
