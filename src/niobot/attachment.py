@@ -784,7 +784,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
         self,
         quality: typing.Tuple[int, int] = (4, 3),
         file: typing.Optional[U[str, pathlib.Path, io.BytesIO, PIL.Image.Image]] = None,
-        disable_auto_crop: bool = False
+        disable_auto_crop: bool = False,
     ) -> str:
         """
         Gets the blurhash of the attachment. See: [woltapp/blurhash](https://github.com/woltapp/blurhash)

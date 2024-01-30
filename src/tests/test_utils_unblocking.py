@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from niobot.utils import unblocking
 
 

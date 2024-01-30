@@ -1,7 +1,7 @@
 import asyncio
 import functools
-import typing
 import inspect
+import typing
 from collections.abc import Callable
 from typing import Any
 

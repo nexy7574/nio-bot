@@ -1,5 +1,5 @@
-matrix-nio>=0.20.0,<0.24.0
+matrix-nio~=0.24
 marko==2.*
-python-magic>=0.4.27
-aiofiles>=23.1.0
-blurhash-python>=1.2.0
+python-magic~=0.4
+aiofiles~=23.1
+blurhash-python~=1.2

@@ -7,8 +7,8 @@ build-backend = "setuptools.build_meta"
 name = "nio-bot"
 description = "Making matrix bots simple"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.9,<3.12"
-license = { text = "GNU GPLv3" }
+requires-python = ">=3.9,<3.13"
+license = { text = "GNU LGPLv3" }
 authors = [
     {name = "Nexus", email = "pip@nexy7574.co.uk"}
 ]
@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Communications",
     "Topic :: Internet",
@@ -41,6 +42,8 @@ Homepage = "https://nio-bot.dev"
 
 [project.optional-dependencies]
 e2ee = ["python-olm", "peewee", "cachetools", "atomicwrites"]
+# Alias e2e
+e2e = ["python-olm", "peewee", "cachetools", "atomicwrites"]
 cli = ['httpx>=0.25', 'click>=8.1.7', 'psutil>=5.9.6', "packaging>=23.1"]
 dev = [
     'mkdocs',
@@ -72,7 +75,7 @@ dependencies = {file = "requirements.txt"}
 
 [tool.black]
 line-length = 120
-target-versions = ["py39", "py310", "py311"]
+target-versions = ["py39", "py310", "py311", "py312"]
 include = 'src/niobot(/utils)?/.+\.py'
 
 [tool.isort]
@@ -93,7 +96,7 @@ filterwarnings = [
 # Replacement for isort & black
 exclude = [".git"]
 ignore = ["F403", "F405"]
-target-version = "py311"
+target-version = "py39"
 line-length = 120
 indent-width = 4
 respect-gitignore = true
