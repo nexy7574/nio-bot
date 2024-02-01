@@ -44,6 +44,7 @@ class NioBot(nio.AsyncClient):
     :param global_message_type: The message type to default to. Defaults to m.notice
     :param ignore_old_events: Whether to simply discard events before the bot's login.
     :param auto_join_rooms: Whether to automatically join rooms the bot is invited to.
+    :param auto_read_messages: Whether to automatically update read recipts 
     :param automatic_markdown_renderer: Whether to automatically render markdown in messages when sending/editing.
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     :param max_message_cache: The maximum number of messages to cache. Defaults to 1000.
@@ -68,6 +69,7 @@ class NioBot(nio.AsyncClient):
         global_message_type: typing.Literal["m.text", "m.notice"] = "m.notice",
         ignore_old_events: bool = True,
         auto_join_rooms: bool = True,
+        auto_read_messages: bool = True,
         automatic_markdown_renderer: bool = True,
         max_message_cache: int = 1000,
         ignore_self: bool = True,
@@ -146,10 +148,10 @@ class NioBot(nio.AsyncClient):
         self.global_message_type = global_message_type
         self.ignore_old_events = ignore_old_events
         self.auto_join_rooms = auto_join_rooms
+        self.auto_read_messages = auto_read_messages
         self.automatic_markdown_renderer = automatic_markdown_renderer
 
         self.add_event_callback(self.process_message, nio.RoomMessageText)  # type: ignore
-        self.add_event_callback(self.update_read_receipts, nio.RoomMessage)
         self.direct_rooms: dict[str, nio.MatrixRoom] = {}
 
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
@@ -161,6 +163,10 @@ class NioBot(nio.AsyncClient):
         if self.auto_join_rooms:
             self.log.info("Auto-joining rooms enabled.")
             self.add_event_callback(self._auto_join_room_backlog_callback, nio.InviteMemberEvent)  # type: ignore
+
+        if self.auto_read_messages:
+            self.log.info("Auto-updating read receipts enabled.")
+            self.add_event_callback(self.update_read_receipts, nio.RoomMessage)
 
         if import_keys:
             keys_path, keys_password = import_keys
