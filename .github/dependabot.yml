@@ -9,7 +9,5 @@ updates:
     directory: "/" # Location of package manifests
     assignees:
       - "nexy7574"
-    reviewers:
-      - "nexy7574"
     schedule:
       interval: "weekly"
