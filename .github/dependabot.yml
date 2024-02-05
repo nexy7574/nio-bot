@@ -8,8 +8,8 @@ updates:
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/" # Location of package manifests
     assignees:
-      - "EEKIM10"
+      - "nexy7574"
     reviewers:
-      - "EEKIM10"
+      - "nexy7574"
     schedule:
       interval: "weekly"
