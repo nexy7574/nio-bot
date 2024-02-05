@@ -2,14 +2,14 @@
 
 ## Supported Versions
 
-All versions under the current and previous major release are supported for security updates. If a version is tagged with ESR, it will be supported for at least 5 more major releases.
+All versions under the current and previous major release are supported for security updates. If a version is tagged with ESR, it will be supported for at least 2 more major releases.
 
 ## Reporting a Vulnerability
 
 You should first attempt to contact a maintainer ([@nex:nexy7574.co.uk](https://matrix.to/#/@nex:nexy7574.co.uk)) directly on matrix, reporting as much detail on the vulnerability and how it affects users
 of the library.
 Should you not get a reply within a couple of days, you should open a pull request (without an issue) with a fix or at least a workaround, ensuring the vulnerability is 100% no-longer present in your fork
-***before*** opening the pull request.
+***before*** opening the pull request. This allows users to use your fork until the patch is merged.
 
 ## How vulnerabilities are handled
 
@@ -23,7 +23,7 @@ patches for each individual version just a waste of effort.
 
 ### Releases
 
-Patched releases will then be uploaded to their own [GitHub releases](//github.com/nexy7574/niobot/releases), which then propagates to
+Patched releases will then be uploaded to their own [GitHub releases](//github.com/nexy7574/nio-bot/releases), which then propagates to
 [PyPi](https://pypi.org/project/nio-bot). Security releases will be *tagged* with `[URGENT] v<version>`, for example, `[URGENT] v4.7.13`. This means that anyone who happens to visit
 the github page will see that there's a new urgent release, and will upgrade.
 
