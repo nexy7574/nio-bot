@@ -759,7 +759,7 @@ class NioBot(nio.AsyncClient):
         user_id = self._get_id(user)
         result = await self.room_create(
             is_direct=True,
-            invitees=[user_id],
+            invite=[user_id],
         )
         if isinstance(result, nio.RoomCreateError):
             raise GenericMatrixError("Failed to create DM room", response=result)
