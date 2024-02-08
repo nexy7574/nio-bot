@@ -736,7 +736,7 @@ class NioBot(nio.AsyncClient):
         if not hasattr(self, "list_direct_rooms"):
             raise RuntimeError("You must have matrix-nio version 0.24.0 or later to use this feature.")
         result = await self.list_direct_rooms()
-        if isinstance(result, nio.DirectRoomsErrorResponse()):
+        if isinstance(result, nio.DirectRoomsErrorResponse):
             raise GenericMatrixError("Failed to get DM rooms", response=result)
         if user:
             user_id = self._get_id(user)
