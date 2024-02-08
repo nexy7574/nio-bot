@@ -20,7 +20,6 @@ from nio.crypto import ENCRYPTION_ENABLED
 from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import *
-from .patches.nio__responses import DirectRoomsErrorResponse, DirectRoomsResponse
 from .utils import Typing, force_await, run_blocking
 from .utils.help_command import default_help_command
 
@@ -734,20 +733,10 @@ class NioBot(nio.AsyncClient):
         :param user: The user ID or object to get DM rooms for.
         :return: A dictionary of user IDs to lists of rooms, or a list of rooms.
         """
-        # When https://github.com/poljar/matrix-nio/pull/451/ is merged in the next version of matrix-nio,
-        # this function should be changed to use Api.list_direct_rooms.
-        # For now, I'll just pull the code from the PR and whack it in here.
-        # It's ugly, but it's better than what we had before:
-        # https://github.com/nexy7574/niobot/blob/216509/src/niobot/client.py#L668-L701
-
-        result = await self._send(
-            DirectRoomsResponse,
-            "GET",
-            nio.Api._build_path(
-                ["user", self.user_id, "account_data", "m.direct"], {"access-token", self.access_token}
-            ),
-        )
-        if isinstance(result, DirectRoomsErrorResponse):
+        if not hasattr(self, "list_direct_rooms"):
+            raise RuntimeError("You must have matrix-nio version 0.24.0 or later to use this feature.")
+        result = await self.list_direct_rooms()
+        if isinstance(result, nio.DirectRoomsErrorResponse()):
             raise GenericMatrixError("Failed to get DM rooms", response=result)
         if user:
             user_id = self._get_id(user)

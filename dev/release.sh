@@ -12,7 +12,7 @@ printf '\nPerforming last-minute formatting...\n'
 black src
 isort src
 git add . || true
-git commit -am "Format code for release $VERSION" || true
+git commit -am "[auto] Format code for release $VERSION" || true
 
 printf '\nCreating release branch...\n'
 git tag -m "Release $VERSION_P" "$VERSION"
