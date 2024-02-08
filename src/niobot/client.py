@@ -743,7 +743,7 @@ class NioBot(nio.AsyncClient):
         result = await self._send(
             DirectRoomsResponse,
             "GET",
-            nio.Api._build_path(["user", self.user_id, "account_data", "m.direct"]),
+            nio.Api._build_path(["user", self.user_id, "account_data", "m.direct"], {"access-token", self.access_token}),
         )
         if isinstance(result, DirectRoomsErrorResponse):
             raise GenericMatrixError("Failed to get DM rooms", response=result)
