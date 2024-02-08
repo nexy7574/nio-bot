@@ -1,6 +1,7 @@
 """
 Matrix file attachments. Full e2ee support is implemented.
 """
+
 import abc
 import enum
 import io
@@ -16,14 +17,15 @@ import time
 import typing
 import urllib.parse
 import warnings
-from typing import Union as U, overload
+from typing import Union as U
+from typing import overload
 
-import PIL.Image
 import aiofiles
 import aiohttp
 import blurhash
 import magic
 import nio
+import PIL.Image
 
 from .exceptions import (
     MediaCodecWarning,
@@ -310,13 +312,11 @@ def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
 
 
 @overload
-def _to_path(file: U[str, pathlib.Path]) -> pathlib.Path:
-    ...
+def _to_path(file: U[str, pathlib.Path]) -> pathlib.Path: ...
 
 
 @overload
-def _to_path(file: io.BytesIO) -> io.BytesIO:
-    ...
+def _to_path(file: io.BytesIO) -> io.BytesIO: ...
 
 
 def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> U[pathlib.Path, io.BytesIO]:
@@ -340,9 +340,7 @@ def _size(file: U[pathlib.Path, io.BytesIO]) -> int:
     return file.stat().st_size
 
 
-def which(
-    file: U[io.BytesIO, pathlib.Path, str], mime_type: typing.Optional[str] = None
-) -> U[
+def which(file: U[io.BytesIO, pathlib.Path, str], mime_type: typing.Optional[str] = None) -> U[
     typing.Type["FileAttachment"],
     typing.Type["ImageAttachment"],
     typing.Type["AudioAttachment"],
@@ -1102,7 +1100,9 @@ class VideoAttachment(BaseAttachment):
                     if stream["codec_type"] == "video":
                         if stream["codec_name"].lower() not in SUPPORTED_VIDEO_CODECS or not stream[
                             "codec_name"
-                        ].startswith("pcm_"):  # usually, pcm is supported.
+                        ].startswith(
+                            "pcm_"
+                        ):  # usually, pcm is supported.
                             warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_VIDEO_CODECS)
                             warnings.warn(warning)
                         height = stream["height"]
