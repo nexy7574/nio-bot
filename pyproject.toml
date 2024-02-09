@@ -32,12 +32,13 @@ classifiers = [
 ]
 
 [project.urls]
-Source = "https://github.com/nexy7574/niobot"
-Tracker = "https://github.com/nexy7574/niobot/issues"
-Documentation = "https://nio-bot.dev/docs"
+Source = "https://github.com/nexy7574/nio-bot"
+Tracker = "https://github.com/nexy7574/nio-bot/issues"
+Documentation = "https://docs.nio-bot.dev"
 "Matrix Room" = "https://nio-bot.dev/support"
 Funding = "https://ko-fi.com/nexy7574"
 Homepage = "https://nio-bot.dev"
+Changelog = "https://docs.nio-bot.dev/changelog"
 
 
 [project.optional-dependencies]
