@@ -401,7 +401,14 @@ class NioBot(nio.AsyncClient):
         if hasattr(module, "setup") and callable(module.setup):
             # call setup
             self.log.debug("Calling module-defined setup() function rather than doing it manually.")
+            _c = self.commands.copy()
+            _e = self._events.copy()
             module.setup(self)
+            if _c == self.commands and _e == self._events:
+                self.log.warning(
+                    "Module %r did not add any commands or events with the custom setup function?",
+                    module,
+                )
             return
 
         self.log.debug("%r does not have its own setup() - auto-discovering commands and events", module)
@@ -654,7 +661,9 @@ class NioBot(nio.AsyncClient):
 
     @staticmethod
     def _get_id(obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, typing.Any]) -> str:
-        """Gets the id of most objects as a string.
+        """
+        Gets the id of most objects as a string.
+
         :param obj: The object who's ID to get, or the ID itself.
         :type obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, Any]
         :returns: the ID of the object
@@ -668,7 +677,7 @@ class NioBot(nio.AsyncClient):
             return obj.user_id
         if isinstance(obj, str):
             return obj
-        raise ValueError("Unable to determine ID")
+        raise ValueError("Unable to determine ID of object: %r" % obj)
 
     @staticmethod
     def generate_mx_reply(room: nio.MatrixRoom, event: nio.RoomMessageText) -> str:
