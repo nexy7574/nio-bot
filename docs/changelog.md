@@ -13,6 +13,8 @@
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
 
 * Added `CHANGELOG.md` (and consequently, this page) to documentation. (2024-02-08)
+* `NioBot._get_id` now tells you what object it couldn't identify in the raised exception. (2024-02-11)
+* `NioBot.mount_module` now warns you if you define a custom `setup()` that doesn't update the command or event register. (2024-02-11)
 
 ## v1.1.0.post2 (2024-02-08)
 
