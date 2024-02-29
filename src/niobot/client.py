@@ -760,9 +760,27 @@ class NioBot(nio.AsyncClient):
         result = await self.room_create(
             is_direct=True,
             invite=[user_id],
+            visibility=nio.api.RoomVisibility.private,
+            preset=nio.api.RoomPreset.trusted_private_chat,
         )
         if isinstance(result, nio.RoomCreateError):
             raise GenericMatrixError("Failed to create DM room", response=result)
+        
+        dm_rooms = {}
+        dm_rooms[user_id] = [result.room_id]
+
+        logging.debug(f"create_dm_user: user_id {user_id} self.user_id {self.user_id}")
+        # Trying to send m.direct type eventfrom nio.responses import DirectRoomsErrorResponse, DirectRoomsResponse
+        logging.debug(f"create_dm_user: setting m.direct type with rooms {nio.Api.to_json(dm_rooms)}")
+        await self._send(
+            nio.DirectRoomsResponse,
+            'PUT',
+            nio.Api._build_path(    ["user", self.user_id, "account_data", "m.direct"],
+                                    {"access_token": self.access_token},
+            ),
+            nio.Api.to_json( dm_rooms )
+        )
+
         return result
 
     async def send_message(
@@ -804,11 +822,24 @@ class NioBot(nio.AsyncClient):
 
         if isinstance(room, nio.MatrixUser) or (isinstance(room, str) and room.startswith("@")):
             _user = room
+            room = None
             rooms = await self.get_dm_rooms(_user)
+            logging.debug( f"send_message get_dm_rooms returns rooms {nio.Api.to_json(rooms)}" )
+            
             if rooms:
-                room = rooms[0]
-            else:
-                room = await self.create_dm_room(_user)
+                for r_id in rooms:
+                    if r_id in self.rooms:
+                        room = r_id
+                        break
+                    else:
+                        logging.warning(f"room {r_id} not found in bot.rooms")
+            if not room:
+                logging.info("creating dm room for user {_user}")
+                response = await self.create_dm_room(_user)
+
+                room = self.rooms.get(response.room_id)
+                if not room:
+                    raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room_id)
 
         self.log.debug("Send message resolved room to %r", room)
 
