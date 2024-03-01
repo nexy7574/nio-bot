@@ -100,7 +100,7 @@ async def command_error(ctx: "Context", error: "CommandError") -> t.Optional[t.A
 
     ??? example "Getting the original error"
         As the error is wrapped in a [niobot.CommandError][], you can access the original error by accessing the
-        [`CommandError.original`][niobot.CommandError.original] attribute.
+        [`CommandError.original`][niobot.exceptions.CommandError] attribute.
 
         ```python
         @bot.event("command_error")

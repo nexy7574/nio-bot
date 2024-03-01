@@ -6,6 +6,7 @@ So, make sure you've got an interactive session on first run.
 
 This example was written in nio-bot version 1.1.0b2.
 """
+
 import getpass
 from base64 import b16decode, b16encode
 from configparser import ConfigParser
