@@ -774,20 +774,20 @@ class NioBot(nio.AsyncClient):
         )
         if isinstance(result, nio.RoomCreateError):
             raise GenericMatrixError("Failed to create DM room", response=result)
-        
-        dm_rooms = {}
-        dm_rooms[user_id] = [result.room_id]
+
+        dm_rooms = {user_id: [result.room_id]}
 
         logging.debug(f"create_dm_user: user_id {user_id} self.user_id {self.user_id}")
         # Trying to send m.direct type eventfrom nio.responses import DirectRoomsErrorResponse, DirectRoomsResponse
         logging.debug(f"create_dm_user: setting m.direct type with rooms {nio.Api.to_json(dm_rooms)}")
         await self._send(
             nio.DirectRoomsResponse,
-            'PUT',
-            nio.Api._build_path(    ["user", self.user_id, "account_data", "m.direct"],
-                                    {"access_token": self.access_token},
+            "PUT",
+            nio.Api._build_path(
+                ["user", self.user_id, "account_data", "m.direct"],
+                {"access_token": self.access_token},
             ),
-            nio.Api.to_json( dm_rooms )
+            nio.Api.to_json(dm_rooms),
         )
 
         return result
@@ -823,6 +823,7 @@ class NioBot(nio.AsyncClient):
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
+        :raises RuntimeError: An internal error occured. A room was created, but is not in the bot room list.
         """
         if file and BaseAttachment is None:
             raise ValueError("You are missing required libraries to use attachments.")
@@ -833,8 +834,8 @@ class NioBot(nio.AsyncClient):
             _user = room
             room = None
             rooms = await self.get_dm_rooms(_user)
-            logging.debug( f"send_message get_dm_rooms returns rooms {nio.Api.to_json(rooms)}" )
-            
+            logging.debug(f"send_message get_dm_rooms returns rooms {nio.Api.to_json(rooms)}")
+
             if rooms:
                 for r_id in rooms:
                     if r_id in self.rooms:
@@ -986,7 +987,7 @@ class NioBot(nio.AsyncClient):
 
         :param room: The room the message is in.
         :param message: The event ID or message object to react to.
-        :param emoji: The emoji to react with (e.g. `\N{cross mark}` = ❌)
+        :param emoji: The emoji to react with (e.g. `\N{CROSS MARK}` = ❌)
         :return: The response from the server.
         :raises MessageException: If the message fails to react.
         """

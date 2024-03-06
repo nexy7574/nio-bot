@@ -96,19 +96,19 @@ filterwarnings = [
 [tool.ruff]
 # Replacement for isort & black
 exclude = [".git"]
-ignore = ["F403", "F405"]
 target-version = "py39"
 line-length = 120
 indent-width = 4
 respect-gitignore = true
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+ignore =   ["F403", "F405"]
 select = [
     "E",     # pycodestyle
     "F",     # Pyflakes
     "I001",  # isort
 ]
-
-[tool.ruff.lint]
-fixable = ["ALL"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
@@ -121,11 +121,11 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 case-sensitive = true
 combine-as-imports = true
 detect-same-package = true
 
-[tool.ruff.pycodestyle]
+[tool.ruff.lint.pycodestyle]
 max-doc-length = 120
 max-line-length = 120
