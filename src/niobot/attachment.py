@@ -760,7 +760,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
     def thumbnailify_image(
         image: U[PIL.Image.Image, io.BytesIO, str, pathlib.Path],
         size: typing.Tuple[int, int] = (320, 240),
-        resampling: PIL.Image.Resampling = PIL.Image.Resampling.BICUBIC,
+        resampling: typing.Union[typing.Literal[1, 2, 3, 4, 5], "PIL.Image.Resampling"] = PIL.Image.BICUBIC,
     ) -> PIL.Image.Image:
         """
         Helper function to thumbnail an image.

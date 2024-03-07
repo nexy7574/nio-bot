@@ -3,3 +3,4 @@ marko==2.*
 python-magic~=0.4
 aiofiles~=23.2
 blurhash-python~=1.2
+pillow>=9.3.0
