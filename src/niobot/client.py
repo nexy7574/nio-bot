@@ -1080,7 +1080,7 @@ class NioBot(nio.AsyncClient):
                 self.log.critical(
                     "Logging in with a password is insecure, slow, and clunky. "
                     "An access token will be issued after logging in, please use that. For more information, see:"
-                    "https://nexy7574.github.io/niobot/guides/faq.html#why-is-logging-in-with-a-password-so-bad"
+                    "https://docs.nio-bot.dev/guides/001-getting-started/#why-is-logging-in-with-a-password-so-bad"
                 )
             self.log.info("Logging in with a password or SSO token")
             login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
