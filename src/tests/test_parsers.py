@@ -1,7 +1,6 @@
 import typing
 
 import pytest
-
 from niobot.commands import Argument
 from niobot.context import Context
 from niobot.utils.parsers import *

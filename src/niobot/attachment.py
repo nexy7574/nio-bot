@@ -17,15 +17,14 @@ import time
 import typing
 import urllib.parse
 import warnings
-from typing import Union as U
-from typing import overload
+from typing import Union as U, overload
 
+import PIL.Image
 import aiofiles
 import aiohttp
 import blurhash
 import magic
 import nio
-import PIL.Image
 
 from .exceptions import (
     MediaCodecWarning,
