@@ -292,7 +292,7 @@ def test_homeserver(homeserver: str):
 @click.option(
     "--output", "-o", "-O", default="-", help="The file to output the results to.", type=click.Path(allow_dash=True)
 )
-def get_access_token(path: str, username: str, password: str, homeserver: str, device_id: str):
+def get_access_token(output: str, username: str, password: str, homeserver: str, device_id: str):
     """Fetches your access token from your homeserver."""
     if not username:
         username = ""
@@ -347,9 +347,9 @@ def get_access_token(path: str, username: str, password: str, homeserver: str, d
         click.secho(f" ({status_code or str(e)})", bg="red")
     else:
         click.secho("OK", fg="green")
-        if path != "-":
+        if output != "-":
             click.secho(f'Access token: {response.json()["access_token"]}', fg="green")
-            with click.open_file(path, "w+") as f:
+            with click.open_file(output, "w+") as f:
                 f.write(response.json()["access_token"])
         else:
             click.echo(response.json()["access_token"])
