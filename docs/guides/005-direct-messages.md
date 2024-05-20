@@ -71,7 +71,7 @@ async def get_dm_room(ctx: niobot.Context):
     await ctx.respond(f"Your {len(rooms):,} direct rooms:\n\n{rooms_text}")
 
 
-@bpt.command("create-dm-room")
+@bot.command("create-dm-room")
 async def create_dm_room(ctx: niobot.Context):
     """Creates a direct room with the user."""
     response = await bot.create_dm_room(ctx.message.sender)
