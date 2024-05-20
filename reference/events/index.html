@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.18">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.24">
     
     
       
@@ -24,7 +24,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.66ac8b77.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -1076,12 +1076,11 @@ In order to keep backwards compatability, as well as high flexibility and extens
 
 
 <a id="niobot._event_stubs"></a>
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
 
-  
+
 
   <div class="doc doc-children">
-
 
 
 
@@ -1094,11 +1093,10 @@ In order to keep backwards compatability, as well as high flexibility and extens
 <div class="doc doc-object doc-function">
 
 
-
 <h3 id="niobot._event_stubs.event_loop_running" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">event_loop_running</span>
+            <span class="doc doc-object-name doc-function-name">event_loop_running</span>
 
-  
+
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
@@ -1107,8 +1105,8 @@ In order to keep backwards compatability, as well as high flexibility and extens
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">event_loop_running</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>An event that is fired once the event loop is running.</p>
 <div class="admonition tip">
 <p class="admonition-title">You should use this event to perform any startup tasks.</p>
@@ -1134,19 +1132,17 @@ You can @[nio]bot.event("event_loop_running") do it here.</p>
 </details>
 </div>
 
-  </div>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h3 id="niobot._event_stubs.ready" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">ready</span>
+            <span class="doc doc-object-name doc-function-name">ready</span>
 
-  
+
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
@@ -1155,54 +1151,51 @@ You can @[nio]bot.event("event_loop_running") do it here.</p>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">ready</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n"><span title="niobot.SyncResponse">SyncResponse</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>An event that is fired when the bot's first <code>sync()</code> is completed.</p>
 <p>This indicates that the bot successfully logged in, synchronised with the server, and is ready to receive events.</p>
 
 
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
         <tr>
-          <td><code>result</code></td>
-          <td>
-                <code><span title="niobot.SyncResponse">SyncResponse</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The response from the sync.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>result</code></td>
+            <td>
+                  <code><span title="niobot.SyncResponse">SyncResponse</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The response from the sync.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  </div>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h3 id="niobot._event_stubs.message" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">message</span>
+            <span class="doc doc-object-name doc-function-name">message</span>
 
-  
+
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
@@ -1213,8 +1206,8 @@ You can @[nio]bot.event("event_loop_running") do it here.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>An event that is fired when the bot receives a message in a room that it is in.</p>
 <p>This event is dispatched <em>before</em> commands are processed, and as such the convenient <a class="autorefs autorefs-internal" href="../context/#niobot.context.Context">niobot.Context</a> is
 unavailable.</p>
@@ -1227,62 +1220,59 @@ unavailable.</p>
 </div>
 
 
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
         <tr>
-          <td><code>room</code></td>
-          <td>
-                <code><span title="niobot.MatrixRoom">MatrixRoom</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The room that the message was received in.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-        <tr>
-          <td><code>event</code></td>
-          <td>
-                <code><span title="niobot.RoomMessageText">RoomMessageText</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The raw event that triggered the message.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>room</code></td>
+            <td>
+                  <code><span title="niobot.MatrixRoom">MatrixRoom</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The room that the message was received in.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>event</code></td>
+            <td>
+                  <code><span title="niobot.RoomMessageText">RoomMessageText</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The raw event that triggered the message.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  </div>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h3 id="niobot._event_stubs.command" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">command</span>
+            <span class="doc doc-object-name doc-function-name">command</span>
 
-  
+
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
@@ -1291,55 +1281,52 @@ unavailable.</p>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">command</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.Context" href="../context/#niobot.context.Context">Context</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>This event is dispatched once a command is finished being prepared, and is about to be invoked.</p>
 <p>This event is dispatched <em>after</em> the <code>message</code> event, but <em>before</em> <code>command_complete</code> and <code>command_error</code>.</p>
 <p>This event features the original context, which can be used to access the message, the command, and the arguments.</p>
 
 
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
         <tr>
-          <td><code>ctx</code></td>
-          <td>
-                <code><a class="autorefs autorefs-internal" title="niobot.Context" href="../context/#niobot.context.Context">Context</a></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The context of the command.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>ctx</code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="niobot.Context" href="../context/#niobot.context.Context">Context</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The context of the command.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  </div>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h3 id="niobot._event_stubs.command_complete" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">command_complete</span>
+            <span class="doc doc-object-name doc-function-name">command_complete</span>
 
-  
+
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
@@ -1350,68 +1337,65 @@ unavailable.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>This event is dispatched after a command has been invoked, and has completed successfully.</p>
 <p>This event features the context, which can be used to access the message, the command, and the arguments.</p>
 
 
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
         <tr>
-          <td><code>ctx</code></td>
-          <td>
-                <code><a class="autorefs autorefs-internal" title="niobot.Context" href="../context/#niobot.context.Context">Context</a></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The context of the command.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-        <tr>
-          <td><code>result</code></td>
-          <td>
-                <code><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The result of the command (the returned value of the callback)</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>ctx</code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="niobot.Context" href="../context/#niobot.context.Context">Context</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The context of the command.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>result</code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The result of the command (the returned value of the callback)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  </div>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h3 id="niobot._event_stubs.command_error" class="doc doc-heading">
-          <span class="doc doc-object-name doc-function-name">command_error</span>
+            <span class="doc doc-object-name doc-function-name">command_error</span>
 
-  
+
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
@@ -1422,8 +1406,8 @@ unavailable.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>This event is dispatched after a command has been invoked, and has completed with an error.</p>
 <p>This event features the context, which can be used to access the message, the command, and the arguments.</p>
 <details class="example">
@@ -1440,50 +1424,49 @@ unavailable.</p>
 logged to the console. Don't forget, you've got the whole <code>Context</code> instance - use it!</p>
 
 
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
         <tr>
-          <td><code>ctx</code></td>
-          <td>
-                <code><a class="autorefs autorefs-internal" title="niobot.Context" href="../context/#niobot.context.Context">Context</a></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The context of the command.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-        <tr>
-          <td><code>error</code></td>
-          <td>
-                <code><a class="autorefs autorefs-internal" title="niobot.CommandError" href="../exceptions/#niobot.exceptions.CommandError">CommandError</a></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The error that was raised.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>ctx</code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="niobot.Context" href="../context/#niobot.context.Context">Context</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The context of the command.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>error</code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="niobot.CommandError" href="../exceptions/#niobot.exceptions.CommandError">CommandError</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The error that was raised.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  </div>
+    </div>
 
 </div>
 
@@ -1491,7 +1474,7 @@ logged to the console. Don't forget, you've got the whole <code>Context</code> i
 
   </div>
 
-  </div>
+    </div>
 
 </div><hr />
 <h2 id="matrix-nio-events"><code>matrix-nio</code> events<a class="headerlink" href="#matrix-nio-events" title="Permanent link">&para;</a></h2>
@@ -1636,8 +1619,10 @@ base-library set of events.</p>
     <script id="__config" type="application/json">{"base": "../..", "features": ["content.tabs.link", "content.action.edit", "navigation.footer", "header.autohide", "search.share", "navigation.instant", "navigation.tracking"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.3220b9d7.min.js"></script>
+      <script src="../../assets/javascripts/bundle.081f42fc.min.js"></script>
       
     
-  <script>document$.subscribe(() => {const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});})</script></body>
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
 </html>
