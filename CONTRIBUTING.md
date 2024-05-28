@@ -1,7 +1,9 @@
 # Making NioBot better
+
 Pull requests and issues are always welcome for niobot! Here's a few things to keep in mind when contributing:
 
 ## Scope
+
 Please keep in mind that nio-bot is a bot *library* - not a bot itself. This package is designed to be the framework
 for quickly and easily making great bots, and you should hold that in mind when considering new features.
 
@@ -12,20 +14,23 @@ You should consider the following questions too:
 <summary>A list of questions to ask yourself before contributing new features.</summary>
 
 ### 1. Is this feature useful for more than me?
+
 A common scope problem seen when contributing to frameworks such as nio-bot is asking for or trying to implement
 functionality that simply isn't useful for more than a handful of users.
 Think - will someone with a specific type of bot find this useful? or will an everything-bot find this useful?
 If you only answered yes to the former, then it is likely not something that needs implementing into nio-bot.
 
-> don't forget - you are welcome to create community plugins. If you feel your feature is useful, but is not enough to 
+> don't forget - you are welcome to create community plugins. If you feel your feature is useful, but is not enough to
 > be implemented into the core library, you can take a look at [community plugin information](#community).
 
 ### 2. Is this feature relevant?
+
 Another common scope problem is asking for or trying to implement functionality that simply isn't relevant to the
 core library. For example, integrating something like youtube-dl into nio-bot would be a bad idea, as it is not
 relevant to the core library, which is focused around Matrix and bots.
 
 ### 3. Is this feature complicated?
+
 If you think a feature may be too complicated to either be implemented or used, it may be a good idea to reconsider
 whether it should be implemented. If you're unsure, feel free to ask.
 
@@ -33,16 +38,24 @@ Remember - technical debt exists. If you add something to nio-bot, it has to be 
 that is too complicated, it may be difficult to maintain, and may be removed in the future.
 
 ## Code style
-NioBot uses a very loose code style, however generally, make sure your code is readable, and that the max line length
-of your code is 120 characters at a max, preferably less than 119.
 
-If you are unsure about the style of your code, you should run `black ./src` and `isort` in the root directory of the
+~~NioBot uses a very loose code style, however generally, make sure your code is readable, and that the max line length
+of your code is 120 characters at a max, preferably less than 119.~~
+
+~~If you are unsure about the style of your code, you should run `black ./src` and `isort` in the root directory of the
 project. In `pyproject.toml`, all the configuration for those tools is already set up, so you don't need to worry about
-command line flags.
+command line flags.~~
 
-You should also ensure there are no warnings with `pycodestyle`.
+~~You should also ensure there are no warnings with `pycodestyle`.~~
+
+NioBot now makes use of `ruff` for code formatting, and this is automatically enforced by the CI.
+You should run `ruff format` in the root directory of the project to format your code before submitting a pull request.
+The rules that are used for formatting are already pre-created in the pyproject.toml file, so you do not need to worry
+about arguments.
+If you just want to check that your code is following the code style without making any changes, run `ruff check`.
 
 ### Versions
+
 NioBot uses SemVer (semantic versioning) for versioning. This means that the version number is split into three parts:
 `Major`, `Minor` and `Patch`. As per the versioning, `Major` versions are not guaranteed to be backwards compatible,
 however `Minor` and `Patch` versions are.
@@ -62,6 +75,7 @@ This minimises the number of breaking releases.
 </details>
 
 ### Backwards compatibility for python
+
 While nio-bot aims to support the most recent stable releases of python, it must also support up to two previous
 stable releases of python.
 
@@ -78,8 +92,9 @@ Furthermore, in the interest of backward compatibility, it may take a while unti
 language features. Keep this in mind.
 
 # Community
+
 The great thing about open source software is the ability for anyone to read, understand, and contribute to it.
-NioBot, with our strong copy-left [GPLv3](/LICENSE) license, is no exception.
+NioBot, with our strong copy-left [LGPLv3](/LICENSE) license, is no exception.
 
 If you think there's something that could benefit nio-bot users, however don't think its in scope or relevant to the
 core library, you are welcome to create a community plugin. Community plugins are plugins that are not part of the
@@ -95,6 +110,7 @@ or one outside of matrix and nio-bot itself.
 Here's a few guidelines to help you get started with designing your plugin:
 
 ## `niobot.utils` namespace
+
 In niobot, there's two namespaces: the parent `niobot` (`import niobot`) namespace, and the `niobot.utils` namespace.
 
 The `niobot.utils` namespace is designed for utility functions that are either very specific, or are simply just helpers.
@@ -121,6 +137,7 @@ all without modifying any native files in the library.
 This is the preferred way to create community plugins that are not interactive.
 
 ## External namespace
+
 If you want to create a plugin that is rather out of scope, you should avoid using the niobot namespace at all.
 
 For example, if you wanted to create a plugin that was designed for a specific use case, such as a bot that is designed
@@ -143,6 +160,7 @@ root/
 Then, users (after running `pip install my-plugin-name`), can import your plugin using `import my_plugin.my_plugin_code`.
 
 ## Module
+
 If you want to create a plugin that is mainly interactive (i.e. does not provide many functions for developers to use),
 you should create a module.
 
