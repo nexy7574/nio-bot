@@ -1,4 +1,4 @@
-name: Build Package
+name: Lint and Test
 
 on:
   push:
@@ -27,6 +27,9 @@ jobs:
         sudo apt-get install ffmpeg imagemagick
         python -m pip install --upgrade pip wheel setuptools
         pip install .[e2ee,dev,cli]
-    - name: Build
+    - name: Lint with Ruff
       run: |
-        python3 -m build
+        ruff format --check
+    - name: Run tests
+      run: |
+        pytest
