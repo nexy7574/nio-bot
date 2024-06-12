@@ -87,7 +87,7 @@ async def upload_txt(ctx: Context):
 ```
 
 This results in the following:
-![image](https://nexy7574.github.io/niobot/assets/guides/images/sending-attachments/file-send.avif)
+![image](https://docs.nio-bot.dev/assets/guides/images/sending-attachments/file-send.avif)
 
 You can then click on the file to download it!
 
@@ -96,7 +96,7 @@ Images are a bit more complex than regular files. They support thumbnails, rich 
 
 ??? note "Thumbnails for images"
     While you may think that thumbnails for images are useless, they are actually very useful for clients.
-    Just beware though, having a larger or equal size image for your thumbnail is very counter productive.
+    Just beware though, having a larger or equal size image for your thumbnail is very counter-productive.
 
     A valid use case for image thumbnails is for lower-resolution, likely compressed versions of the image you're
     sending. Paired with a blurhash, this can provide a very good "placeholder" image for people on 
@@ -110,8 +110,8 @@ having an ugly loading spinner or outright blank space in place of a loading ima
 
 For example:
 
-![pre-blurhash (after loading the image)](https://nexy7574.github.io/niobot/assets/guides/images/sending-attachments/blurhash-hashed.avif){ loading=lazy }
-![post-blurhash (after loading the image)](https://nexy7574.github.io/niobot/assets/guides/images/sending-attachments/blurhash-dehashed.avif){ loading=lazy }
+![pre-blurhash (after loading the image)](https://docs.nio-bot.dev/assets/guides/images/sending-attachments/blurhash-hashed.avif){ loading=lazy }
+![post-blurhash (after loading the image)](https://docs.nio-bot.dev/assets/guides/images/sending-attachments/blurhash-dehashed.avif){ loading=lazy }
 
 ??? info "This may slow down your image upload"
     Generating blurhashes, especially for large images, even more especially with a weak CPU, can be very slow.
