@@ -106,7 +106,7 @@ If you install the cli extras, you can use `niocli` to get an access token
 from a username and password (read [this](https://docs.nio-bot.dev/guides/001-getting-started/#why-is-logging-in-with-a-password-so-bad) for why you'd want to use an access token):
 
 ```bash
-niocli get-access-token -u '@example1:example.org' -d 'my-device-name'
+niocli get-access-token -U '@example1:example.org' -D 'my-device-name'
 ```
 
 After putting in your password, an access token will be printed to the console once the login is successful.
