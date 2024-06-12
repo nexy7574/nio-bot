@@ -77,12 +77,12 @@ All you get from thumbnails is the file name, and the file size. That's it.
 Anyway, here's how you could send an example text (foo.txt) file:
 ```python
 from niobot import NioBot, Context, FileAttachment
-from pathlib import Path
 ...
 
 @bot.comand(name="upload.txt")
 async def upload_txt(ctx: Context):
     """Sends a text file!"""
+    attachment = await FileAttachment.from_file("file.txt")
     await ctx.respond(file=attachment)
 ```
 
@@ -123,7 +123,6 @@ For example:
 And here's an example:
 ```python
 from niobot import NioBot, Context, ImageAttachment
-from pathlib import Path
 ...
 
 
@@ -147,7 +146,6 @@ duration.
 Here's an example:
 ```python
 from niobot import NioBot, Context, AudioAttachment
-from pathlib import Path
 ...
 
 
@@ -180,7 +178,6 @@ For simplicity, the video's auto-generated thumbnail is simply the first frame o
 Here's an example:
 ```python
 from niobot import NioBot, Context, VideoAttachment
-from pathlib import Path
 ...
 
 
@@ -190,6 +187,36 @@ async def upload_mp4(ctx: Context):
     attachment = await VideoAttachment.from_file("file.mp4")
     await ctx.respond(file=attachment)
 ```
+
+### Unsure which to use?
+If you aren't sure which file type you have, you can find out the most appropriate Attachment type using
+[`niobot.attachment.which`][] - this will return either [`VideoAttachment`][niobot.VideoAttachment],
+[`ImageAttachment`][niobot.ImageAttachment], [`AudioAttachment`][niobot.AudioAttachment],
+or [`FileAttachment`][niobot.FileAttachment], based on the mime type of the file.
+
+Fpr example:
+
+```python
+import random
+import niobot
+
+
+...
+
+
+@bot.comand(name="upload")
+async def upload_mp4(ctx: Context):
+    """Sends a random file!"""
+    files = ("file.txt", "file.mp4", "file.mp3", "file.png")
+    file_name = random.choice(files)
+
+    attachment_type = niobot.which(file_name)
+    attachment = await attachment_type.from_file(file_name)
+    # ^ can also be written as `attachment = await niobot.which(file_name).from_file(file_name)`
+    await ctx.respond(file=attachment)
+```
+
+This will upload using the appropriate file type.
 
 
 ## Disabling extra media features
