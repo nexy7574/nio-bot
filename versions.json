@@ -3,8 +3,13 @@
     "version": "{{",
     "title": "{{",
     "aliases": [
-      "github.ref_name",
-      "}}"
+      "}}",
+      "github.ref_name"
     ]
+  },
+  {
+    "version": "master",
+    "title": "master",
+    "aliases": []
   }
 ]
