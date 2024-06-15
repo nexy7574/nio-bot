@@ -118,7 +118,7 @@ def get_metadata_ffmpeg(file: U[str, pathlib.Path]) -> dict[str, typing.Any]:
     """
     Gets metadata for a file via ffprobe.
 
-    [example output (JSON)](https://github.com/nexy7574/niobot/raw/master/docs/assets/guides/text/example_ffprobe.json)
+    [example output (JSON)](https://github.com/nexy7574/nio-bot/blob/0e61ea1/docs/assets/guides/text/example_ffprobe.json)
 
     :param file: The file to get metadata for. **Must be a path-like object**
     :return: A dictionary containing the metadata.
@@ -523,26 +523,21 @@ class BaseAttachment(abc.ABC):
 
     @classmethod
     async def from_mxc(
-        cls, client: "NioBot", url: str, *, force_write: U[bool, pathlib.Path] = False
+        cls, client: "NioBot", url: str, *, force_write: U[None, bool, pathlib.Path] = None
     ) -> "BaseAttachment":
         """
         Creates an attachment from an MXC URL.
 
         :param client: The current client instance (used to download the attachment)
         :param url: The MXC:// url to download
-        :param force_write: Whether to force writing downloaded attachments to a temporary file.
+        :param force_write: Deprecated, will be removed in v1.2.0. Was never implemented.
         :return: The downloaded and probed attachment.
         """
-        # !!! warning "This function loads the entire attachment into memory."
-        #     If you are downloading large attachments, you should set `force_write` to `True`, otherwise the downloaded
-        #     attachment is pushed into an [`io.BytesIO`][] object (for speed benefits), which can cause memory issues
-        #     on low-memory systems.
-        #
-        #     Bear in mind that most attachments are <= 100 megabytes. Also, forcing temp file writes may not be useful
-        #     unless your temporary file directory is backed by a physical disk, because otherwise you're just loading
-        #     into RAM with extra steps (for example, by default, `/tmp` is in-memory on linux, but `/var/tmp` is not).
         if force_write is not None:
-            raise NotImplementedError("force_write is not implemented yet.")
+            warnings.warn(
+                "force_write is deprecated and will be removed in v1.2.0.",
+                DeprecationWarning
+            )
         response = await client.download(url)
         if isinstance(response, nio.DownloadResponse):
             return await cls.from_file(io.BytesIO(response.body), response.filename)
@@ -554,7 +549,7 @@ class BaseAttachment(abc.ABC):
         url: str,
         client_session: typing.Optional[aiohttp.ClientSession] = None,
         *,
-        force_write: U[bool, pathlib.Path] = False,
+        force_write: U[None, bool, pathlib.Path] = None,
     ) -> "BaseAttachment":
         """
         Creates an attachment from an HTTP URL.
@@ -563,13 +558,17 @@ class BaseAttachment(abc.ABC):
 
         :param url: The http/s URL to download
         :param client_session: The aiohttp client session to use. If not specified, a new one will be created.
-        :param force_write: Whether to force stream the download to the file system, instead of into memory.
-            See: [niobot.BaseAttachment.from_mxc][]
+        :param force_write: Deprecated, will be removed in v1.2.0. Was never implemented.
         :return: The downloaded and probed attachment.
         :raises niobot.MediaDownloadException: if the download failed.
         :raises aiohttp.ClientError: if the download failed.
         :raises niobot.MediaDetectionException: if the MIME type could not be detected.
         """
+        if force_write is not None:
+            warnings.warn(
+                "force_write is deprecated and will be removed in v1.2.0.",
+                DeprecationWarning
+            )
         if not client_session:
             from . import __user_agent__
 
@@ -630,6 +629,10 @@ class BaseAttachment(abc.ABC):
     ) -> U[int, float]:
         """
         Helper function to convert the size of this attachment into a different unit.
+
+        Remember:
+        - 1 kilobyte (KB) is 1000 bytes
+        - 1 kibibyte (KiB) is 1024 bytes
 
         ??? example "Example"
             ```python
@@ -726,6 +729,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
     :param xyz_amorgan_blurhash: The blurhash of the attachment
     :ivar xyz_amorgan_blurhash: The blurhash of the attachment
     """
+    # TODO: Merge this into ImageAttachment as it is the only subclass.
 
     if typing.TYPE_CHECKING:
         xyz_amorgan_blurhash: str
