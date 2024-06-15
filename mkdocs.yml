@@ -68,3 +68,5 @@ extra:
   social:
     - icon: simple/matrix
       link: https://matrix.to/#/#niobot:nexy7574.co.uk
+  version:
+    provider: mike
