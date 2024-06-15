@@ -1,8 +1,8 @@
-name: mkdocs-deploy
+name: Deploy version docs
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [published]
+
 permissions:
   contents: write
 jobs:
@@ -27,4 +27,4 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install '.[dev,e2e,cli]'
-      - run: mkdocs gh-deploy --force
+      - run: mike deploy -p -u v{{ github.ref_name }}
