@@ -1,0 +1,10 @@
+[
+  {
+    "version": "{{",
+    "title": "{{",
+    "aliases": [
+      "github.ref_name",
+      "}}"
+    ]
+  }
+]
