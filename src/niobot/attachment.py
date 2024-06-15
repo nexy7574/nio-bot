@@ -534,10 +534,7 @@ class BaseAttachment(abc.ABC):
         :return: The downloaded and probed attachment.
         """
         if force_write is not None:
-            warnings.warn(
-                "force_write is deprecated and will be removed in v1.2.0.",
-                DeprecationWarning
-            )
+            warnings.warn("force_write is deprecated and will be removed in v1.2.0.", DeprecationWarning)
         response = await client.download(url)
         if isinstance(response, nio.DownloadResponse):
             return await cls.from_file(io.BytesIO(response.body), response.filename)
@@ -565,10 +562,7 @@ class BaseAttachment(abc.ABC):
         :raises niobot.MediaDetectionException: if the MIME type could not be detected.
         """
         if force_write is not None:
-            warnings.warn(
-                "force_write is deprecated and will be removed in v1.2.0.",
-                DeprecationWarning
-            )
+            warnings.warn("force_write is deprecated and will be removed in v1.2.0.", DeprecationWarning)
         if not client_session:
             from . import __user_agent__
 
@@ -729,6 +723,7 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
     :param xyz_amorgan_blurhash: The blurhash of the attachment
     :ivar xyz_amorgan_blurhash: The blurhash of the attachment
     """
+
     # TODO: Merge this into ImageAttachment as it is the only subclass.
 
     if typing.TYPE_CHECKING:
