@@ -12,6 +12,13 @@
 
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
 
+* Heavy CI improvements (2024-05-08 -> 2024-06-15)
+* Deprecated unimplemented `force_write` parameter in some `BaseAttachment` (and subclass) methods. (2024-06-15)
+
+## v1.1.0.post3 (2024-04-16)
+
+### New features
+
 * Added `CHANGELOG.md` (and consequently, this page) to documentation. (2024-02-08)
 * `NioBot._get_id` now tells you what object it couldn't identify in the raised exception. (2024-02-11)
 * `NioBot.mount_module` now warns you if you define a custom `setup()` that doesn't update the command or event register. (2024-02-11)

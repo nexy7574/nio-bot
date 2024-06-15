@@ -28,4 +28,4 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install '.[dev,e2e,cli]'
-      - run: mike deploy -p -u ${{ github.ref_name }}
+      - run: mike deploy -p -u ${{ github.ref_name }} latest
