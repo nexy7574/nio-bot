@@ -62,7 +62,8 @@ dev = [
     'pytest-asyncio',
     'pytest-benchmark',
     'pytest-dependency',
-    'ruff'
+    'ruff',
+    'mike'
 ]
 
 [project.scripts]
