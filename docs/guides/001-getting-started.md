@@ -125,7 +125,7 @@ async def on_ready(_):
 
 @bot.command()
 async def ping(ctx):  # can be invoked with "!ping"
-    await ctx.reply("Pong!")
+    await ctx.respond("Pong!")
 
 bot.run(password=config.PASSWORD)
 ```
@@ -207,7 +207,7 @@ class MyFunModule(niobot.Module):  # subclassing niobot.Module is mandatory for 
 
     @niobot.command()
     async def hello(self, ctx):
-        await ctx.reply("Hello %s!" % ctx.event.sender)
+        await ctx.respond("Hello %s!" % ctx.event.sender)
 ```
 This will add a command, `!hello`, that will reply with "Hello {@author}!"
 
@@ -329,7 +329,7 @@ Then, you can run `!help` to get a list of commands, and `!help <command>` to ge
 
     @bot.command()
     async def ping(ctx):  # can be invoked with "!ping"
-        await ctx.reply("Pong!")
+        await ctx.respond("Pong!")
 
     bot.run(access_token=config.ACCESS_TOKEN)
     ```
@@ -345,7 +345,7 @@ Then, you can run `!help` to get a list of commands, and `!help <command>` to ge
 
         @niobot.command()
         async def hello(self, ctx):
-            await ctx.reply("Hello %s!" % ctx.event.sender)
+            await ctx.respond("Hello %s!" % ctx.event.sender)
     ```
 
 ## Why is logging in with a password so bad?
