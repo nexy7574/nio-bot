@@ -12,6 +12,8 @@
 
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
 
+## v1.1.1 (2024-06-26)
+
 * Heavy CI improvements (2024-05-08 -> 2024-06-15)
 * Deprecated unimplemented `force_write` parameter in some `BaseAttachment` (and subclass) methods. (2024-06-15)
 
