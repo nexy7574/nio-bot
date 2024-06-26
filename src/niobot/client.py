@@ -26,7 +26,7 @@ from .exceptions import (
     CommandError,
     CommandDisabledError,
     CommandArgumentsError,
-    GenericMatrixError
+    GenericMatrixError,
 )
 from .utils import Typing, force_await, run_blocking
 from .utils.help_command import default_help_command
