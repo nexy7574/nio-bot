@@ -19,7 +19,15 @@ from nio.crypto import ENCRYPTION_ENABLED
 
 from .attachment import BaseAttachment
 from .commands import Command, Module
-from .exceptions import *
+from .exceptions import (
+    NioBotException,
+    MessageException,
+    LoginException,
+    CommandError,
+    CommandDisabledError,
+    CommandArgumentsError,
+    GenericMatrixError
+)
 from .utils import Typing, force_await, run_blocking
 from .utils.help_command import default_help_command
 
