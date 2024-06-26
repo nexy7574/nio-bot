@@ -5,7 +5,8 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write
+  id-token: write
 
 jobs:
   publish:
@@ -13,8 +14,6 @@ jobs:
     environment:
       name: publishing
       url: https://pypi.org/p/nio-bot
-    permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +32,8 @@ jobs:
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1.8
-        # with:
-        #   user: __token__
-        #   password: ${{ secrets.PYPI_API_TOKEN }}
+      
+      - name: Upload wheels to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
