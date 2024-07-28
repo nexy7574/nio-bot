@@ -2,7 +2,6 @@
 
 ## Making Matrix bots simple
 
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/nexy7574/niobot/python-package.yml?style=flat-square&logo=github&label=Package)
 [![GitHub issues](https://img.shields.io/github/issues/nexy7574/niobot?style=flat-square&logo=github)](https://github.com/nexy7574/niobot/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/nexy7574/niobot?style=flat-square&logo=github)](https://github.com/nexy7574/niobot/pulls)
 ![GitHub](https://img.shields.io/github/license/nexy7574/niobot?style=flat-square&logo=github)
@@ -28,7 +27,7 @@ pip install nio-bot
 
 You may also want some extras:
 
-* End to End encryption support: `nio-bot[e2ee]`
+* End-to-End encryption support: `nio-bot[e2ee]`
 * The CLI (recommended): `nio-bot[cli]`
 * Both: `nio-bot[cli,e2ee]`
 * Development dependencies: `nio-bot[dev]`
@@ -70,13 +69,13 @@ client = niobot.NioBot(
     # * homeserver
     # * user_id
     # * command_prefix
-    homeserver="https://matrix.example.org",
+    homeserver="https://matrix.example.org",  # it is important that you use the matrix server, not the delegation URL
     user_id="@example1:example.org",
     device_id="my-device-name",
     command_prefix="!",
     case_insensitive=True,
     owner_id="@example2:example.org",
-    ignore_self=False
+    ignore_self=True  # default is True, set to false to not ignore the bot's own messages
 )
 
 @client.on_event("ready")
@@ -88,16 +87,16 @@ async def on_ready(sync_result: niobot.SyncResponse):
 @client.command()
 async def ping(ctx: niobot.Context):
     latency = ctx.latency
-    await ctx.reply("Pong!")
+    await ctx.respond(f"Pong! {latency:.2f}ms")
 
 
 # A command with arguments
 @client.command()
 async def echo(ctx: niobot.Context, *, message: str):
-    await ctx.respond(message)
+    await ctx.respond("You said: " + message)
 
 
-client.run(access_token="aaaaaaaaaaaaaa")
+client.run(access_token="...")
 ```
 
 ### Using the CLI to get an access token

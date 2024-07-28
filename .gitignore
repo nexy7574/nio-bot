@@ -345,3 +345,8 @@ examples/**/.env
 examples/**/.toml
 examples/**/config.*
 .idea/
+
+Pipfile
+Pipfile.lock
+
+

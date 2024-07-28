@@ -12,6 +12,10 @@
 
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
 
+* Remove `force_write` properly
+* Fix `<instance> has no attribute 'mro'` error when initialising auto-detected arguments
+* Fixed `niocli get-access-token` crashing on windows
+
 ## v1.1.1 (2024-06-26)
 
 * Heavy CI improvements (2024-05-08 -> 2024-06-15)
