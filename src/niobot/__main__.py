@@ -7,6 +7,7 @@ import re
 import shutil
 import sys
 import typing
+import platform
 
 import packaging.specifiers
 import packaging.version
@@ -311,8 +312,9 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
         homeserver = click.prompt("Homeserver URL")
 
     if not device_id:
+        node = platform.node()
         device_id = click.prompt(
-            "Device ID (a memorable display name for this login, such as 'bot-production')", default=os.uname().nodename
+            "Device ID (a memorable display name for this login, such as 'bot-production')", default=node
         )
 
     click.secho("Resolving homeserver... ", fg="cyan", nl=False)
