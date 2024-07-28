@@ -75,7 +75,17 @@ class Argument:
                 log.debug("Using builtin parser %r for %r", self.type, self)
                 self.parser = BUILTIN_MAPPING[self.type]
             else:
-                for base in inspect.getmro(self.type):
+                if self.type.__class__ != type:
+                    log.warning(
+                        "Argument got an instance of a type, not a type itself: %r. Inspect as if it was its raw"
+                        "type, %r.",
+                        self.type,
+                        type(self.type)
+                    )
+                    target = type(self.type)
+                else:
+                    target = self.type
+                for base in inspect.getmro(target):
                     if base in BUILTIN_MAPPING:
                         log.debug("Using builtin parser %r for %s due to being a subclass", base, self.type)
                         self.parser = BUILTIN_MAPPING[base]
@@ -233,7 +243,7 @@ class Command:
 
             # Disallow *args and **kwargs
             if parameter.kind in [inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD]:
-                # Perhaps support *args as a way to take a greedy string?
+                # TODO: support *args as a way to take a greedy string
                 raise CommandArgumentsError("Cannot use *args or **kwargs in command callback (argument No. %d)" % n)
 
             if parameter.annotation is inspect.Parameter.empty:
