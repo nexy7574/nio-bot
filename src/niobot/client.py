@@ -20,13 +20,13 @@ from nio.crypto import ENCRYPTION_ENABLED
 from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import (
-    NioBotException,
-    MessageException,
-    LoginException,
-    CommandError,
-    CommandDisabledError,
     CommandArgumentsError,
+    CommandDisabledError,
+    CommandError,
     GenericMatrixError,
+    LoginException,
+    MessageException,
+    NioBotException,
 )
 from .utils import Typing, force_await, run_blocking
 from .utils.help_command import default_help_command
@@ -881,7 +881,9 @@ class NioBot(nio.AsyncClient):
 
                 room = self.rooms.get(response.room_id)
                 if not room:
-                    raise RuntimeError("DM room %r was created, but could not be found in the room list!" % room_id)
+                    raise RuntimeError(
+                        "DM room %r was created, but could not be found in the room list!" % response.room_id
+                    )
 
         self.log.debug("Send message resolved room to %r", room)
 

@@ -522,9 +522,7 @@ class BaseAttachment(abc.ABC):
         return cls(file, file_name, mime_type, size)
 
     @classmethod
-    async def from_mxc(
-        cls, client: "NioBot", url: str
-    ) -> "BaseAttachment":
+    async def from_mxc(cls, client: "NioBot", url: str) -> "BaseAttachment":
         """
         Creates an attachment from an MXC URL.
 

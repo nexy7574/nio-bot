@@ -80,7 +80,7 @@ class Argument:
                         "Argument got an instance of a type, not a type itself: %r. Inspect as if it was its raw"
                         "type, %r.",
                         self.type,
-                        type(self.type)
+                        type(self.type),
                     )
                     target = type(self.type)
                 else:

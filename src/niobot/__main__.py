@@ -1,13 +1,12 @@
 import asyncio
 import importlib.metadata
 import logging
-import os
 import pathlib
+import platform
 import re
 import shutil
 import sys
 import typing
-import platform
 
 import packaging.specifiers
 import packaging.version
