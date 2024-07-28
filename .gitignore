@@ -344,3 +344,4 @@ examples/**/*.env
 examples/**/.env
 examples/**/.toml
 examples/**/config.*
+.idea/
