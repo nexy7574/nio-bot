@@ -1150,8 +1150,11 @@ class NioBot(nio.AsyncClient):
             self.log.info("Uploading encryption keys...")
             response = await self.keys_upload()
             if isinstance(response, nio.KeysUploadError):
-                self.log.critical("Failed to upload encryption keys. Encryption may not work.")
-            self.log.info("Uploaded encryption keys.")
+                self.log.critical(
+                    "Failed to upload encryption keys. Encryption may not work. Error: %r", response
+                )
+            else:
+                self.log.info("Uploaded encryption keys.")
         self.log.info("Performing first sync...")
         result = await self.sync(timeout=30000, full_state=True, set_presence="unavailable")
         if not isinstance(result, nio.SyncResponse):
