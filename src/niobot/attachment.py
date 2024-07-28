@@ -523,18 +523,15 @@ class BaseAttachment(abc.ABC):
 
     @classmethod
     async def from_mxc(
-        cls, client: "NioBot", url: str, *, force_write: U[None, bool, pathlib.Path] = None
+        cls, client: "NioBot", url: str
     ) -> "BaseAttachment":
         """
         Creates an attachment from an MXC URL.
 
         :param client: The current client instance (used to download the attachment)
         :param url: The MXC:// url to download
-        :param force_write: Deprecated, will be removed in v1.2.0. Was never implemented.
         :return: The downloaded and probed attachment.
         """
-        if force_write is not None:
-            warnings.warn("force_write is deprecated and will be removed in v1.2.0.", DeprecationWarning)
         response = await client.download(url)
         if isinstance(response, nio.DownloadResponse):
             return await cls.from_file(io.BytesIO(response.body), response.filename)
@@ -545,8 +542,6 @@ class BaseAttachment(abc.ABC):
         cls,
         url: str,
         client_session: typing.Optional[aiohttp.ClientSession] = None,
-        *,
-        force_write: U[None, bool, pathlib.Path] = None,
     ) -> "BaseAttachment":
         """
         Creates an attachment from an HTTP URL.
@@ -555,19 +550,16 @@ class BaseAttachment(abc.ABC):
 
         :param url: The http/s URL to download
         :param client_session: The aiohttp client session to use. If not specified, a new one will be created.
-        :param force_write: Deprecated, will be removed in v1.2.0. Was never implemented.
         :return: The downloaded and probed attachment.
         :raises niobot.MediaDownloadException: if the download failed.
         :raises aiohttp.ClientError: if the download failed.
         :raises niobot.MediaDetectionException: if the MIME type could not be detected.
         """
-        if force_write is not None:
-            warnings.warn("force_write is deprecated and will be removed in v1.2.0.", DeprecationWarning)
         if not client_session:
             from . import __user_agent__
 
             async with aiohttp.ClientSession(headers={"User-Agent": __user_agent__}) as session:
-                return await cls.from_http(url, session, force_write=force_write)
+                return await cls.from_http(url, session)
 
         async with client_session.get(url) as response:
             try:
@@ -584,25 +576,8 @@ class BaseAttachment(abc.ABC):
             if not file_name:
                 u = urllib.parse.urlparse(url)
                 file_name = os.path.basename(u.path)
-            save_path = None
-            if force_write is not False:
-                if force_write is True:
-                    tempdir = tempfile.gettempdir()
-                elif isinstance(force_write, (os.PathLike, str)):
-                    tempdir = pathlib.Path(str(force_write))
 
-                if os.path.isdir(tempdir):
-                    save_path = os.path.join(tempdir, file_name)
-                else:
-                    save_path = tempdir
-
-            if save_path is None:
-                return await cls.from_file(io.BytesIO(await response.read()), file_name)
-
-            async with aiofiles.open(save_path, "wb") as fh:
-                async for chunk in response.content.iter_chunked(1024):
-                    await fh.write(chunk)
-            return await cls.from_file(save_path, file_name)
+            return await cls.from_file(io.BytesIO(await response.read()), file_name)
 
     @property
     def size_bytes(self) -> int:
