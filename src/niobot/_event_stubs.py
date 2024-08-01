@@ -3,7 +3,7 @@
 import typing as t
 
 if t.TYPE_CHECKING:
-    from . import CommandError, Context, MatrixRoom, RoomMessageText, SyncResponse
+    from . import CommandError, Context, MatrixRoom, RoomMessage, SyncResponse
 
 
 async def event_loop_running() -> t.Optional[t.Any]:
@@ -47,12 +47,20 @@ async def ready(result: "SyncResponse") -> t.Optional[t.Any]:
     ...
 
 
-async def message(room: "MatrixRoom", event: "RoomMessageText") -> t.Optional[t.Any]:
+async def message(room: "MatrixRoom", event: "RoomMessage") -> t.Optional[t.Any]:
     """
     An event that is fired when the bot receives a message in a room that it is in.
 
     This event is dispatched *before* commands are processed, and as such the convenient [niobot.Context][] is
     unavailable.
+
+    !!! danger "Not every message is a text message"
+        As of v1.2.0, the `message` event is dispatched for every decrypted message type, as such
+        including videos, images, audio, and text. Prior for v1.2.0, this was only dispatched for
+        text messages.
+
+        Please check either the type of the event (i.e. `isinstance(event, niobot.RoomMessageText)`)
+        or the `event.source["content"]["msgtype"]` to determine the type of the message.
 
     !!! tip
         If you want to be able to use the [niobot.Context][] in your event handlers, you should use the
