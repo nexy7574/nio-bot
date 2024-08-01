@@ -689,30 +689,119 @@ class BaseAttachment(abc.ABC):
         return self
 
 
-class SupportXYZAmorganBlurHash(BaseAttachment):
+class FileAttachment(BaseAttachment):
     """
-    Represents an attachment that supports blurhashes.
+    Represents a generic file attachment.
 
-    :param xyz_amorgan_blurhash: The blurhash of the attachment
-    :ivar xyz_amorgan_blurhash: The blurhash of the attachment
+    You should use [VideoAttachment][niobot.attachment.VideoAttachment] for videos,
+    [AudioAttachment][niobot.attachment.AudioAttachment] for audio,
+    and [ImageAttachment][niobot.attachment.ImageAttachment] for images.
+    This is for everything else.
+
+    :param file: The file to upload
+    :param file_name: The name of the file
+    :param mime_type: The mime type of the file
+    :param size_bytes: The size of the file in bytes
     """
 
-    # TODO: Merge this into ImageAttachment as it is the only subclass.
+    def __init__(
+        self,
+        file: U[str, io.BytesIO, pathlib.Path],
+        file_name: typing.Optional[str] = None,
+        mime_type: typing.Optional[str] = None,
+        size_bytes: typing.Optional[int] = None,
+    ):
+        super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.FILE)
 
-    if typing.TYPE_CHECKING:
-        xyz_amorgan_blurhash: str
 
-    def __init__(self, *args, xyz_amorgan_blurhash: typing.Optional[str] = None, **kwargs):
-        super().__init__(*args, **kwargs)
+class ImageAttachment(BaseAttachment):
+    """
+    Represents an image attachment.
+
+    :param file: The file to upload
+    :param file_name: The name of the file
+    :param mime_type: The mime type of the file
+    :param size_bytes: The size of the file in bytes
+    :param height: The height of the image in pixels (e.g. 1080)
+    :param width: The width of the image in pixels (e.g. 1920)
+    :param thumbnail: A thumbnail of the image. NOT a blurhash.
+    :param xyz_amorgan_blurhash: The blurhash of the image
+
+    :ivar info: A dict of info about the image. Contains `h`, `w`, `mimetype`, and `size` keys.
+    :ivar thumbnail: A thumbnail of the image. NOT a blurhash.
+    """
+
+    def __init__(
+        self,
+        file: U[str, io.BytesIO, pathlib.Path],
+        file_name: typing.Optional[str] = None,
+        mime_type: typing.Optional[str] = None,
+        size_bytes: typing.Optional[int] = None,
+        height: typing.Optional[int] = None,
+        width: typing.Optional[int] = None,
+        thumbnail: typing.Optional["ImageAttachment"] = None,
+        xyz_amorgan_blurhash: typing.Optional[str] = None,
+    ):
+        super().__init__(
+            file,
+            file_name,
+            mime_type,
+            size_bytes,
+            attachment_type=AttachmentType.IMAGE,
+        )
         self.xyz_amorgan_blurhash = xyz_amorgan_blurhash
+        self.info = {
+            "h": height,
+            "w": width,
+            "mimetype": mime_type,
+            "size": size_bytes,
+        }
+        self.thumbnail = thumbnail
+
+    @property
+    def height(self) -> typing.Optional[int]:
+        """The height of this image in pixels"""
+        return self.info["h"]
+
+    @height.setter
+    def height(self, value: typing.Optional[int]):
+        self.info["h"] = value
+
+    @property
+    def width(self) -> typing.Optional[int]:
+        """The width of this image in pixels"""
+        return self.info["w"]
+
+    @width.setter
+    def width(self, value: typing.Optional[int]):
+        self.info["w"] = value
 
     @classmethod
     async def from_file(
         cls,
         file: U[str, io.BytesIO, pathlib.Path],
         file_name: typing.Optional[str] = None,
-        xyz_amorgan_blurhash: typing.Optional[U[str, bool]] = None,
-    ) -> "SupportXYZAmorganBlurHash":
+        height: typing.Optional[int] = None,
+        width: typing.Optional[int] = None,
+        thumbnail: typing.Optional["ImageAttachment"] = None,
+        generate_blurhash: bool = True,
+        *,
+        xyz_amorgan_blurhash: typing.Optional[str] = None,
+        unsafe: bool = False,
+    ) -> "ImageAttachment":
+        """
+        Generates an image attachment
+
+        :param file: The file to upload
+        :param file_name: The name of the file (only used if file is a `BytesIO`)
+        :param height: The height, in pixels, of this image
+        :param width: The width, in pixels, of this image
+        :param thumbnail: A thumbnail for this image
+        :param generate_blurhash: Whether to generate a blurhash for this image
+        :param xyz_amorgan_blurhash: The blurhash of the image, if known beforehand.
+        :param unsafe: Whether to allow uploading of images with unsupported codecs. May break metadata detection.
+        :return: An image attachment
+        """
         file = _to_path(file)
         if isinstance(file, io.BytesIO):
             if not file_name:
@@ -721,18 +810,48 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
             if not file_name:
                 file_name = file.name
 
+            if height is None or width is None:
+                metadata = await run_blocking(get_metadata, file)
+                for stream in metadata["streams"]:
+                    log.debug("Found stream in image:\n%s", stream)
+                    if stream["codec_type"] == "video":
+                        if stream["codec_name"].lower() not in SUPPORTED_IMAGE_CODECS and unsafe is False:
+                            warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_IMAGE_CODECS)
+                            warnings.warn(warning)
+                        log.debug("Selecting stream %r for image", stream)
+                        break
+                else:
+                    raise ValueError("Unable to find an image stream in the given file. Are you sure its an image?")
+                # ffmpeg doesn't have an image type
+                height = stream["height"]
+                width = stream["width"]
+
         mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
-        self = cls(file, file_name, mime_type, size, xyz_amorgan_blurhash=xyz_amorgan_blurhash)
-        if xyz_amorgan_blurhash is not False:
+        self = cls(
+            file, file_name, mime_type, size, height, width, thumbnail, xyz_amorgan_blurhash=xyz_amorgan_blurhash
+        )
+        if generate_blurhash:
             await self.get_blurhash()
         return self
+
+    def as_body(self, body: typing.Optional[str] = None) -> dict:
+        output_body = super().as_body(body)
+        output_body["info"] = {**output_body["info"], **self.info}
+        if self.thumbnail:
+            if self.thumbnail.keys:
+                output_body["info"]["thumbnail_file"] = self.thumbnail.keys
+            output_body["info"]["thumbnail_info"] = self.thumbnail.info
+            output_body["info"]["thumbnail_url"] = self.thumbnail.url
+        if self.xyz_amorgan_blurhash:
+            output_body["info"]["xyz.amorgan.blurhash"] = self.xyz_amorgan_blurhash
+        return output_body
 
     @staticmethod
     def thumbnailify_image(
         image: U[PIL.Image.Image, io.BytesIO, str, pathlib.Path],
         size: typing.Tuple[int, int] = (320, 240),
-        resampling: typing.Union[typing.Literal[1, 2, 3, 4, 5], "PIL.Image.Resampling"] = PIL.Image.BICUBIC,
+        resampling: typing.Union["PIL.Image.Resampling"] = PIL.Image.Resampling.BICUBIC,
     ) -> PIL.Image.Image:
         """
         Helper function to thumbnail an image.
@@ -797,169 +916,10 @@ class SupportXYZAmorganBlurHash(BaseAttachment):
 
         if disable_auto_crop is False and (file.width > 800 or file.height > 600):
             log.debug("Cropping image down from {0.width}x{0.height} to 800x600 for faster blurhashing".format(file))
-            file.thumbnail((800, 600), PIL.Image.BICUBIC)
+            file.thumbnail((800, 600), PIL.Image.Resampling.BICUBIC)
         x = await run_blocking(generate_blur_hash, file or self.file, *quality)
         self.xyz_amorgan_blurhash = x
         return x
-
-    def as_body(self, body: typing.Optional[str] = None) -> dict:
-        output_body = super().as_body(body)
-        if isinstance(self.xyz_amorgan_blurhash, str):
-            output_body["info"]["xyz.amorgan.blurhash"] = self.xyz_amorgan_blurhash
-        return output_body
-
-
-class FileAttachment(BaseAttachment):
-    """
-    Represents a generic file attachment.
-
-    You should use [VideoAttachment][niobot.attachment.VideoAttachment] for videos,
-    [AudioAttachment][niobot.attachment.AudioAttachment] for audio,
-    and [ImageAttachment][niobot.attachment.ImageAttachment] for images.
-    This is for everything else.
-
-    :param file: The file to upload
-    :param file_name: The name of the file
-    :param mime_type: The mime type of the file
-    :param size_bytes: The size of the file in bytes
-    """
-
-    def __init__(
-        self,
-        file: U[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
-    ):
-        super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.FILE)
-
-
-class ImageAttachment(SupportXYZAmorganBlurHash):
-    """
-    Represents an image attachment.
-
-    :param file: The file to upload
-    :param file_name: The name of the file
-    :param mime_type: The mime type of the file
-    :param size_bytes: The size of the file in bytes
-    :param height: The height of the image in pixels (e.g. 1080)
-    :param width: The width of the image in pixels (e.g. 1920)
-    :param thumbnail: A thumbnail of the image. NOT a blurhash.
-    :param xyz_amorgan_blurhash: The blurhash of the image
-
-    :ivar info: A dict of info about the image. Contains `h`, `w`, `mimetype`, and `size` keys.
-    :ivar thumbnail: A thumbnail of the image. NOT a blurhash.
-    """
-
-    def __init__(
-        self,
-        file: U[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
-        height: typing.Optional[int] = None,
-        width: typing.Optional[int] = None,
-        thumbnail: typing.Optional["ImageAttachment"] = None,
-        xyz_amorgan_blurhash: typing.Optional[str] = None,
-    ):
-        super().__init__(
-            file,
-            file_name,
-            mime_type,
-            size_bytes,
-            xyz_amorgan_blurhash=xyz_amorgan_blurhash,
-            attachment_type=AttachmentType.IMAGE,
-        )
-        self.info = {
-            "h": height,
-            "w": width,
-            "mimetype": mime_type,
-            "size": size_bytes,
-        }
-        self.thumbnail = thumbnail
-
-    @property
-    def height(self) -> typing.Optional[int]:
-        """The height of this image in pixels"""
-        return self.info["h"]
-
-    @height.setter
-    def height(self, value: typing.Optional[int]):
-        self.info["h"] = value
-
-    @property
-    def width(self) -> typing.Optional[int]:
-        """The width of this image in pixels"""
-        return self.info["w"]
-
-    @width.setter
-    def width(self, value: typing.Optional[int]):
-        self.info["w"] = value
-
-    @classmethod
-    async def from_file(
-        cls,
-        file: U[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        height: typing.Optional[int] = None,
-        width: typing.Optional[int] = None,
-        thumbnail: typing.Optional["ImageAttachment"] = None,
-        generate_blurhash: bool = True,
-        *,
-        unsafe: bool = False,
-    ) -> "ImageAttachment":
-        """
-        Generates an image attachment
-
-        :param file: The file to upload
-        :param file_name: The name of the file (only used if file is a `BytesIO`)
-        :param height: The height, in pixels, of this image
-        :param width: The width, in pixels, of this image
-        :param thumbnail: A thumbnail for this image
-        :param generate_blurhash: Whether to generate a blurhash for this image
-        :param unsafe: Whether to allow uploading of images with unsupported codecs. May break metadata detection.
-        :return: An image attachment
-        """
-        file = _to_path(file)
-        if isinstance(file, io.BytesIO):
-            if not file_name:
-                raise ValueError("file_name must be specified when uploading a BytesIO object.")
-        else:
-            if not file_name:
-                file_name = file.name
-
-            if height is None or width is None:
-                metadata = await run_blocking(get_metadata, file)
-                for stream in metadata["streams"]:
-                    log.debug("Found stream in image:\n%s", stream)
-                    if stream["codec_type"] == "video":
-                        if stream["codec_name"].lower() not in SUPPORTED_IMAGE_CODECS and unsafe is False:
-                            warning = MediaCodecWarning(stream["codec_name"], *SUPPORTED_IMAGE_CODECS)
-                            warnings.warn(warning)
-                        log.debug("Selecting stream %r for image", stream)
-                        break
-                else:
-                    raise ValueError("Unable to find an image stream in the given file. Are you sure its an image?")
-                # ffmpeg doesn't have an image type
-                height = stream["height"]
-                width = stream["width"]
-
-        mime_type = await run_blocking(detect_mime_type, file)
-        size = _size(file)
-        self = cls(file, file_name, mime_type, size, height, width, thumbnail)
-        if generate_blurhash:
-            await self.get_blurhash()
-        return self
-
-    def as_body(self, body: typing.Optional[str] = None) -> dict:
-        output_body = super().as_body(body)
-        output_body["info"] = {**output_body["info"], **self.info}
-        if self.thumbnail:
-            if self.thumbnail.keys:
-                output_body["info"]["thumbnail_file"] = self.thumbnail.keys
-            output_body["info"]["thumbnail_info"] = self.thumbnail.info
-            output_body["info"]["thumbnail_url"] = self.thumbnail.url
-        return output_body
 
 
 class VideoAttachment(BaseAttachment):
@@ -1088,6 +1048,7 @@ class VideoAttachment(BaseAttachment):
         original_thumbnail = thumbnail
         if thumbnail is False:
             thumbnail = None
+        # noinspection PyTypeChecker
         self = cls(file, file_name, mime_type, size, duration, height, width, thumbnail)
         if generate_blurhash:
             if isinstance(self.thumbnail, ImageAttachment):
