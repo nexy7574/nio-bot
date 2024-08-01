@@ -58,7 +58,6 @@ class NioBot(nio.AsyncClient):
     :param ignore_old_events: Whether to simply discard events before the bot's login.
     :param auto_join_rooms: Whether to automatically join rooms the bot is invited to.
     :param auto_read_messages: Whether to automatically update read recipts
-    :param automatic_markdown_renderer: Whether to automatically render markdown in messages when sending/editing.
     :param owner_id: The user ID of the bot owner. If set, only this user can run owner-only commands, etc.
     :param max_message_cache: The maximum number of messages to cache. Defaults to 1000.
     :param ignore_self: Whether to ignore messages sent by the bot itself. Defaults to False. Useful for self-bots.
@@ -161,7 +160,6 @@ class NioBot(nio.AsyncClient):
         self.ignore_old_events = ignore_old_events
         self.auto_join_rooms = auto_join_rooms
         self.auto_read_messages = auto_read_messages
-        self.automatic_markdown_renderer = automatic_markdown_renderer
 
         self.add_event_callback(self.process_message, nio.RoomMessageText)  # type: ignore
         self.direct_rooms: dict[str, nio.MatrixRoom] = {}
