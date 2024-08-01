@@ -15,7 +15,7 @@ DEFAULT_HELP_COMMAND = niobot.Command(
 @pytest.mark.parametrize(
     "kwargs,expected_error,expected_attrs",
     [
-        ({"homeserver": "https://example.com", "user_id": "@example:example.com", "command_prefix": "!"}, None, ...),
+        ({"homeserver": "https://example.com", "user_id": "@example:example.com", "command_prefix": ("!",)}, None, ...),
         (
             {
                 "homeserver": "https://example.com",

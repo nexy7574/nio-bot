@@ -135,7 +135,7 @@ class NioBot(nio.AsyncClient):
             except TypeError:
                 raise TypeError("Command prefix must be a string,  or a regex pattern.") from None
             else:
-                self.command_prefix: typing.Tuple[str] = tuple(command_prefix)
+                self.command_prefix: typing.Tuple[str, ...] = tuple(command_prefix)
         elif isinstance(command_prefix, re.Pattern):
             self.command_prefix: re.Pattern = command_prefix
         else:
@@ -173,7 +173,7 @@ class NioBot(nio.AsyncClient):
         self.add_event_callback(self.process_message, nio.RoomMessage)  # type: ignore
         self.direct_rooms: dict[str, nio.MatrixRoom] = {}
 
-        self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
+        self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessage]] = deque(
             maxlen=max_message_cache
         )
         self.is_ready = asyncio.Event()

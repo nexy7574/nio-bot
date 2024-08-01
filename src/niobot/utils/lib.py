@@ -1,6 +1,6 @@
 import functools
-import warnings
 import logging
+import warnings
 
 __all__ = ("deprecated", "silence_noisy_loggers")
 

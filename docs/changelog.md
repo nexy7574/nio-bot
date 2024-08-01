@@ -18,6 +18,10 @@
 * Fixed `NioBot` throwing a warning about failing key uploads without logging the actual error
 * Allowed `command_prefix` to be an iterable, converting single-strings into a single-item iterable too.
 * Changed the event type of the `message` event to be any `RoomMessage`, not just `Text`.
+* Merged `xyzamorganblurhash` into `ImageAttachment`
+* Removed deprecated `automatic_markdown_parser` option and functionality in NioBot
+* Fixed `niobot.utils.parsers.EventParser` raising an error when used
+* Added beautifulsoup4 as a hard dependency. Backwards compatibility is still kept in case bs4 is not installed.
 
 ## v1.1.1 (2024-06-26)
 
