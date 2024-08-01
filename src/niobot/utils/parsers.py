@@ -291,8 +291,8 @@ class EventParser(Parser):
         else:
             raise CommandParserError(f"Invalid event ID or matrix.to link: {value!r}.")
 
-    def __call__(self, *args, **kwargs) -> typing.Coroutine[typing.Any, typing.Any, nio.Event]:
-        return self.internal(*args, **kwargs)
+    def __call__(self, ctx, arg, value) -> typing.Coroutine[typing.Any, typing.Any, nio.Event]:
+        return self.internal(ctx, value)
 
 
 class MatrixDotToParser(Parser):
@@ -422,7 +422,7 @@ BUILTIN_MAPPING = {
     int: IntegerParser(),
     list: JSONParser(),
     dict: JSONParser(),
-    nio.RoomMessageText: EventParser("m.room.message"),
+    nio.RoomMessage: EventParser("m.room.message"),
     nio.Event: EventParser(),
     nio.MatrixRoom: RoomParser(),
     nio.MatrixUser: MatrixUserParser(),
