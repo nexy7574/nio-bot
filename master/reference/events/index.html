@@ -1206,7 +1206,7 @@ You can @[nio]bot.event("event_loop_running") do it here.</p>
 
 <a href="#niobot._event_stubs.message" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">message</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">room</span><span class="p">:</span> <span class="n"><span title="niobot.MatrixRoom">MatrixRoom</span></span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n"><span title="niobot.RoomMessageText">RoomMessageText</span></span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">room</span><span class="p">:</span> <span class="n"><span title="niobot.MatrixRoom">MatrixRoom</span></span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n"><span title="niobot.RoomMessage">RoomMessage</span></span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
@@ -1215,6 +1215,14 @@ You can @[nio]bot.event("event_loop_running") do it here.</p>
       <p>An event that is fired when the bot receives a message in a room that it is in.</p>
 <p>This event is dispatched <em>before</em> commands are processed, and as such the convenient <a class="autorefs autorefs-internal" href="../context/#niobot.context.Context">niobot.Context</a> is
 unavailable.</p>
+<div class="admonition danger">
+<p class="admonition-title">Not every message is a text message</p>
+<p>As of v1.2.0, the <code>message</code> event is dispatched for every decrypted message type, as such
+including videos, images, audio, and text. Prior for v1.2.0, this was only dispatched for
+text messages.</p>
+<p>Please check either the type of the event (i.e. <code>isinstance(event, niobot.RoomMessageText)</code>)
+or the <code>event.source["content"]["msgtype"]</code> to determine the type of the message.</p>
+</div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>If you want to be able to use the <a class="autorefs autorefs-internal" href="../context/#niobot.context.Context">niobot.Context</a> in your event handlers, you should use the
@@ -1252,7 +1260,7 @@ unavailable.</p>
           <tr class="doc-section-item">
             <td><code>event</code></td>
             <td>
-                  <code><span title="niobot.RoomMessageText">RoomMessageText</span></code>
+                  <code><span title="niobot.RoomMessage">RoomMessage</span></code>
             </td>
             <td>
               <div class="doc-md-description">

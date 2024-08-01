@@ -1531,11 +1531,11 @@
           <tr class="doc-section-item">
             <td><code>command_prefix</code></td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="re.Pattern" href="https://docs.python.org/3/library/re.html#re.Pattern">Pattern</a>]</code>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="re.Pattern" href="https://docs.python.org/3/library/re.html#re.Pattern">Pattern</a>, <a class="autorefs autorefs-external" title="typing.Iterable" href="https://docs.python.org/3/library/typing.html#typing.Iterable">Iterable</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The prefix to use for commands. e.g. !</p>
+                <p>The prefix to use for commands. e.g. <code>!</code>. Can be a string, a list of strings, or a regex pattern.</p>
               </div>
             </td>
             <td>
@@ -1995,7 +1995,7 @@ As such, your read receipt will always be the most recent message. You rarely ne
 
 <a href="#niobot.client.NioBot.process_message" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process_message</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">room</span><span class="p">:</span> <span class="n"><span title="nio.MatrixRoom">MatrixRoom</span></span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n"><span title="nio.RoomMessageText">RoomMessageText</span></span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">room</span><span class="p">:</span> <span class="n"><span title="nio.MatrixRoom">MatrixRoom</span></span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n"><span title="nio.RoomMessage">RoomMessage</span></span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
