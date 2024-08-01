@@ -2,6 +2,7 @@ import asyncio
 import getpass
 import importlib
 import inspect
+import json
 import logging
 import os
 import pathlib
@@ -82,7 +83,6 @@ class NioBot(nio.AsyncClient):
         ignore_old_events: bool = True,
         auto_join_rooms: bool = True,
         auto_read_messages: bool = True,
-        automatic_markdown_renderer: bool = True,
         max_message_cache: int = 1000,
         ignore_self: bool = True,
         import_keys: typing.Tuple[os.PathLike, typing.Optional[str]] = None,
@@ -812,13 +812,12 @@ class NioBot(nio.AsyncClient):
         file: typing.Optional[BaseAttachment] = None,
         reply_to: typing.Optional[U[nio.RoomMessageText, str]] = None,
         message_type: typing.Optional[str] = None,
-        clean_mentions: typing.Optional[bool] = False,
         *,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
     ) -> nio.RoomSendResponse:
         """
-        Sends a message.
+        Sends a message. Doesn't get any more simple than this.
 
         ??? tip "DMs"
             As of v1.1.0, you can now send messages to users (either a [nio.MatrixUser][nio.rooms.MatrixUser]
@@ -846,7 +845,6 @@ class NioBot(nio.AsyncClient):
         :param reply_to: A message to reply to.
         :param message_type: The message type to send. If none, defaults to NioBot.global_message_type,
         which itself is `m.notice` by default.
-        :param clean_mentions: Whether to escape all mentions
         :param override: A dictionary containing additional properties to pass to the body.
         Overrides existing properties.
         :param content_type: The type of content to send. Defaults to "markdown".
@@ -855,8 +853,6 @@ class NioBot(nio.AsyncClient):
         :raises ValueError: You specified neither file nor content.
         :raises RuntimeError: An internal error occured. A room was created, but is not in the bot room list.
         """
-        if clean_mentions is not None:
-            warnings.warn(DeprecationWarning("clean_mentions is deprecated and is defunct."))
         if file and BaseAttachment is None:
             raise ValueError("You are missing required libraries to use attachments.")
         if not any((content, file)):
@@ -866,7 +862,7 @@ class NioBot(nio.AsyncClient):
             _user = room
             room = None
             rooms = await self.get_dm_rooms(_user)
-            logging.debug(f"send_message get_dm_rooms returns rooms {nio.Api.to_json(rooms)}")
+            logging.debug(f"send_message get_dm_rooms returns rooms {json.dumps(rooms)}")
 
             if rooms:
                 for r_id in rooms:
@@ -904,21 +900,11 @@ class NioBot(nio.AsyncClient):
         else:
             body["body"] = content
             if content_type == "markdown":
-                if self.automatic_markdown_renderer is not None:
-                    warnings.warn(
-                        DeprecationWarning(
-                            "niobot.NioBot.automatic_markdown_renderer is deprecated in favour of fine-grained"
-                            " content type controls.\nThis option will be removed in v1.2.0."
-                        )
-                    )
-                if self.automatic_markdown_renderer is False:
-                    self.log.debug("Not markdown rendering content - global markdown render is disabled.")
-                else:
-                    parsed = await run_blocking(marko.parse, content)
-                    if parsed.children:
-                        rendered = await run_blocking(marko.render, parsed)
-                        body["formatted_body"] = rendered
-                        body["format"] = "org.matrix.custom.html"
+                parsed = await run_blocking(marko.parse, content)
+                if parsed.children:
+                    rendered = await run_blocking(marko.render, parsed)
+                    body["formatted_body"] = rendered
+                    body["format"] = "org.matrix.custom.html"
             elif content_type == "html":
                 if BeautifulSoup:
                     soup = BeautifulSoup(content)
@@ -960,7 +946,6 @@ class NioBot(nio.AsyncClient):
         *,
         message_type: typing.Optional[str] = None,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
-        clean_mentions: bool = False,
         override: typing.Optional[dict] = None,
     ) -> nio.RoomSendResponse:
         """
@@ -972,20 +957,15 @@ class NioBot(nio.AsyncClient):
         :param message: The message to edit.
         :param content: The new content of the message.
         :param message_type: The new type of the message (i.e. m.text, m.notice. Defaults to client.global_message_type)
-        :param clean_mentions: Whether to escape all mentions
         :param override: A dictionary containing additional properties to pass to the body.
         Overrides existing properties.
         :param content_type: The type of content to send. Defaults to "markdown".
         :raises RuntimeError: If you are not the sender of the message.
         :raises TypeError: If the message is not text.
         """
-        if clean_mentions is not None:
-            warnings.warn(DeprecationWarning("clean_mentions is deprecated and is defunct."))
 
         room = self._get_id(room)
 
-        if clean_mentions:
-            content = content.replace("@", "@\u200b")
         event_id = self._get_id(message)
         message_type = message_type or self.global_message_type
         content_dict = {
@@ -1006,23 +986,13 @@ class NioBot(nio.AsyncClient):
         }
 
         if content_type == "markdown":
-            if self.automatic_markdown_renderer is not None:
-                warnings.warn(
-                    DeprecationWarning(
-                        "niobot.NioBot.automatic_markdown_renderer is deprecated in favour of fine-grained"
-                        " content type controls.\nThis option will be removed in v1.2.0."
-                    )
-                )
-            if self.automatic_markdown_renderer is False:
-                self.log.debug("Not markdown rendering content - global markdown render is disabled.")
-            else:
-                parsed = await run_blocking(marko.parse, content)
-                if parsed.children:
-                    rendered = await run_blocking(marko.render, parsed)
-                    body["formatted_body"] = rendered
-                    body["format"] = "org.matrix.custom.html"
+            parsed = await run_blocking(marko.parse, content)
+            if parsed.children:
+                rendered = await run_blocking(marko.render, parsed)
+                body["formatted_body"] = rendered
+                body["format"] = "org.matrix.custom.html"
         elif content_type == "html":
-            if BeautifulSoup:
+            if BeautifulSoup is not None:
                 soup = BeautifulSoup(content)
                 content_new = soup.prettify("utf-8", "minimal")
             else:
@@ -1140,7 +1110,7 @@ class NioBot(nio.AsyncClient):
                 except FileNotFoundError:
                     self.log.warning("Failed to load store.")
                 except nio.LocalProtocolError as e:
-                    self.log.warning("No store?? %r", e, exc_info=e)
+                    self.log.warning("No store? %r", e, exc_info=e)
             self.access_token = access_token
             self.start_time = time.time()
         else:
@@ -1167,7 +1137,7 @@ class NioBot(nio.AsyncClient):
                 set_presence="online",
             )
         finally:
-            self.log.info("Closing http session and logging out.")
+            self.log.info("Closing http session.")
             await self.close()
 
     def run(

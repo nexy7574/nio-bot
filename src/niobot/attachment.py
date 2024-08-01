@@ -144,7 +144,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> dict[str, typing.Any]:
     Only returns a limited subset of the data, such as one stream, which contains the format, and size,
     and the format, which contains the filename, format, and size.
 
-    [example output (JSON)](https://github.com/nexy7574/niobot/raw/master/docs/assets/guides/text/example_identify.json)
+    [example output (JSON)](https://raw.githubusercontent.com/nexy7574/nio-bot/80b33a/docs/assets/guides/text/example_identify.json)
 
     :param file: The file to get metadata for. **Must be a path object**
     :return: A slimmed-down dictionary containing the metadata.
