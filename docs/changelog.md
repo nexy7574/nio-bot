@@ -15,6 +15,9 @@
 * Remove `force_write` properly
 * Fix `<instance> has no attribute 'mro'` error when initialising auto-detected arguments
 * Fixed `niocli get-access-token` crashing on windows
+* Fixed `NioBot` throwing a warning about failing key uploads without logging the actual error
+* Allowed `command_prefix` to be an iterable, converting single-strings into a single-item iterable too.
+* Changed the event type of the `message` event to be any `RoomMessage`, not just `Text`.
 
 ## v1.1.1 (2024-06-26)
 

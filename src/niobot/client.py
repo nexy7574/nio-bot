@@ -51,7 +51,8 @@ class NioBot(nio.AsyncClient):
     :param user_id: The user ID to log in as. e.g. @user:matrix.org
     :param device_id: The device ID to log in as. e.g. nio-bot
     :param store_path: The path to the store file. Defaults to ./store. Must be a directory.
-    :param command_prefix: The prefix to use for commands. e.g. !
+    :param command_prefix: The prefix to use for commands. e.g. `!`. Can be a string, a list of strings,
+     or a regex pattern.
     :param case_insensitive: Whether to ignore case when checking for commands. If True, this casefold()s
      incoming messages for parsing.
     :param global_message_type: The message type to default to. Defaults to m.notice
@@ -71,7 +72,7 @@ class NioBot(nio.AsyncClient):
         device_id: str = "nio-bot",
         store_path: typing.Optional[str] = None,
         *,
-        command_prefix: typing.Union[str, re.Pattern],
+        command_prefix: typing.Union[str, re.Pattern, typing.Iterable[str]],
         case_insensitive: bool = True,
         owner_id: typing.Optional[str] = None,
         config: typing.Optional[nio.AsyncClientConfig] = None,
@@ -125,12 +126,20 @@ class NioBot(nio.AsyncClient):
         self.device_id = device_id
         self.store_path = store_path
         self.case_insensitive = case_insensitive
-        self.command_prefix = command_prefix
         self.owner_id = owner_id
         self.ignore_self = ignore_self
 
         if not isinstance(command_prefix, (str, re.Pattern)):
-            raise TypeError("Command prefix must be a string or a regex pattern.")
+            try:
+                iter(command_prefix)
+            except TypeError:
+                raise TypeError("Command prefix must be a string,  or a regex pattern.") from None
+            else:
+                self.command_prefix: typing.Tuple[str] = tuple(command_prefix)
+        elif isinstance(command_prefix, re.Pattern):
+            self.command_prefix: re.Pattern = command_prefix
+        else:
+            self.command_prefix: typing.Tuple[str] = (command_prefix,)
         if command_prefix == "/":
             self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
         if isinstance(command_prefix, str) and re.search(r"\s", command_prefix):
@@ -152,7 +161,7 @@ class NioBot(nio.AsyncClient):
                 help_cmd.callback = cmd
             else:
                 raise TypeError("help_command must be a Command instance or a coroutine/function.")
-        self._commands = {"help": help_cmd, "h": help_cmd}
+        self._commands = {}
         self._modules = {}
         self._events = {}
         self._event_tasks = []
@@ -161,7 +170,7 @@ class NioBot(nio.AsyncClient):
         self.auto_join_rooms = auto_join_rooms
         self.auto_read_messages = auto_read_messages
 
-        self.add_event_callback(self.process_message, nio.RoomMessageText)  # type: ignore
+        self.add_event_callback(self.process_message, nio.RoomMessage)  # type: ignore
         self.direct_rooms: dict[str, nio.MatrixRoom] = {}
 
         self.message_cache: typing.Deque[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]] = deque(
@@ -191,6 +200,7 @@ class NioBot(nio.AsyncClient):
             self.__key_import = pathlib.Path(keys_path), keys_password
         else:
             self.__key_import = None
+        self.add_command(help_cmd)
 
     async def sync(self, *args, **kwargs) -> U[nio.SyncResponse, nio.SyncError]:
         sync = await super().sync(*args, **kwargs)
@@ -288,13 +298,16 @@ class NioBot(nio.AsyncClient):
         else:
             self.log.debug("Updated read receipts for %s to %s.", room, event_id)
 
-    async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessageText) -> None:
+    async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessage) -> None:
         """Processes a message and runs the command it is trying to invoke if any."""
         if self.start_time is None:
             raise RuntimeError("Bot has not started yet!")
 
         self.message_cache.append((room, event))
         self.dispatch("message", room, event)
+        if not isinstance(event, nio.RoomMessageText):
+            self.log.debug("Ignoring non-text message %r", event)
+            return
         if event.sender == self.user and self.ignore_self is True:
             self.log.debug("Ignoring message sent by self.")
             return
@@ -314,8 +327,9 @@ class NioBot(nio.AsyncClient):
                 if _m:
                     return _m.group(0)
             else:
-                if c.startswith(self.command_prefix):
-                    return self.command_prefix
+                for pfx in self.command_prefix:
+                    if c.startswith(pfx):
+                        return pfx
 
         matched_prefix = get_prefix(content)
         if matched_prefix:
