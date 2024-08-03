@@ -29,7 +29,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import Typing, force_await, run_blocking
+from .utils import Typing, force_await, run_blocking, deprecated
 from .utils.help_command import default_help_command
 
 try:
@@ -41,6 +41,8 @@ if typing.TYPE_CHECKING:
     from .context import Context
 
 __all__ = ("NioBot",)
+
+T = typing.TypeVar("T")
 
 
 class NioBot(nio.AsyncClient):
@@ -64,6 +66,14 @@ class NioBot(nio.AsyncClient):
     :param ignore_self: Whether to ignore messages sent by the bot itself. Defaults to False. Useful for self-bots.
     :param import_keys: A key export file and password tuple. These keys will be imported at startup.
     """
+
+    # Long typing definitions out here instead of in __init__ to just keep it cleaner.
+    _events: typing.Dict[typing.Union[str, nio.Event], typing.List[typing.Callable[..., typing.Any]]]
+    """Internal events register."""
+    _commands: typing.Dict[str, Command]
+    """Internal command register."""
+    _modules: typing.Dict[typing.Type, Module]
+    """Internal module register."""
 
     def __init__(
         self,
@@ -140,7 +150,8 @@ class NioBot(nio.AsyncClient):
             self.command_prefix: re.Pattern = command_prefix
         else:
             self.command_prefix: typing.Tuple[str] = (command_prefix,)
-        if command_prefix == "/":
+
+        if "/" in self.command_prefix:
             self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
         if isinstance(command_prefix, str) and re.search(r"\s", command_prefix):
             raise RuntimeError("Command prefix cannot contain whitespace.")
@@ -165,6 +176,7 @@ class NioBot(nio.AsyncClient):
         self._modules = {}
         self._events = {}
         self._event_tasks = []
+
         self.global_message_type = global_message_type
         self.ignore_old_events = ignore_old_events
         self.auto_join_rooms = auto_join_rooms
@@ -209,9 +221,7 @@ class NioBot(nio.AsyncClient):
         return sync
 
     def _populate_dm_rooms(self, sync: nio.SyncResponse):
-        # This function is a workaround until a solution is implemented upstream.
-        # This function is unreliable (see: `is_direct` below, not always provided, optional in spec)
-        # See: https://github.com/poljar/matrix-nio/issues/421
+        # This function is a historical workaround. It is kept as it is still useful in some cases.
         for room_id, room_info in sync.rooms.join.items():
             for event in room_info.state:
                 if isinstance(event, nio.RoomMemberEvent):
@@ -245,7 +255,7 @@ class NioBot(nio.AsyncClient):
         now = received_at or time.time()
         return (now - event.server_timestamp / 1000) * 1000
 
-    def dispatch(self, event_name: str, *args, **kwargs):
+    def dispatch(self, event_name: typing.Union[str, nio.Event], *args, **kwargs):
         """Dispatches an event to listeners"""
         if event_name in self._events:
             for handler in self._events[event_name]:
@@ -483,7 +493,7 @@ class NioBot(nio.AsyncClient):
         return self._commands
 
     @property
-    def modules(self) -> dict[typing.Type[Module], Module]:
+    def modules(self) -> dict[typing.Type, Module]:
         """Returns the internal module register.
 
         !!! warning
@@ -539,7 +549,7 @@ class NioBot(nio.AsyncClient):
 
         return decorator
 
-    def add_event_listener(self, event_type: str, func):
+    def add_event_listener(self, event_type: typing.Union[str, nio.Event], func):
         self._events.setdefault(event_type, [])
         self._events[event_type].append(func)
         self.log.debug("Added event listener %r for %r", func, event_type)
@@ -612,7 +622,7 @@ class NioBot(nio.AsyncClient):
             ignore_unverified_devices,
         )
 
-    def get_cached_message(self, event_id: str) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]]:
+    def get_cached_message(self, event_id: str) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessage]]:
         """Fetches a message from the cache.
 
         This returns both the room the message was sent in, and the event itself.
@@ -641,14 +651,25 @@ class NioBot(nio.AsyncClient):
         check: typing.Optional[typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any]] = None,
         *,
         timeout: typing.Optional[float] = None,
-    ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessageText]]:
+        msg_type: T[typing.Type[nio.RoomMessage]] = nio.RoomMessageText,
+    ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, T[nio.RoomMessage]]]:
         """Waits for a message, optionally with a filter.
 
-        If this function times out, asyncio.TimeoutError is raised."""
+        If this function times out, asyncio.TimeoutError is raised.
+
+        :param room_id: The room ID to wait for a message in. If None, waits for any room.
+        :param sender: The user ID to wait for a message from. If None, waits for any sender.
+        :param check: A function to check the message with. If the function returns False, the message is ignored.
+        :param timeout: The maximum time to wait for a message. If None, waits indefinitely.
+        :param msg_type: The type of message to wait for. Defaults to nio.RoomMessageText.
+        :return: The room and message that was received.
+        """
         event = asyncio.Event()
         value = None
 
         async def event_handler(_room, _event):
+            if not isinstance(_event, msg_type):
+                self.log.debug("Ignoring non-text message %r", _event)
             if room_id and _room.room_id != room_id:
                 self.log.debug("Ignoring bubbling message from %r (vs %r)", _room.room_id, room_id)
                 return False
@@ -676,7 +697,13 @@ class NioBot(nio.AsyncClient):
         return value
 
     @staticmethod
-    async def _markdown_to_html(text: str) -> str:
+    async def markdown_to_html(text: str) -> str:
+        """
+        Converts markdown to HTML.
+
+        :param text: The markdown to render as HTML
+        :return: the rendered HTML
+        """
         parsed = await run_blocking(marko.parse, text)
         if parsed.children:
             rendered = await run_blocking(marko.render, parsed)
@@ -684,12 +711,17 @@ class NioBot(nio.AsyncClient):
             rendered = text
         return rendered
 
+    @property
+    @deprecated("niobot.NioBot.markdown_to_html")
+    def _markdown_to_html(self) -> typing.Callable[[str], typing.Awaitable[str]]:
+        return self.markdown_to_html
+
     @staticmethod
     def _get_id(obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, typing.Any]) -> str:
         """
         Gets the id of most objects as a string.
 
-        :param obj: The object who's ID to get, or the ID itself.
+        :param obj: The object whose ID to get, or the ID itself.
         :type obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, Any]
         :returns: the ID of the object
         :raises: ValueError - the Object doesn't have an ID
@@ -767,8 +799,6 @@ class NioBot(nio.AsyncClient):
         :param user: The user ID or object to get DM rooms for.
         :return: A dictionary of user IDs to lists of rooms, or a list of rooms.
         """
-        if not hasattr(self, "list_direct_rooms"):
-            raise RuntimeError("You must have matrix-nio version 0.24.0 or later to use this feature.")
         result = await self.list_direct_rooms()
         if isinstance(result, nio.DirectRoomsErrorResponse):
             if result.status_code == "M_NOT_FOUND":
@@ -984,7 +1014,7 @@ class NioBot(nio.AsyncClient):
             "msgtype": message_type,
             "body": content,
             "format": "org.matrix.custom.html",
-            "formatted_body": await self._markdown_to_html(content),
+            "formatted_body": await self.markdown_to_html(content),
         }
 
         body = {
