@@ -22,6 +22,11 @@
 * Removed deprecated `automatic_markdown_parser` option and functionality in NioBot
 * Fixed `niobot.utils.parsers.EventParser` raising an error when used
 * Added beautifulsoup4 as a hard dependency. Backwards compatibility is still kept in case bs4 is not installed.
+* Fixed some typing dotted around the client
+* Removed the deprecated `name` parameter from niobot checks
+* Added support for passing raw `nio.Event` types to event listeners
+* Added proper support for `typing.Optional` in automatic argument detection
+* Added support for `*args` in automatic argument detection
 
 ## v1.1.1 (2024-06-26)
 
