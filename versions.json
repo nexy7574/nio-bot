@@ -1,10 +1,17 @@
 [
   {
-    "version": "master",
-    "title": "master",
+    "version": "v{{",
+    "title": "v{{",
     "aliases": [
+      "}}",
+      "github.ref_name",
       "latest"
     ]
+  },
+  {
+    "version": "master",
+    "title": "master",
+    "aliases": []
   },
   {
     "version": "1.1.0.post3",
