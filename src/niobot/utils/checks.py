@@ -1,4 +1,4 @@
-from typing import Optional
+import urllib.parse
 
 from ..commands import check
 from ..context import Context
@@ -9,6 +9,7 @@ __all__ = (
     "is_dm",
     "sender_has_power",
     "client_has_power",
+    "from_homeserver",
 )
 
 
@@ -16,7 +17,6 @@ def is_owner(*extra_owner_ids):
     """
     Requires the sender owns the bot ([`NioBot.owner_id`][]), or is in `extra_owner_ids`.
     :param extra_owner_ids: A set of `@localpart:homeserver.tld` strings to check against.
-    :param name: The human name of this check.
     :return: True - the check passed.
     :raises NotOwner: The sender is not the owner of the bot and is not in the given IDs.
     """
@@ -28,7 +28,9 @@ def is_owner(*extra_owner_ids):
             raise NotOwner()
         return True
 
-    return check(predicate, )
+    return check(
+        predicate,
+    )
 
 
 def is_dm(allow_dual_membership: bool = False):
@@ -75,16 +77,15 @@ def client_has_power(level: int):
     Requires that the bot has a certain power level in the current room before running the command.
 
     :param level: The minimum power level
-    :param name: The human name of this check
     :return:
     """
 
     def predicate(ctx):
         if (sp := ctx.room.power_levels.get(ctx.client.user_id, -999)) < level:
-            raise InsufficientPower(name, needed=level, have=sp)
+            raise InsufficientPower(needed=level, have=sp)
         return True
 
-    return check(predicate, name)
+    return check(predicate)
 
 
 def from_homeserver(*homeservers: str):
@@ -94,3 +95,18 @@ def from_homeserver(*homeservers: str):
     :param homeservers: The homeservers to allowlist.
     :return:
     """
+    parsed_hs = set()
+    for raw_hs in homeservers:
+        if raw_hs.startswith("http"):
+            _parsed = urllib.parse.urlparse(raw_hs)
+            if not _parsed.netloc:
+                raise ValueError(f"Invalid homeserver URL: {raw_hs}")
+            parsed_hs.add(_parsed.netloc)
+        else:
+            parsed_hs.add(raw_hs)
+
+    def predicate(ctx: Context):
+        hs = ctx.message.sender.split(":")[-1]
+        return hs in homeservers
+
+    return check(predicate)
