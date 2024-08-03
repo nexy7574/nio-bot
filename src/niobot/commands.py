@@ -412,28 +412,26 @@ def command(name: typing.Optional[str] = None, **kwargs) -> Callable:
 
 def check(
     function: typing.Callable[[Context], typing.Union[bool, typing.Coroutine[None, None, bool]]],
-    name: typing.Optional[str] = None,
 ) -> Callable:
     """
     Allows you to register checks in modules.
 
     ```python
     @niobot.command()
-    @niobot.check(my_check_func, name="My Check")
+    @niobot.check(my_check_func)
     async def my_command(ctx: niobot.Context):
         pass
     ```
 
     :param function: The function to register as a check
-    :param name: A human-readable name for the check. Defaults to function.__name__
     :return: The decorated function.
     """
 
     def decorator(command_function):
         if hasattr(command_function, "__nio_checks__"):
-            command_function.__nio_checks__[function] = name or function.__name__
+            command_function.__nio_checks__[function] = function.__name__
         else:
-            command_function.__nio_checks__ = {function: name or function.__name__}
+            command_function.__nio_checks__ = {function: function.__name__}
         return command_function
 
     decorator.internal = function
@@ -486,7 +484,12 @@ class Module:
             if hasattr(potential_command, "__nio_command__"):
                 yield potential_command.__nio_command__
 
-    def list_events(self):
+    def list_events(self) -> typing.Generator[..., None, None]:  # I can't type this properly.
+        """
+        Lists all the @event listeners registered in this module.
+
+        This returns the functions themselves. You can get the event name via `result.__nio_event__["name"]`.
+        """
         for _, potential_event in inspect.getmembers(self):
             if hasattr(potential_event, "__nio_event__"):
                 yield potential_event.__nio_event__
@@ -499,18 +502,33 @@ class Module:
         return wrapper
 
     def __setup__(self):
-        """Setup function called once by NioBot.mount_module(). Mounts every command discovered."""
+        """
+        Setup function called once by NioBot.mount_module(). Mounts every command discovered.
+
+        .. warning:
+            If you override this function, you should ensure that you call super().__setup__() to ensure that
+            commands are properly registered.
+        """
         for cmd in self.list_commands():
             cmd.module = self
             logging.getLogger(__name__).debug("Discovered command %r in %s.", cmd, self.__class__.__name__)
             self.bot.add_command(cmd)
 
-        for _event in self.list_events():
+        for _event_function in self.list_events():
+            _event = _event_function.__nio_event__
             _event["_module_instance"] = self
             self.bot.add_event_listener(_event["name"], self._event_handler_callback(_event["function"]))
 
     def __teardown__(self):
-        """Teardown function called once by NioBot.unmount_module(). Removes any command that was mounted."""
+        """
+        Teardown function called once by NioBot.unmount_module(). Removes any command that was mounted.
+
+        .. warning:
+            If you override this function, you should ensure that you call super().__teardown__() to ensure that
+            commands are properly unregistered.
+        """
         for cmd in self.list_commands():
             self.bot.remove_command(cmd)
+        for evnt in self.list_events():
+            self.bot.remove_event_listener(evnt.__nio_event__["function"])
         del self
