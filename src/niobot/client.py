@@ -29,7 +29,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import Typing, force_await, run_blocking, deprecated
+from .utils import Typing, deprecated, force_await, run_blocking
 from .utils.help_command import default_help_command
 
 try:
@@ -554,15 +554,23 @@ class NioBot(nio.AsyncClient):
         self._events[event_type].append(func)
         self.log.debug("Added event listener %r for %r", func, event_type)
 
-    def on_event(self, event_type: typing.Optional[str] = None):
-        """Wrapper that allows you to register an event handler"""
+    def on_event(self, event_type: typing.Optional[typing.Union[str, nio.Event]] = None):
+        """Wrapper that allows you to register an event handler.
+
+        Event handlers **must** be async.
+
+        if event_type is None, the function name is used as the event type.
+
+        Please note that if you pass a [nio.Event][], you are responsible for capturing errors.
+        """
 
         def wrapper(func):
             nonlocal event_type
             event_type = event_type or func.__name__
-            if event_type.startswith("on_"):
-                self.log.warning("No events start with 'on_' - stripping prefix")
-                event_type = event_type[3:]
+            if isinstance(event_type, str):
+                if event_type.startswith("on_"):
+                    self.log.warning("No events start with 'on_' - stripping prefix from %r", event_type)
+                    event_type = event_type[3:]
             self.add_event_listener(event_type, func)
             return func
 
