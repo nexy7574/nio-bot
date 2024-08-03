@@ -515,7 +515,7 @@ class Module:
             if hasattr(potential_command, "__nio_command__"):
                 yield potential_command.__nio_command__
 
-    def list_events(self) -> typing.Generator[..., None, None]:  # I can't type this properly.
+    def list_events(self):
         """
         Lists all the @event listeners registered in this module.
 
