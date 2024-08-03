@@ -41,6 +41,9 @@ class Argument:
     :param description: The description of the argument. Will be shown in the auto-generated help command.
     :param default: The default value of the argument
     :param required: Whether the argument is required or not. Defaults to True if default is ..., False otherwise.
+    :param parser: A function that will parse the argument. Defaults to the default parser.
+    :param greedy: When enabled, will attempt to match as many arguments as possible, without raising an error.
+    If no arguments can be parsed, is merely empty, otherwise is a list of parsed arguments.
     """
 
     def __init__(
@@ -52,6 +55,7 @@ class Argument:
         default: typing.Any = ...,
         required: bool = ...,
         parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
+        greedy: bool = False,
         **kwargs,
     ):
         if default is inspect.Parameter.default:
@@ -67,6 +71,7 @@ class Argument:
             self.default = None
         self.extra = kwargs
         self.parser = parser
+        self.greedy = greedy
 
         if self.parser is ...:
             from .utils import BUILTIN_MAPPING
@@ -242,14 +247,14 @@ class Command:
                 )
                 continue
 
-            # Disallow *args and **kwargs
-            if parameter.kind in [inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD]:
-                # TODO: support *args as a way to take a greedy string
-                raise CommandArgumentsError("Cannot use *args or **kwargs in command callback (argument No. %d)" % n)
+            # Disallow **kwargs
+            if parameter.kind in [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.VAR_KEYWORD]:
+                raise CommandArgumentsError("Cannot use keyword args in command callback (argument No. %d)" % n)
+            greedy = parameter.kind == inspect.Parameter.VAR_POSITIONAL
 
             if parameter.annotation is inspect.Parameter.empty:
                 log.debug("Found argument %r, however no type was specified. Assuming string.", parameter)
-                a = Argument(parameter.name, str, default=parameter.default)
+                a = Argument(parameter.name, str, default=parameter.default, greedy=greedy)
             else:
                 annotation = parameter.annotation
                 origin = typing.get_origin(annotation)
@@ -262,18 +267,18 @@ class Command:
                         real_type,
                         type_parser,
                     )
-                    a = Argument(parameter.name, real_type, default=parameter.default, parser=type_parser)
+                    a = Argument(
+                        parameter.name, real_type, default=parameter.default, parser=type_parser, greedy=greedy
+                    )
                 elif origin is typing.Optional:
                     log.debug("Found argument %r with optional type %r", parameter, annotation)
-                    a = Argument(parameter.name, annotation_args[0], default=parameter.default, required=False)
+                    a = Argument(
+                        parameter.name, annotation_args[0], default=parameter.default, required=False, greedy=greedy
+                    )
                 elif origin is typing.Union:
                     raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
                 else:
-                    log.debug(
-                        "Found argument %r with unknown annotated type %r",
-                        parameter,
-                        parameter.annotation
-                    )
+                    log.debug("Found argument %r with unknown annotated type %r", parameter, parameter.annotation)
                     a = Argument(parameter.name, parameter.annotation)
 
             if parameter.default is not inspect.Parameter.empty:
@@ -358,8 +363,22 @@ class Command:
                 raise CommandArgumentsError(error) from e
             parsed_args.append(parsed_argument)
 
+            # Greedy args support
+            if argument.greedy:
+                for arg in ctx.args[index + 1:]:
+                    # noinspection PyBroadException
+                    try:
+                        parsed_argument = argument.parser(ctx, argument, arg)
+                        if inspect.iscoroutine(parsed_argument):
+                            parsed_argument = await parsed_argument
+                    except Exception:
+                        break
+                    parsed_args.append(parsed_argument)
+                    self.log.debug("Resolved greedy argument %s to %r", argument.name, arg)
+                break
+
         parsed_args = [ctx, *parsed_args]
-        if len(parsed_args) != len(self.arguments):
+        if len(parsed_args) < len(self.arguments):
             self.log.warning(
                 "Parsed arguments length does not match registered arguments length. %d processed arguments, %d "
                 "arguments.",

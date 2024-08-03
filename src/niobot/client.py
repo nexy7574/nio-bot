@@ -659,8 +659,8 @@ class NioBot(nio.AsyncClient):
         check: typing.Optional[typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any]] = None,
         *,
         timeout: typing.Optional[float] = None,
-        msg_type: T[typing.Type[nio.RoomMessage]] = nio.RoomMessageText,
-    ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, T[nio.RoomMessage]]]:
+        msg_type: typing.Type[nio.RoomMessage] = nio.RoomMessageText,
+    ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessage]]:
         """Waits for a message, optionally with a filter.
 
         If this function times out, asyncio.TimeoutError is raised.
