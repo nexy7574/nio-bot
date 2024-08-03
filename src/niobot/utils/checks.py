@@ -12,7 +12,7 @@ __all__ = (
 )
 
 
-def is_owner(*extra_owner_ids, name: Optional[str] = None):
+def is_owner(*extra_owner_ids):
     """
     Requires the sender owns the bot ([`NioBot.owner_id`][]), or is in `extra_owner_ids`.
     :param extra_owner_ids: A set of `@localpart:homeserver.tld` strings to check against.
@@ -25,18 +25,17 @@ def is_owner(*extra_owner_ids, name: Optional[str] = None):
         if ctx.message.sender in extra_owner_ids:
             return True
         if ctx.message.sender != ctx.bot.owner_id:
-            raise NotOwner(name)
+            raise NotOwner()
         return True
 
-    return check(predicate, name)
+    return check(predicate, )
 
 
-def is_dm(allow_dual_membership: bool = False, name: Optional[str] = None):
+def is_dm(allow_dual_membership: bool = False):
     """
     Requires that the current room is a DM with the sender.
 
     :param allow_dual_membership: Whether to allow regular rooms, but only with the client and sender as members.
-    :param name: The human name of this check.
     :return:
     """
 
@@ -47,18 +46,17 @@ def is_dm(allow_dual_membership: bool = False, name: Optional[str] = None):
             members = ctx.room.member_count
             if members == 2 and ctx.client.user_id in ctx.room.users:
                 return True
-        raise CheckFailure(name)
+        raise CheckFailure()
 
-    return check(predicate, name)
+    return check(predicate)
 
 
-def sender_has_power(level: int, room_creator_bypass: bool = False, name: Optional[str] = None):
+def sender_has_power(level: int, room_creator_bypass: bool = False):
     """
     Requires that the sender has a certain power level in the current room before running the command.
 
     :param level: The minimum power level
     :param room_creator_bypass: If the room creator should bypass the check and always be allowed, regardless of level.
-    :param name: The human name of this check
     :return:
     """
 
@@ -66,13 +64,13 @@ def sender_has_power(level: int, room_creator_bypass: bool = False, name: Option
         if ctx.message.sender == ctx.room.creator and room_creator_bypass:
             return True
         if (sp := ctx.room.power_levels.get(ctx.message.sender, -999)) < level:
-            raise InsufficientPower(name, needed=level, have=sp)
+            raise InsufficientPower(needed=level, have=sp)
         return True
 
-    return check(predicate, name)
+    return check(predicate)
 
 
-def client_has_power(level: int, name: Optional[str] = None):
+def client_has_power(level: int):
     """
     Requires that the bot has a certain power level in the current room before running the command.
 
@@ -87,3 +85,12 @@ def client_has_power(level: int, name: Optional[str] = None):
         return True
 
     return check(predicate, name)
+
+
+def from_homeserver(*homeservers: str):
+    """
+    Requires that the sender is from one of the given homeservers.
+
+    :param homeservers: The homeservers to allowlist.
+    :return:
+    """
