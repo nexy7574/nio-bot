@@ -151,10 +151,18 @@ class NioBot(nio.AsyncClient):
         else:
             self.command_prefix: typing.Tuple[str] = (command_prefix,)
 
-        if "/" in self.command_prefix:
-            self.log.warning("The prefix '/' may interfere with client-side commands on some clients, such as Element.")
-        if isinstance(command_prefix, str) and re.search(r"\s", command_prefix):
-            raise RuntimeError("Command prefix cannot contain whitespace.")
+        if isinstance(self.command_prefix, re.Pattern):
+            if self.command_prefix.match("/"):
+                self.log.warning(
+                    "The prefix '/' may interfere with client-side commands on some clients, such as Element."
+                )
+        else:
+            if "/" in self.command_prefix:
+                self.log.warning(
+                    "The prefix '/' may interfere with client-side commands on some clients, such as Element."
+                )
+            if re.search(r"\s", ";".join(command_prefix)):
+                raise RuntimeError("Command prefix cannot contain whitespace.")
 
         self.start_time: typing.Optional[float] = None
         help_cmd = Command(

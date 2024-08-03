@@ -365,7 +365,7 @@ class Command:
 
             # Greedy args support
             if argument.greedy:
-                for arg in ctx.args[index + 1:]:
+                for arg in ctx.args[index + 1 :]:
                     # noinspection PyBroadException
                     try:
                         parsed_argument = argument.parser(ctx, argument, arg)
