@@ -226,6 +226,7 @@ class Command:
         # If the parameter is `self`, ignore it.
         # If the parameter is `ctx`, use the `Context` type.
         log = logging.getLogger(__name__)
+        log.debug("Processing arguments for callback %r", callback)
         args = []
         for n, parameter in enumerate(inspect.signature(callback).parameters.values()):
             # If it has a parent class and this is the first parameter, skip it.
@@ -251,7 +252,9 @@ class Command:
                 a = Argument(parameter.name, str, default=parameter.default)
             else:
                 annotation = parameter.annotation
-                if typing.get_origin(annotation) is typing.Annotated:
+                origin = typing.get_origin(annotation)
+                annotation_args = typing.get_args(annotation)
+                if origin is typing.Annotated:
                     real_type, type_parser = typing.get_args(annotation)
                     log.debug(
                         "Resolved Annotated[...] (%r) to real type %r with parser %r",
@@ -260,8 +263,17 @@ class Command:
                         type_parser,
                     )
                     a = Argument(parameter.name, real_type, default=parameter.default, parser=type_parser)
+                elif origin is typing.Optional:
+                    log.debug("Found argument %r with optional type %r", parameter, annotation)
+                    a = Argument(parameter.name, annotation_args[0], default=parameter.default, required=False)
+                elif origin is typing.Union:
+                    raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
                 else:
-                    log.debug("Found argument %r with type %r", parameter, parameter.annotation)
+                    log.debug(
+                        "Found argument %r with unknown annotated type %r",
+                        parameter,
+                        parameter.annotation
+                    )
                     a = Argument(parameter.name, parameter.annotation)
 
             if parameter.default is not inspect.Parameter.empty:
