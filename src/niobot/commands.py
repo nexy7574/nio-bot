@@ -270,13 +270,12 @@ class Command:
                     a = Argument(
                         parameter.name, real_type, default=parameter.default, parser=type_parser, greedy=greedy
                     )
-                elif origin is typing.Optional:
-                    log.debug("Found argument %r with optional type %r", parameter, annotation)
-                    a = Argument(
-                        parameter.name, annotation_args[0], default=parameter.default, required=False, greedy=greedy
-                    )
                 elif origin is typing.Union:
-                    raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
+                    if len(annotation_args) == 2 and annotation_args[1] is type(None):
+                        log.debug("Resolved Union[...] (%r) to optional type %r", annotation, annotation_args[0])
+                        a = Argument(parameter.name, annotation_args[0], default=parameter.default, greedy=greedy)
+                    else:
+                        raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
                 else:
                     log.debug("Found argument %r with unknown annotated type %r", parameter, parameter.annotation)
                     a = Argument(parameter.name, parameter.annotation)
