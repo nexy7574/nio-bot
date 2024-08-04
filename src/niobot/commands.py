@@ -260,7 +260,7 @@ class Command:
                 origin = typing.get_origin(annotation)
                 annotation_args = typing.get_args(annotation)
                 if origin is typing.Annotated:
-                    real_type, type_parser = typing.get_args(annotation)
+                    real_type, type_parser = annotation_args
                     log.debug(
                         "Resolved Annotated[...] (%r) to real type %r with parser %r",
                         annotation,
@@ -514,7 +514,7 @@ class Module:
             if hasattr(potential_command, "__nio_command__"):
                 yield potential_command.__nio_command__
 
-    def list_events(self):
+    def list_events(self) -> typing.Generator[dict, None, None]:
         """
         Lists all the @event listeners registered in this module.
 
@@ -545,7 +545,7 @@ class Module:
             self.bot.add_command(cmd)
 
         for _event_function in self.list_events():
-            _event = _event_function.__nio_event__
+            _event = _event_function
             _event["_module_instance"] = self
             self.bot.add_event_listener(_event["name"], self._event_handler_callback(_event["function"]))
 
