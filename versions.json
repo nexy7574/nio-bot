@@ -3,15 +3,16 @@
     "version": "v{{",
     "title": "v{{",
     "aliases": [
-      "}}",
       "github.ref_name",
-      "latest"
+      "}}"
     ]
   },
   {
     "version": "master",
     "title": "master",
-    "aliases": []
+    "aliases": [
+      "latest"
+    ]
   },
   {
     "version": "1.1.0.post3",
