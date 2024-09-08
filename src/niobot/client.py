@@ -992,7 +992,14 @@ class NioBot(nio.AsyncClient):
 
         if override:
             body.update(override)
-        async with Typing(self, self._get_id(room)):
+        try:
+            async with Typing(self, self._get_id(room)):
+                response = await self.room_send(
+                    self._get_id(room),
+                    "m.room.message",
+                    body,
+                )
+        except RuntimeError:  # already typing
             response = await self.room_send(
                 self._get_id(room),
                 "m.room.message",
