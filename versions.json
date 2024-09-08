@@ -3,8 +3,8 @@
     "version": "v{{",
     "title": "v{{",
     "aliases": [
-      "}}",
-      "github.ref_name"
+      "github.ref_name",
+      "}}"
     ]
   },
   {
