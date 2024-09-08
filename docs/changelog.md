@@ -31,6 +31,7 @@
 * Added `niobot.utils.Mentions` to handle intentional mentions in messages
 * (Typing) send_message can now reply to any RoomMessage, not just RoomMessageText.
 * `niobot.util.help_command.help_command_callback` was removed, in line with deprecation.
+* `start()` will now query `/_matrix/client/versions` to fetch server version metadata. This is currently unused, however will be helpful for feature detection in the future.
 
 ## v1.1.1 (2024-06-26)
 

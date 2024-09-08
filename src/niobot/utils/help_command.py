@@ -13,7 +13,6 @@ __all__ = (
     "format_command_line",
     "get_short_description",
     "get_long_description",
-    "help_command_callback",
     "default_help_command",
     "clean_output",
 )

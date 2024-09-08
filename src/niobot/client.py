@@ -220,6 +220,8 @@ class NioBot(nio.AsyncClient):
             self.__key_import = pathlib.Path(keys_path), keys_password
         else:
             self.__key_import = None
+        
+        self.server_info: typing.Optional[dict] = None
         self.add_command(help_cmd)
 
     async def sync(self, *args, **kwargs) -> U[nio.SyncResponse, nio.SyncError]:
@@ -1188,6 +1190,13 @@ class NioBot(nio.AsyncClient):
                 self.log.critical("Failed to upload encryption keys. Encryption may not work. Error: %r", response)
             else:
                 self.log.info("Uploaded encryption keys.")
+        self.log.info("Fetching server details...")
+        response = await self.send("GET", "/_matrix/client/versions")
+        if response.status != 200:
+            self.log.warning("Failed to fetch server details. Status: %d", response.status)
+        else:
+            self.server_info = await response.json()
+            self.log.debug("Server details: %r", self.server_info)
         self.log.info("Performing first sync...")
         result = await self.sync(timeout=30000, full_state=True, set_presence="unavailable")
         if not isinstance(result, nio.SyncResponse):
