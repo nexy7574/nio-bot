@@ -140,12 +140,3 @@ async def default_help_command(ctx: "Context"):
         description = get_long_description(command)
         lines = ["* {}:".format(display), *description.splitlines()]
         await ctx.respond(clean_output("\n".join(lines)))
-
-
-def help_command_callback(ctx: "Context"):
-    """Default help command callback"""
-    warnings.warn(
-        "help_command_callback is deprecated and will be removed in v1.2.0, please use default_help_command instead",
-        DeprecationWarning,
-    )
-    return default_help_command(ctx)

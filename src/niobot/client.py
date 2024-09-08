@@ -29,7 +29,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import Typing, deprecated, force_await, run_blocking
+from .utils import Typing, deprecated, force_await, run_blocking, Mentions
 from .utils.help_command import default_help_command
 
 try:
@@ -868,11 +868,12 @@ class NioBot(nio.AsyncClient):
         room: U[nio.MatrixRoom, nio.MatrixUser, str],
         content: typing.Optional[str] = None,
         file: typing.Optional[BaseAttachment] = None,
-        reply_to: typing.Optional[U[nio.RoomMessageText, str]] = None,
+        reply_to: typing.Optional[U[nio.RoomMessage, str]] = None,
         message_type: typing.Optional[str] = None,
         *,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
+        mentions: typing.Optional[Mentions] = None
     ) -> nio.RoomSendResponse:
         """
         Sends a message. Doesn't get any more simple than this.
@@ -906,6 +907,7 @@ class NioBot(nio.AsyncClient):
         :param override: A dictionary containing additional properties to pass to the body.
         Overrides existing properties.
         :param content_type: The type of content to send. Defaults to "markdown".
+        :param mentions: Intentional mentions to send with the message.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
@@ -983,6 +985,8 @@ class NioBot(nio.AsyncClient):
 
         if reply_to:
             body["m.relates_to"] = {"m.in_reply_to": {"event_id": self._get_id(reply_to)}}
+        if mentions:
+            body.update(mentions.as_body())
 
         if override:
             body.update(override)
@@ -1004,6 +1008,7 @@ class NioBot(nio.AsyncClient):
         *,
         message_type: typing.Optional[str] = None,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
+        mentions: typing.Optional[Mentions] = None,
         override: typing.Optional[dict] = None,
     ) -> nio.RoomSendResponse:
         """
@@ -1061,6 +1066,8 @@ class NioBot(nio.AsyncClient):
         elif content_type == "html.raw":
             body["formatted_body"] = content
             body["format"] = "org.matrix.custom.html"
+        if mentions:
+            body.update(mentions.as_body())
         if override:
             body.update(override)
         async with Typing(self, room):

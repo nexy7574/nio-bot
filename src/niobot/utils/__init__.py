@@ -6,3 +6,4 @@ from .parsers import *
 from .string_view import *
 from .typing import *
 from .unblocking import *
+from .mentions import Mentions
