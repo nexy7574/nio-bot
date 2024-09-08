@@ -27,6 +27,12 @@
 * Added support for passing raw `nio.Event` types to event listeners
 * Added proper support for `typing.Optional` in automatic argument detection
 * Added support for `*args` in automatic argument detection
+* Fixed niobot attachments (Image/Video/Audio) sending `null` for metadata, which may cause incorrect client behaviours
+* Added `niobot.utils.Mentions` to handle intentional mentions in messages
+* (Typing) send_message can now reply to any RoomMessage, not just RoomMessageText.
+* `niobot.util.help_command.help_command_callback` was removed, in line with deprecation.
+* `start()` will now query `/_matrix/client/versions` to fetch server version metadata. This is currently unused, however will be helpful for feature detection in the future.
+* Fix RuntimeError due to concurrent typing in send_message
 
 ## v1.1.1 (2024-06-26)
 

@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import logging
 import time
 import typing
 
 import nio
 
+from .utils.lib import deprecated
 from .utils.string_view import ArgumentView
 
 if typing.TYPE_CHECKING:
@@ -30,37 +33,73 @@ class ContextualResponse:
         return "<ContextualResponse ctx={0.ctx!r} response={0.response!r}>".format(self)
 
     @property
-    def message(self) -> typing.Optional[nio.RoomMessageText]:
-        """Fetches the current message for this response"""
+    @deprecated("original_event")
+    def message(self) -> typing.Optional[nio.RoomMessage]:
         result = self.ctx.client.get_cached_message(self._response.event_id)
         if result:
             return result[1]
         else:
             logger.warning("Original response for context %r was not found in cache, unable to modify.", self.ctx)
 
-    async def reply(self, *args) -> "ContextualResponse":
+    async def original_event(self) -> typing.Optional[nio.RoomMessage]:
+        """Fetches the current event for this response"""
+        result = self.ctx.client.get_cached_message(self._response.event_id)
+        if result:
+            return result[1]
+        event = await self.ctx.client.room_get_event(self.ctx.room.room_id, self._response.event_id)
+        if isinstance(event, nio.RoomGetEventResponse):
+            return nio.RoomMessage.parse_event(event.event.source)
+
+    async def reply(
+        self,
+        content: typing.Optional[str] = None,
+        file: typing.Optional[BaseAttachment] = None,
+        message_type: typing.Optional[str] = None,
+        *,
+        content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
+        override: typing.Optional[dict] = None,
+    ) -> "ContextualResponse":
         """
         Replies to the current response.
 
         This does NOT reply to the original invoking message.
 
-        :param args: args to pass to send_message
-        :return: a new ContextualResponse object.
+        See [niobot.NioBot.send_message][] for more information.
         """
-
         return ContextualResponse(
-            self.ctx, await self.ctx.client.send_message(self.ctx.room, *args, reply_to=self._response.event_id)
+            self.ctx,
+            await self.ctx.client.send_message(
+                self.ctx.room,
+                content,
+                file,
+                message_type=message_type,
+                content_type=content_type,
+                reply_to=self._response.event_id,
+                override=override,
+            ),
         )
 
-    async def edit(self, content: str, **kwargs) -> "ContextualResponse":
+    async def edit(
+        self,
+        content: str,
+        *,
+        message_type: typing.Optional[str] = None,
+        content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
+        override: typing.Optional[dict] = None,
+    ) -> "ContextualResponse":
         """
         Edits the current response.
 
-        :param content: The new content to edit with
-        :param kwargs: Any extra arguments to pass to Client.edit_message
-        :return: self
+        See [niobot.NioBot.edit_message][] for more information.
         """
-        await self.ctx.client.edit_message(self.ctx.room, self._response.event_id, content, **kwargs)
+        await self.ctx.client.edit_message(
+            self.ctx.room,
+            self._response.event_id,
+            content,
+            message_type=message_type,
+            content_type=content_type,
+            override=override,
+        )
         return self
 
     async def delete(self, reason: typing.Optional[str] = None) -> None:
@@ -153,14 +192,27 @@ class Context:
         return self.client.latency(self.event, received_at=self._init_ts)
 
     async def respond(
-        self, content: typing.Optional[str] = None, file: typing.Optional["BaseAttachment"] = None
+        self,
+        content: typing.Optional[str] = None,
+        file: typing.Optional[BaseAttachment] = None,
+        reply_to: typing.Optional[typing.Union[nio.RoomMessageText, str]] = None,
+        message_type: typing.Optional[str] = None,
+        *,
+        content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
+        override: typing.Optional[dict] = None,
     ) -> ContextualResponse:
         """
         Responds to the current event.
 
-        :param content: The text to reply with
-        :param file: A file to reply with
-        :return:
+        See [niobot.NioBot.send_message][] for more information.
         """
-        result = await self.client.send_message(self.room, content, file, self.message)
+        result = await self.client.send_message(
+            self.room,
+            content,
+            file,
+            reply_to=reply_to or self.event,
+            message_type=message_type,
+            content_type=content_type,
+            override=override,
+        )
         return ContextualResponse(self, result)

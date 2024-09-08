@@ -80,7 +80,7 @@ class Argument:
                 log.debug("Using builtin parser %r for %r", self.type, self)
                 self.parser = BUILTIN_MAPPING[self.type]
             else:
-                if self.type.__class__ != type:
+                if self.type.__class__ is not type:
                     log.warning(
                         "Argument got an instance of a type, not a type itself: %r. Inspect as if it was its raw"
                         "type, %r.",

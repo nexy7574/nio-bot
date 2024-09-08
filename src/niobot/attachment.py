@@ -837,7 +837,14 @@ class ImageAttachment(BaseAttachment):
 
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
-        output_body["info"] = {**output_body["info"], **self.info}
+        info = self.info.copy()
+
+        # Remove null elements for width and height
+        if info.get("h") is None:
+            info.pop("h", None)
+        if info.get("w") is None:
+            info.pop("w", None)
+        output_body["info"] = {**output_body["info"], **info}
         if self.thumbnail:
             if self.thumbnail.keys:
                 output_body["info"]["thumbnail_file"] = self.thumbnail.keys
@@ -1080,7 +1087,15 @@ class VideoAttachment(BaseAttachment):
 
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
-        output_body["info"] = {**output_body["info"], **self.info}
+        info = self.info.copy()
+        # Remove null elements for width, height, and duration
+        if info.get("h") is None:
+            info.pop("h", None)
+        if info.get("w") is None:
+            info.pop("w", None)
+        if info.get("duration") is None:
+            info.pop("duration", None)
+        output_body["info"] = {**output_body["info"], **info}
         if self.thumbnail:
             if self.thumbnail.keys:
                 output_body["info"]["thumbnail_file"] = self.thumbnail.keys
@@ -1151,5 +1166,8 @@ class AudioAttachment(BaseAttachment):
 
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
+        info = self.info.copy()
+        if info.get("duration") is None:
+            info.pop("duration", None)
         output_body["info"] = {**output_body["info"], **self.info}
         return output_body
