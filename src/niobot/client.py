@@ -29,7 +29,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import Typing, deprecated, force_await, run_blocking, Mentions
+from .utils import Mentions, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import default_help_command
 
 try:
@@ -220,7 +220,7 @@ class NioBot(nio.AsyncClient):
             self.__key_import = pathlib.Path(keys_path), keys_password
         else:
             self.__key_import = None
-        
+
         self.server_info: typing.Optional[dict] = None
         self.add_command(help_cmd)
 
@@ -875,7 +875,7 @@ class NioBot(nio.AsyncClient):
         *,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
-        mentions: typing.Optional[Mentions] = None
+        mentions: typing.Optional[Mentions] = None,
     ) -> nio.RoomSendResponse:
         """
         Sends a message. Doesn't get any more simple than this.

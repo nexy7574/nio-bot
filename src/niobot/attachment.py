@@ -1088,7 +1088,7 @@ class VideoAttachment(BaseAttachment):
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
         info = self.info.copy()
-            # Remove null elements for width, height, and duration
+        # Remove null elements for width, height, and duration
         if info.get("h") is None:
             info.pop("h", None)
         if info.get("w") is None:

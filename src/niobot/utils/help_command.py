@@ -1,7 +1,6 @@
 import re
 import textwrap
 import typing
-import warnings
 
 if typing.TYPE_CHECKING:
     from ..commands import Command
