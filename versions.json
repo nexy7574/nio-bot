@@ -1,10 +1,5 @@
 [
   {
-    "version": "v1.1.1.post1",
-    "title": "v1.1.1.post1",
-    "aliases": ["stable"]
-  },
-  {
     "version": "master",
     "title": "master",
     "aliases": [
@@ -12,13 +7,20 @@
     ]
   },
   {
-    "version": "v1.1.0.post3",
-    "title": "v1.1.0.post3",
-    "aliases": []
+    "version": "v1.1.1.post1",
+    "title": "v1.1.1.post1",
+    "aliases": [
+      "stable"
+    ]
   },
   {
     "version": "v1.1.1",
     "title": "v1.1.1",
+    "aliases": []
+  },
+  {
+    "version": "v1.1.0.post3",
+    "title": "v1.1.0.post3",
     "aliases": []
   }
 ]
