@@ -28,4 +28,4 @@ jobs:
             mkdocs-material-
       - run: pip install '.[dev,e2e,cli]'
       - name: deploy named docs
-        run: mike deploy -p -u "v${{ github.ref_name }}" latest
+        run: mike deploy -p -u "v${{ github.ref_name }}" stable
