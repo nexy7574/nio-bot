@@ -1,14 +1,10 @@
 # Changelog
 
-!!! note "This changelog is new"
-    Previously, all changelogs were only available in the [GitHub releases](https://github.com/nexy7574/nio-bot/releases).
-    Now, they will be additionally available in the documentation.
-
 ## Unreleased
 
-??? example "These changes are not in any released version."
+??? example "These changes are not in a stable release."
     You can only get these changes by installing the library from GitHub. This is not recommended in production, as these changes
-    are often not properly tested.
+    are often not properly battle-tested.
 
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
 
@@ -33,6 +29,8 @@
 * `niobot.util.help_command.help_command_callback` was removed, in line with deprecation.
 * `start()` will now query `/_matrix/client/versions` to fetch server version metadata. This is currently unused, however will be helpful for feature detection in the future.
 * Fix RuntimeError due to concurrent typing in send_message
+* Updated the documentation index page and added documentation for Mentions
+* Fixed the versioned docs deployment
 
 ## v1.1.1 (2024-06-26)
 
