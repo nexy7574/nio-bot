@@ -1,11 +1,8 @@
 [
   {
-    "version": "v{{",
-    "title": "v{{",
-    "aliases": [
-      "}}",
-      "github.ref_name"
-    ]
+    "version": "v1.1.1.post1",
+    "title": "v1.1.1.post1",
+    "aliases": ["stable"]
   },
   {
     "version": "master",
@@ -15,11 +12,8 @@
     ]
   },
   {
-    "version": "1.1.0.post3",
-    "title": "1.1.0.post3",
-    "aliases": [
-      "stable"
-    ]
+    "version": "v1.1.0.post3",
+    "title": "v1.1.0.post3"
   },
   {
     "version": "v1.1.1",
