@@ -245,7 +245,8 @@ class NioBot(nio.AsyncClient):
 
     def server_supports(self, version: typing.Union[typing.Tuple[int, int], typing.Tuple[int, int, int]]) -> bool:
         """Checks that the server supports at least this matrix version."""
-        return any((v <= version for v in self.supported_server_versions))
+        return any((v >= version for v in self.supported_server_versions))
+        # e.g. (1, 1, 0) >= (1, 12, 0) = False | (1, 12, 0) >= (1, 11, 0) = True
 
     async def mxc_to_http(
         self,
