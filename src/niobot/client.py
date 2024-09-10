@@ -12,7 +12,7 @@ import time
 import typing
 import warnings
 from collections import deque
-from typing import Union as U
+from typing import Optional, Union as U
 
 import marko
 import nio
@@ -223,6 +223,52 @@ class NioBot(nio.AsyncClient):
 
         self.server_info: typing.Optional[dict] = None
         self.add_command(help_cmd)
+
+    @property
+    def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
+        """
+        Returns the supported server versions as a list of `major`, `minor`, `patch` tuples.
+
+        The only time `patch` is >0 is when the server is using a deprecated `r` release.
+        All stable releases (`v1`) will have `patch` as 0.
+        """
+        parsed = []
+        if self.server_info:
+            for version in self.server_info.get("versions", []):
+                if version.startswith("r"):
+                    major, minor, patch = map(int, version[1:].split("."))
+                else:
+                    major, minor = map(int, version[1:].split("."))
+                    patch = 0
+                parsed.append((major, minor, patch))
+        return parsed or [(1, 1, 0)]    # default to 1.1.0 if no server info is available
+
+    def server_supports(self, version: typing.Union[typing.Tuple[int, int], typing.Tuple[int, int, int]]) -> bool:
+        """Checks that the server supports at least this matrix version."""
+        return any((v <= version for v in self.supported_server_versions))
+
+    async def mxc_to_http(
+        self,
+        mxc: str,
+        homeserver: Optional[str] = None,
+    ) -> Optional[str]:
+        """
+        Converts an `mxc://` URI to a downloadable HTTP URL.
+
+        This function is identical the [nio.AsyncClient.mxc_to_http()][nio.AsyncClient.mxc_to_http] function,
+        however supports matrix 1.10 and below's unauthenticated media automatically.
+
+        :param mxc: The mxc URI
+        :param homeserver: The homeserver to download this through (defaults to the bot's homeserver)
+        :return: an MXC URL, if applicable
+        """
+        http: Optional[str] = await super().mxc_to_http(mxc, homeserver)
+        if http is not None and not self.server_supports((1, 11, 0)):  # 1.10 and below
+            http = http.replace(
+                "/_matrix/client/v1/media/download/",
+                "/_matrix/media/r0/download/"
+            )
+        return http
 
     async def sync(self, *args, **kwargs) -> U[nio.SyncResponse, nio.SyncError]:
         sync = await super().sync(*args, **kwargs)
