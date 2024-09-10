@@ -7,7 +7,7 @@ import niobot
 
 DEFAULT_HELP_COMMAND = niobot.Command(
     "help",
-    niobot.default_help_command,
+    niobot.DefaultHelpCommand().respond,
     aliases=["h"],
     description="Shows a list of commands for this bot",
 )

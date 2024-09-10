@@ -8,7 +8,7 @@ from collections.abc import Callable
 import nio
 
 from .context import Context
-from .exceptions import *
+from .exceptions import CheckFailure, CommandArgumentsError, CommandDisabledError, CommandParserError
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -250,11 +250,11 @@ class Command:
             # Disallow **kwargs
             if parameter.kind in [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.VAR_KEYWORD]:
                 raise CommandArgumentsError("Cannot use keyword args in command callback (argument No. %d)" % n)
-            greedy = parameter.kind == inspect.Parameter.VAR_POSITIONAL
+            is_positional = parameter.kind == inspect.Parameter.VAR_POSITIONAL
 
             if parameter.annotation is inspect.Parameter.empty:
                 log.debug("Found argument %r, however no type was specified. Assuming string.", parameter)
-                a = Argument(parameter.name, str, default=parameter.default, greedy=greedy)
+                a = Argument(parameter.name, str, default=parameter.default, greedy=is_positional)
             else:
                 annotation = parameter.annotation
                 origin = typing.get_origin(annotation)
@@ -268,12 +268,14 @@ class Command:
                         type_parser,
                     )
                     a = Argument(
-                        parameter.name, real_type, default=parameter.default, parser=type_parser, greedy=greedy
+                        parameter.name, real_type, default=parameter.default, parser=type_parser, greedy=is_positional
                     )
                 elif origin is typing.Union:
                     if len(annotation_args) == 2 and annotation_args[1] is type(None):
                         log.debug("Resolved Union[...] (%r) to optional type %r", annotation, annotation_args[0])
-                        a = Argument(parameter.name, annotation_args[0], default=parameter.default, greedy=greedy)
+                        a = Argument(
+                            parameter.name, annotation_args[0], default=parameter.default, greedy=is_positional
+                        )
                     else:
                         raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
                 else:
@@ -318,14 +320,15 @@ class Command:
                 usage.append(opt.format(arg.name))
         return " ".join(usage)
 
-    async def invoke(self, ctx: Context) -> typing.Coroutine:
+    async def can_run(self, ctx: Context) -> bool:
         """
-        Invokes the current command with the given context
+        Checks if the current user passes all of the checks on the command.
 
-        :param ctx: The current context
-        :raises CommandArgumentsError: Too many/few arguments, or an error parsing an argument.
-        :raises CheckFailure: A check failed
+        If the user fails a check, CheckFailure is raised.
+        Otherwise, True is returned.
         """
+        if self.disabled:
+            raise CommandDisabledError(self)
         from .utils import force_await
 
         if self.checks:
@@ -339,6 +342,15 @@ class Command:
                     raise CheckFailure(name, exception=e) from e
                 if not cr:
                     raise CheckFailure(name)
+
+    async def invoke(self, ctx: Context) -> typing.Coroutine:
+        """
+        Invokes the current command with the given context
+
+        :param ctx: The current context
+        :raises CommandArgumentsError: Too many/few arguments, or an error parsing an argument.
+        :raises CheckFailure: A check failed
+        """
 
         parsed_args = []
         if len(ctx.args) > (len(self.arguments) - 1) and self.greedy is False:
