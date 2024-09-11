@@ -122,7 +122,9 @@ class DefaultHelpCommand:
         """Displays help information about available commands"""
         lines = []
         prefix = ctx.invoking_prefix or "%prefix%"
-        command = ctx.bot.get_command(command_name.casefold())
+        command = None
+        if command_name is not None:
+            command = ctx.bot.get_command(command_name.casefold())
 
         if command_name is None:
             added = []

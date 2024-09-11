@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "nio-bot"
 description = "Making matrix bots simple"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 license = { text = "GNU LGPLv3" }
 authors = [
     {name = "Nexus", email = "pip@nexy7574.co.uk"}
