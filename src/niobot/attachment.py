@@ -894,7 +894,7 @@ class ImageAttachment(BaseAttachment):
             Anything over 800x600 is definitely overkill.
 
             You can easily resize images with
-            [SupportXYZAmorganBlurHash.thumbnailify_image][niobot.attachment.SupportXYZAmorganBlurHash.thumbnailify_image]:
+            [niobot.ImageAttachment.thumbnailify_image][]:
 
             ```python
             attachment = await niobot.ImageAttachment.from_file(my_image, generate_blurhash=False)

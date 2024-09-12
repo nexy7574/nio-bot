@@ -615,7 +615,7 @@ class NioBot(nio.AsyncClient):
 
         if event_type is None, the function name is used as the event type.
 
-        Please note that if you pass a [nio.Event][], you are responsible for capturing errors.
+        Please note that if you pass a [Event][nio.events.room_events.Event], you are responsible for capturing errors.
         """
 
         def wrapper(func):

@@ -96,9 +96,9 @@ coro = await MyParser()(...)
 Great question!
 
 With parsers, there's often a split between complicated/customisable, and fixed parsers. For example, 
-[IntegerParser](#niobot.utils.parsers.IntegerParser) is a customisable parser - You can pass options to it while
+[IntegerParser][niobot.utils.parsers.IntegerParser] is a customisable parser - You can pass options to it while
 initialising it, and it will use those options to parse the input. However, on the contrary,
-[BooleanParser](#niobot.utils.parsers.BooleanParser) is a fixed parser - it does not take any options, and will always
+[BooleanParser][niobot.utils.parsers.BooleanParser] is a fixed parser - it does not take any options, and will always
 convert the input to a boolean.
 
 Basically, `StatelessParser` never needs to access `self` while parsing. `Parser` *can*.

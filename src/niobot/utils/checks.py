@@ -15,7 +15,7 @@ __all__ = (
 
 def is_owner(*extra_owner_ids):
     """
-    Requires the sender owns the bot ([`NioBot.owner_id`][]), or is in `extra_owner_ids`.
+    Requires the sender owns the bot (`[NioBot.owner_id][]`), or is in `extra_owner_ids`.
     :param extra_owner_ids: A set of `@localpart:homeserver.tld` strings to check against.
     :return: True - the check passed.
     :raises NotOwner: The sender is not the owner of the bot and is not in the given IDs.

@@ -27,7 +27,7 @@ functions of `NioBot`, but you can use it at any point to send typing events to 
     This will not work because `Context.respond` calls `NioBot.send_message`, and `NioBot.send_message` creates its own
     `Typing` instance.
     Once `ctx.respond` returns, the internal `Typing` instance is destroyed, and the typing event is stopped, as is
-    the behaviour of [exiting the context manager](#niobot.utils.typing.Typing.__aexit__). This means that either
+    the behaviour of exiting the context manager. This means that either
     if on the loop, the upper-most `utils.Typing` instance will simply just create a new typing notification,
     or will not (especially if `persistent` was set to `False`). This breaks the whole persistence of typing.
 
