@@ -132,7 +132,7 @@ class DefaultHelpCommand:
         if command_name is None:
             added = []
             # Display global help.
-            for command in sorted(lambda v: v.name, ctx.client.commands.values()):
+            for command in sorted(ctx.client.commands.values(), key=lambda c: c.name):
                 if command in added or command.disabled is True:
                     continue  # command is disabled.
                 try:

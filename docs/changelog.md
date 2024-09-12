@@ -27,10 +27,17 @@
 * Added `niobot.utils.Mentions` to handle intentional mentions in messages
 * (Typing) send_message can now reply to any RoomMessage, not just RoomMessageText.
 * `niobot.util.help_command.help_command_callback` was removed, in line with deprecation.
-* `start()` will now query `/_matrix/client/versions` to fetch server version metadata. This is currently unused, however will be helpful for feature detection in the future.
+* `start()` will now query `/_matrix/client/versions` to fetch server version metadata.
 * Fix RuntimeError due to concurrent typing in send_message
 * Updated the documentation index page and added documentation for Mentions
 * Fixed the versioned docs deployment
+* Updated the help command
+    - Unified all of the functions into a single class, `DefaultHelpCommand`, to make subclassing easier.
+    - `default_help_command` was replaced with `DefaultHelpCommand().repond`.
+    - Help command will no longer display commands in the command list that the current user cannot run
+* Added `Command.can_run(ctx)`, which runs through and makes sure that all of the command checks pass.
+* Added backwards compatibility support for legacy media endpoints (servers that don't support matrix v1.11 yet). Authenticated media will still be used by default.
+* Python 3.13 is now officially supported in time for v1.2.0a2
 
 ## v1.1.1 (2024-06-26)
 
