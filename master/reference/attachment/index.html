@@ -3153,7 +3153,7 @@ You should crop-down your images to a reasonable size before generating the blur
 <p>Remember, most image quality is lost - there's very little point in generating a blurhash for a 4K image.
 Anything over 800x600 is definitely overkill.</p>
 <p>You can easily resize images with
-[SupportXYZAmorganBlurHash.thumbnailify_image][niobot.attachment.SupportXYZAmorganBlurHash.thumbnailify_image]:</p>
+<a class="autorefs autorefs-internal" href="#niobot.attachment.ImageAttachment.thumbnailify_image">niobot.ImageAttachment.thumbnailify_image</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">attachment</span> <span class="o">=</span> <span class="k">await</span> <span class="n">niobot</span><span class="o">.</span><span class="n">ImageAttachment</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">my_image</span><span class="p">,</span> <span class="n">generate_blurhash</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">await</span> <span class="n">attachment</span><span class="o">.</span><span class="n">get_blurhash</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">attachment</span><span class="o">.</span><span class="n">thumbnailify_image</span><span class="p">(</span><span class="n">attachment</span><span class="o">.</span><span class="n">file</span><span class="p">))</span>
 </span></code></pre></div>
