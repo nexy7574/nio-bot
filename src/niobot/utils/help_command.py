@@ -121,8 +121,8 @@ class DefaultHelpCommand:
 
         return "\n".join("> " + x for x in description.splitlines())
 
-    async def respond(self, ctx: "Context", command_name: str = None) -> None:
-        """Displays help information about available commands"""
+    async def get_default_help(self, ctx: "Context", command_name: str = None) -> str:
+        """Gets the default help text"""
         lines = []
         prefix = ctx.invoking_prefix or "%prefix%"
         command = None
@@ -143,11 +143,15 @@ class DefaultHelpCommand:
                 description = self.get_short_description(command)
                 lines.append("* `{}`: {}".format(display, description))
                 added.append(command)
-            await ctx.respond("\n".join(lines))
+            return "\n".join(lines)
         elif command is None:
-            return await ctx.respond("No command with the name %r found." % (self.clean_output(command_name)))
+            return "No command with the name %r found." % (self.clean_output(command_name))
         else:
             display = self.format_command_line(prefix, command)
             description = self.get_long_description(command)
             lines = ["* {}:".format(display), *description.splitlines()]
-            await ctx.respond(self.clean_output("\n".join(lines)))
+            return self.clean_output("\n".join(lines))
+
+    async def respond(self, ctx: "Context", command_name: str = None) -> None:
+        """Displays help information about available commands"""
+        return await ctx.respond(await self.get_default_help(ctx, command_name))
