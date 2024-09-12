@@ -86,7 +86,8 @@ class DefaultHelpCommand:
         """Formats a command line, including name(s) & usage."""
         name = self.format_command_name(command)
         start = f"{prefix}{name}"
-        start += " " + command.display_usage.strip().replace("\n", "")
+        if command.display_usage:
+            start += " " + command.display_usage.strip().replace("\n", "")
 
         return start
 
@@ -115,6 +116,8 @@ class DefaultHelpCommand:
             description = command.callback.__doc__ or "No command description."
         else:
             description = command.description
+
+        description = textwrap.dedent(description)
 
         return "\n".join("> " + x for x in description.splitlines())
 
