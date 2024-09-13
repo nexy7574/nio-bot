@@ -104,9 +104,12 @@ def version(no_colour: bool):
 
         # Check for updates
         niobot_versions = versions("nio-bot")
-        newest = tuple(filter(lambda v: v.pre is None and v.dev is None, niobot_versions))[-1]
+        allow_pre = niobot_version.is_prerelease
+        newest = tuple(filter(lambda v: v.is_prerelease in (False, allow_pre), niobot_versions))[-1]
         if newest > niobot_version:
-            logging.warning("There is an update to nio-bot available: %s", niobot_version)
+            msg = "There is an update to nio-bot available: %s" % newest
+            logger.warning(msg)
+            click.secho(msg, fg="yellow")
     except (importlib.metadata.PackageNotFoundError, packaging.version.InvalidVersion) as e:
         logger.critical("Failed to resolve nio-bot version information", exc_info=e)
         niobot_version = packaging.version.Version("0.0.0")
@@ -159,7 +162,7 @@ def version(no_colour: bool):
     nio_versions_raw = ""
     for version in importlib.metadata.requires("nio-bot"):
         if version.startswith("matrix-nio"):
-            nio_versions_raw = version.split(" ")[1]
+            nio_versions_raw = "~" + version.split("~")[1]
             break
     nio_versions = packaging.specifiers.SpecifierSet(nio_versions_raw)
     if not nio_versions.contains(nio_version):

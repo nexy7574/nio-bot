@@ -1,7 +1,7 @@
 # Getting started / quick start
 
-!!! warning "Unfinished guide"
-    This guide is not yet finished.
+!!! tip "Want to skip to see some examples?"
+    You can see some examples on [GitHub](https://github.com/nexy7574/nio-bot/tree/master/examples)
 
 So, you've joined matrix, had a look around, and now you want to make your own little bot?
 Guess what, you can do just that with nio-bot!
