@@ -15,7 +15,7 @@ from pathlib import Path
 import niobot
 
 __author__ = "nexy7574 (@nex:nex7574.co.uk)"
-__version__ = "1.1.0b2"
+__version__ = "1.1.1"
 
 
 CONFIG_PATH = Path("./config.ini")
