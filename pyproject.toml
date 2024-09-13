@@ -96,7 +96,7 @@ filterwarnings = [
 
 [tool.ruff]
 # Replacement for isort & black
-exclude = [".git"]
+exclude = [".git", "examples"]
 target-version = "py39"
 line-length = 120
 indent-width = 4
