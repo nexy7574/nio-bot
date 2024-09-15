@@ -426,6 +426,7 @@ class NioBot(nio.AsyncClient):
                         raise CheckFailure(None, "Unknown check failure")
                 except CheckFailure as err:
                     self.dispatch("command_error", context, err)
+                    raise
 
                 def _task_callback(t: asyncio.Task):
                     try:
