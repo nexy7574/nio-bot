@@ -12,13 +12,13 @@ import time
 import typing
 import warnings
 from collections import deque
-from typing import Optional, Union as U
+from typing import List, Optional, Union as U
 
 import marko
 import nio
 from nio.crypto import ENCRYPTION_ENABLED
 
-from .attachment import BaseAttachment
+from .attachment import BaseAttachment, ImageAttachment
 from .commands import Command, Module
 from .exceptions import (
     CommandArgumentsError,
@@ -29,6 +29,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
+from .proposals import msc2545
 from .utils import Mentions, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
 
@@ -1286,3 +1287,89 @@ class NioBot(nio.AsyncClient):
         :return:
         """
         asyncio.run(self.start(password=password, access_token=access_token, sso_token=sso_token))
+
+    async def _resolve_room_or_user_id(self, target: U[nio.MatrixUser, nio.MatrixRoom, str]) -> str:
+        """Returns either a user ID (@example:example.example) or room ID (!123ABC:example.example)"""
+        if isinstance(target, nio.MatrixUser):
+            return target.user_id
+        elif isinstance(target, nio.MatrixRoom):
+            return target.room_id
+        elif isinstance(target, str):
+            if target.startswith("@"):
+                return target
+            if target.startswith("#"):
+                response = await self.room_resolve_alias(target)
+                if isinstance(response, nio.RoomResolveAliasError):
+                    raise GenericMatrixError("Unable to resolve room alias %r." % target, response=response)
+                room = self.rooms.get(response.room_id)
+                if not room:
+                    raise ValueError("Room with ID %r is not known." % response.room_id)
+
+                return room.room_id
+            else:
+                raise ValueError("target must be a room or user ID.")
+        else:
+            raise TypeError("target must be a MatrixUser, MatrixRoom, or string; got %r" % target)
+
+    async def set_image_pack(
+        self,
+        display_name: str,
+        avatar_url: str = None,
+        usage: List[str] = None,
+        attribution: str = None,
+        *images: U[ImageAttachment, msc2545.ImageObject],
+        target: U[nio.MatrixUser, nio.MatrixRoom, str] = None,
+    ) -> None:
+        """
+        Creates or modifies an MSC2545 image pack.
+
+        !!! danger "Conflicting names will overwrite"
+            If you want to create a new pack, you should always check for conflicts in the room state
+            before calling. If you create a new image pack with an existing state key, it will overwrite
+            the existing one!
+
+        :param display_name: The name of the new pack
+        :param avatar_url: The MXC of an avatar/icon for the pack
+        :param usage: intended usage of the pack. Values must be "emoticon" and/or "sticker"
+        :param attribution: The attribution of this pack
+        :param images: A list of either pre-constructed `ImageObject`s, or `ImageAttachments` to upload.
+        :param target: Where the pack should be stored. Defaults to the current user.
+        """
+        if target is None:
+            target = self.user_id
+        else:
+            target = await self._resolve_room_or_user_id(target)
+
+        if target.startswith("@"):
+            path = nio.Api._build_path("/user/%s/account_data/im.ponies.user_emotes" % target)
+        else:
+            path = nio.Api._build_path("/rooms/%s/state/im.ponies.room_emotes/%s" % (target, display_name))
+
+        obj = msc2545.PackObject(display_name=display_name, avatar_url=avatar_url, usage=usage, attribution=attribution)
+        _images = {}
+        for image in images:
+            if isinstance(image, ImageAttachment):
+                await image.upload(self, False)
+                item = msc2545.ImageObject(
+                    url=image.url,
+                    body=image.file_name,
+                    info=image.as_body(image.file_name)["info"],
+                )
+            else:
+                item = image
+            if item.body in _images:
+                raise ValueError("Duplicate image: %r" % item)
+            _images[item.body] = item
+
+        pack = msc2545.ImagePack(images=_images, pack=obj)
+        c_response = await self.send("PUT", path, pack.model_dump(mode="json"))
+        return (await c_response.json())["event_id"]
+
+    async def delete_image_pack(self, target: U[nio.MatrixUser, nio.MatrixRoom, str], pack: msc2545.ImagePack):
+        """Deletes an existing image pack"""
+        if target.startswith("@"):
+            path = nio.Api._build_path("/user/%s/account_data/im.ponies.user_emotes" % target)
+        else:
+            path = nio.Api._build_path("/rooms/%s/state/im.ponies.room_emotes/%s" % (target, pack.body))
+
+        await self.send("PUT", path, "{}")
