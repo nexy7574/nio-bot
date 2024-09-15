@@ -342,6 +342,7 @@ class Command:
                     raise CheckFailure(name, exception=e) from e
                 if not cr:
                     raise CheckFailure(name)
+        return True
 
     async def invoke(self, ctx: Context) -> typing.Coroutine:
         """
