@@ -18,6 +18,7 @@ import marko
 import nio
 from nio.crypto import ENCRYPTION_ENABLED
 
+from . import CheckFailure
 from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import (
@@ -419,7 +420,12 @@ class NioBot(nio.AsyncClient):
                     invoking_prefix=matched_prefix,
                     meta=matched_prefix + original_command,
                 )
-                self.dispatch("command", context)
+
+                try:
+                    if not await context.command.can_run(context):
+                        raise CheckFailure(None, "Unknown check failure")
+                except CheckFailure as err:
+                    self.dispatch("command_error", context, err)
 
                 def _task_callback(t: asyncio.Task):
                     try:
