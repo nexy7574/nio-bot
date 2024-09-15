@@ -18,10 +18,10 @@ import marko
 import nio
 from nio.crypto import ENCRYPTION_ENABLED
 
-from . import CheckFailure
 from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import (
+    CheckFailure,
     CommandArgumentsError,
     CommandDisabledError,
     CommandError,
