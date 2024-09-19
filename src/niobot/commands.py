@@ -342,6 +342,7 @@ class Command:
                     raise CheckFailure(name, exception=e) from e
                 if not cr:
                     raise CheckFailure(name)
+        return True
 
     async def invoke(self, ctx: Context) -> typing.Coroutine:
         """
@@ -397,6 +398,7 @@ class Command:
                 len(self.arguments),
             )
         self.log.debug("Arguments to pass: %r", parsed_args)
+        ctx.client.dispatch("command", ctx)
         if self.module:
             self.log.debug("Will pass module instance")
             return self.callback(self.module, *parsed_args)
