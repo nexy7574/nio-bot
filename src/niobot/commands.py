@@ -1,3 +1,4 @@
+import functools
 import inspect
 import logging
 import os
@@ -509,7 +510,7 @@ class Module:
     :ivar bot: The bot instance this module is mounted to.
     """
 
-    __is_nio_module__ = True
+    __is_nio_module__ = property(lambda: True, doc='Indicates to niobot that this is a module')
 
     def __init__(self, bot: "NioBot"):
         self.bot = bot
@@ -540,6 +541,7 @@ class Module:
 
     def _event_handler_callback(self, function):
         # Due to the fact events are less stateful than commands, we need to manually inject self for events
+        @functools.wraps(function)
         async def wrapper(*args, **kwargs):
             return await function(self, *args, **kwargs)
 
