@@ -510,7 +510,7 @@ class Module:
     :ivar bot: The bot instance this module is mounted to.
     """
 
-    __is_nio_module__ = property(lambda: True, doc='Indicates to niobot that this is a module')
+    __is_nio_module__ = property(lambda _: True, doc='Indicates to niobot that this is a module')
 
     def __init__(self, bot: "NioBot"):
         self.bot = bot
