@@ -30,6 +30,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
+from .patches.nio__api import AsyncClientWithFixedJoin
 from .proposals import msc2545
 from .utils import Mentions, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
@@ -47,7 +48,7 @@ __all__ = ("NioBot",)
 T = typing.TypeVar("T")
 
 
-class NioBot(nio.AsyncClient):
+class NioBot(AsyncClientWithFixedJoin):
     """
     The main client for NioBot.
 
