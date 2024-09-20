@@ -1,4 +1,4 @@
-matrix-nio~=0.25
+matrix-nio>=0.25.2rc1
 marko==2.*
 python-magic~=0.4
 blurhash-python~=1.2
