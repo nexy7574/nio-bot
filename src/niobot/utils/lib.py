@@ -1,35 +1,46 @@
 import functools
 import logging
 import warnings
+from types import FunctionType
+from typing import Optional as O, Union as U
 
 __all__ = ("deprecated", "silence_noisy_loggers")
 
 
 try:
-    from warnings import deprecated
+    from warnings import deprecated as _deprecated
     # Python 3.13 and above
 except ImportError:
+    _deprecated = None
     # Below python 3.13, we need to define our own deprecated decorator
-    def deprecated(use_instead: str = None):
-        """Marks a function as deprecated and will warn users on call."""
 
-        def wrapper(func):
-            @functools.wraps(func)
-            def caller(*args, **kwargs):
-                value = "{} is deprecated.{}".format(
-                    func.__qualname__, "" if not use_instead else " Please use %r instead." % use_instead
-                )
+
+def deprecated(use_instead: O[U[FunctionType, str]] = None):
+    """Marks a function as deprecated and will warn users on call."""
+
+    if use_instead is not None and not isinstance(use_instead, str):
+        use_instead = use_instead.__qualname__
+
+    def wrapper(func):
+        @functools.wraps(func)
+        def caller(*args, **kwargs):
+            value = "{} is deprecated.{}".format(
+                func.__qualname__, "" if not use_instead else " Please use %r instead." % use_instead
+            )
+            if not _deprecated:
                 warnings.warn(
                     value,
                     category=DeprecationWarning,
                     stacklevel=2,
                 )
-                return func(*args, **kwargs)
+            else:
+                _deprecated(value)
+            return func(*args, **kwargs)
 
-            caller.__doc__ = func.__doc__
-            return caller
+        caller.__doc__ = func.__doc__
+        return caller
 
-        return wrapper
+    return wrapper
 
 
 def silence_noisy_loggers(*exclude: str):

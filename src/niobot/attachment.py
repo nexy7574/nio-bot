@@ -2,6 +2,8 @@
 Matrix file attachments. Full e2ee support is implemented.
 """
 
+from __future__ import annotations
+
 import abc
 import enum
 import io
@@ -32,7 +34,7 @@ from .exceptions import (
     MediaUploadException,
     MetadataDetectionException,
 )
-from .utils import run_blocking
+from .utils import deprecated, run_blocking
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -750,31 +752,19 @@ class ImageAttachment(BaseAttachment):
             attachment_type=AttachmentType.IMAGE,
         )
         self.xyz_amorgan_blurhash = xyz_amorgan_blurhash
-        self.info = {
-            "h": height,
-            "w": width,
-            "mimetype": mime_type,
-            "size": size_bytes,
-        }
+        self.height = height
+        self.width = width
+        self.mime_type = mime_type
+        self.size = size_bytes
         self.thumbnail = thumbnail
 
     @property
-    def height(self) -> typing.Optional[int]:
-        """The height of this image in pixels"""
-        return self.info["h"]
+    @deprecated(BaseAttachment.as_body)
+    def info(self) -> typing.Dict:
+        """<legacy> returns the info dictionary for this image.
 
-    @height.setter
-    def height(self, value: typing.Optional[int]):
-        self.info["h"] = value
-
-    @property
-    def width(self) -> typing.Optional[int]:
-        """The width of this image in pixels"""
-        return self.info["w"]
-
-    @width.setter
-    def width(self, value: typing.Optional[int]):
-        self.info["w"] = value
+        Use `ImageAttachment.as_body()["info"]` instead."""
+        return {"h": self.height, "w": self.width, "mimetype": self.mime_type, "size": self.size}
 
     @classmethod
     async def from_file(
@@ -837,18 +827,16 @@ class ImageAttachment(BaseAttachment):
 
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
-        info = self.info.copy()
+        output_body["info"] = {"mimetype": self.mime_type, "size": self.size}
+        if self.height is not None:
+            output_body["info"]["h"] = self.height
+        if self.width is not None:
+            output_body["info"]["w"] - self.width
 
-        # Remove null elements for width and height
-        if info.get("h") is None:
-            info.pop("h", None)
-        if info.get("w") is None:
-            info.pop("w", None)
-        output_body["info"] = {**output_body["info"], **info}
         if self.thumbnail:
             if self.thumbnail.keys:
                 output_body["info"]["thumbnail_file"] = self.thumbnail.keys
-            output_body["info"]["thumbnail_info"] = self.thumbnail.info
+            output_body["info"]["thumbnail_info"] = self.thumbnail.as_body()["info"]
             output_body["info"]["thumbnail_url"] = self.thumbnail.url
         if self.xyz_amorgan_blurhash:
             output_body["info"]["xyz.amorgan.blurhash"] = self.xyz_amorgan_blurhash
@@ -955,41 +943,21 @@ class VideoAttachment(BaseAttachment):
         thumbnail: typing.Optional["ImageAttachment"] = None,
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.VIDEO)
-        self.info = {
-            "duration": duration,
-            "h": height,
-            "w": width,
-            "mimetype": mime_type,
-            "size": size_bytes,
-        }
+        self.width = width
+        self.height = height
+        self.duration = duration
         self.thumbnail = thumbnail
 
     @property
-    def duration(self) -> typing.Optional[int]:
-        """The duration of this video in milliseconds"""
-        return self.info["duration"]
-
-    @duration.setter
-    def duration(self, value: typing.Optional[int]):
-        self.info["duration"] = value
-
-    @property
-    def height(self) -> typing.Optional[int]:
-        """The height of this image in pixels"""
-        return self.info["h"]
-
-    @height.setter
-    def height(self, value: typing.Optional[int]):
-        self.info["h"] = value
-
-    @property
-    def width(self) -> typing.Optional[int]:
-        """The width of this image in pixels"""
-        return self.info["w"]
-
-    @width.setter
-    def width(self, value: typing.Optional[int]):
-        self.info["w"] = value
+    @deprecated(BaseAttachment.as_body)
+    def info(self):
+        return {
+            "duration": self.duration,
+            "h": self.height,
+            "w": self.width,
+            "mimetype": self.mime_type,
+            "size": self.size_bytes,
+        }
 
     @classmethod
     async def from_file(
@@ -1087,14 +1055,13 @@ class VideoAttachment(BaseAttachment):
 
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
-        info = self.info.copy()
-        # Remove null elements for width, height, and duration
-        if info.get("h") is None:
-            info.pop("h", None)
-        if info.get("w") is None:
-            info.pop("w", None)
-        if info.get("duration") is None:
-            info.pop("duration", None)
+        info = {"mimetype": self.mime_type, "size": self.size_bytes}
+        if self.height:
+            info["h"] = self.height
+        if self.width:
+            info["w"] = self.width
+        if self.duration:
+            info["duration"] = self.duration
         output_body["info"] = {**output_body["info"], **info}
         if self.thumbnail:
             if self.thumbnail.keys:
