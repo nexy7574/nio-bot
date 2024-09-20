@@ -313,25 +313,28 @@ def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
 
 
 @overload
-def _to_path(file: U[str, pathlib.Path]) -> pathlib.Path: ...
+def _to_path(file: U[str, os.PathLike, pathlib.Path]) -> pathlib.Path:
+    ...
 
 
 @overload
-def _to_path(file: io.BytesIO) -> io.BytesIO: ...
+def _to_path(file: io.BytesIO) -> io.BytesIO:
+    ...
 
 
 def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> U[pathlib.Path, io.BytesIO]:
     """Converts a string to a Path object."""
-    if not isinstance(file, (str, pathlib.Path, io.BytesIO)):
+    if not isinstance(file, (str, pathlib.Path, os.PathLike, io.BytesIO)):
         raise TypeError("File must be a string, BytesIO, or Path object.")
-
-    if isinstance(file, io.BytesIO):
-        return file
 
     if isinstance(file, str):
         file = pathlib.Path(file)
-    file = file.resolve()
-    return file
+    elif isinstance(file, os.PathLike) and not isinstance(file, pathlib.Path):
+        file = pathlib.Path(file.__fspath__())
+    elif isinstance(file, io.BytesIO):
+        return file
+
+    return file.resolve()
 
 
 def _size(file: U[pathlib.Path, io.BytesIO]) -> int:
@@ -444,9 +447,33 @@ class BaseAttachment(abc.ABC):
         url: typing.Optional[str]
         keys: typing.Optional[dict[str, str]]
 
+    @typing.overload
     def __init__(
         self,
-        file: U[str, io.BytesIO, pathlib.Path],
+        file: io.BytesIO,
+        file_name: str,
+        mime_type: typing.Optional[str] = None,
+        size_bytes: typing.Optional[int] = None,
+        *,
+        attachment_type: AttachmentType = AttachmentType.FILE
+    ):
+        ...
+
+    @typing.overload
+    def __init__(
+        self,
+        file: U[str, os.PathLike, pathlib.Path],
+        file_name: typing.Optional[str] = None,
+        mime_type: typing.Optional[str] = None,
+        size_bytes: typing.Optional[int] = None,
+        *,
+        attachment_type: AttachmentType = AttachmentType.FILE
+    ):
+        ...
+
+    def __init__(
+        self,
+        file: U[str, io.BytesIO, os.PathLike, pathlib.Path],
         file_name: typing.Optional[str] = None,
         mime_type: typing.Optional[str] = None,
         size_bytes: typing.Optional[int] = None,
