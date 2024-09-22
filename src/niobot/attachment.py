@@ -313,13 +313,11 @@ def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
 
 
 @overload
-def _to_path(file: U[str, os.PathLike, pathlib.Path]) -> pathlib.Path:
-    ...
+def _to_path(file: U[str, os.PathLike, pathlib.Path]) -> pathlib.Path: ...
 
 
 @overload
-def _to_path(file: io.BytesIO) -> io.BytesIO:
-    ...
+def _to_path(file: io.BytesIO) -> io.BytesIO: ...
 
 
 def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> U[pathlib.Path, io.BytesIO]:
@@ -455,9 +453,8 @@ class BaseAttachment(abc.ABC):
         mime_type: typing.Optional[str] = None,
         size_bytes: typing.Optional[int] = None,
         *,
-        attachment_type: AttachmentType = AttachmentType.FILE
-    ):
-        ...
+        attachment_type: AttachmentType = AttachmentType.FILE,
+    ): ...
 
     @typing.overload
     def __init__(
@@ -467,9 +464,8 @@ class BaseAttachment(abc.ABC):
         mime_type: typing.Optional[str] = None,
         size_bytes: typing.Optional[int] = None,
         *,
-        attachment_type: AttachmentType = AttachmentType.FILE
-    ):
-        ...
+        attachment_type: AttachmentType = AttachmentType.FILE,
+    ): ...
 
     def __init__(
         self,
@@ -499,6 +495,7 @@ class BaseAttachment(abc.ABC):
             self.size = os.path.getsize(self.file)
 
         self.type = attachment_type
+
         self.url = None
         self.keys = None
 

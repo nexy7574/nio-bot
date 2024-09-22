@@ -41,7 +41,8 @@ class Typing:
     async def __aenter__(self):
         """Starts the typing notification loop, or sends a single typing notification if not persistent."""
         if self.room_id in _TYPING_STATES:
-            raise RuntimeError("A typing notification is already active for this room", _TYPING_STATES[self.room_id])
+            log.warning("A typing notification is already active for this room: %s", _TYPING_STATES[self.room_id])
+            return
         if not self.persistent:
             await self.client.room_typing(self.room_id, True, timeout=self.timeout)
         else:
