@@ -287,11 +287,14 @@ class NioBot(AsyncClientWithFixedJoin):
                         self.log.debug("Found DM room in sync: %s", room_id)
                         self.direct_rooms[event.state_key] = self.rooms[room_id]
 
-    async def _auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
+    async def _auto_join_room_callback(self, room: nio.MatrixRoom, event: nio.InviteMemberEvent):
         """Callback for auto-joining rooms"""
         if self.auto_join_rooms:
             self.log.info("Joining room %s", room.room_id)
-            result = await self.join(room.room_id)
+            result = await self.join(
+                room.room_id,
+                reason=f"Auto-joining from invite sent by {event.sender}"
+            )
             if isinstance(result, nio.JoinError):
                 self.log.error("Failed to join room %s: %s", room.room_id, result.message)
             else:
