@@ -350,11 +350,15 @@ Then, you can run `!help` to get a list of commands, and `!help <command>` to ge
 
 ## Why is logging in with a password so bad?
 
-You may get a notice in your console when you try to log in with a password.
+Logging in with a password carries more risk than logging in with a token, and is more prone to error.
+When you log in with a password with nio-bot, you need to *store* that password.
+If your password is leaked, an attacker can create as many sessions as they want, reset your password, etc.
+However, with an access token, they're limited to that session, and cannot reset your password.
 
-This is because logging in with a password is actually an awful idea.
-It will create an entirely new session, 9 times out of 10 a hard-coded password, can cause issues with e2ee, and is
-generally just a bad idea.
+Furthermore, if you log in with a password, some servers may generate you a completely new session, which
+is very slow, and can easily break any e2ee you have.
+Unless you are very careful with your environment, you may find yourself with slow startup times,
+session spam, and decryption errors.
 
 What you **should** do instead is get an access token.
 
@@ -367,11 +371,3 @@ $ niocli get-access-token
 This will log into the account when prompted, and will grab you an access token, spitting it out into your terminal.
 
 From there, you can replace `bot.run(password="...")` with `bot.run(access_token="...")`, and you're good to go!
-
-!!! tip
-    You'll also notice that the bot starts up in a matter of seconds when using an access token.
-    This is because the client has already logged in before, so rather than having to sync the entire state and history,
-    it only downloads and syncs new events and data.
-
-    In comparison to using a password, which creates a new session, meaning the client has to download and sync the
-    entire history yet again.
