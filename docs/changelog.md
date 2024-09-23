@@ -38,6 +38,18 @@
 * Added `Command.can_run(ctx)`, which runs through and makes sure that all of the command checks pass.
 * Added backwards compatibility support for legacy media endpoints (servers that don't support matrix v1.11 yet). Authenticated media will still be used by default.
 * Python 3.13 is now officially supported in time for v1.2.0a2
+* niobot attachment types now support os.PathLike, as well as str, BytesIO, and Pathlib, in case you had some freaky custom path type
+* Overlapping typing events in anything using room_send (e.g. send_message, edit_message) will no-longer
+throw an error if there is a mid-air collision. Instead, a warning will be logged to the stream, and
+the operation will be a no-op. This may cause some inconsistencies in the typing indicators sent by nio-bot,
+however that is preferrable to errors.
+* You can now have a little bit more control over the sync loop
+    - `NioBot()` now allows you to pass a static presence (`online`, `unavailable`, `offline`), `False` to outright disable presence, and `None` (default) to set it automatically based on the startup stage (recommended for slower connections)
+    - You can now, if you needed to for some reason, disable full state sync via `sync_full_state=False`.
+* Fixed `NioBot.join()` throwing a JSON EOF in some cases
+* Added the `reason` parameter to `NioBot.join` and `NioBot.room_leave` as optional strings
+* NioBot's auto-join feature now uses this to include a reason when automatically joining rooms
+* Fixed module event handlers, in debug logs, being named as anonymous functions, rather than their true names. This will make debugging issues with your event handlers easier.
 
 ## v1.1.1 (2024-06-26)
 
