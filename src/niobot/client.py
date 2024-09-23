@@ -12,13 +12,13 @@ import time
 import typing
 import warnings
 from collections import deque
-from typing import List, Optional, Union as U
+from typing import Optional, Union as U
 
 import marko
 import nio
 from nio.crypto import ENCRYPTION_ENABLED
 
-from .attachment import BaseAttachment, ImageAttachment
+from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import (
     CheckFailure,
@@ -31,7 +31,6 @@ from .exceptions import (
     NioBotException,
 )
 from .patches.nio__api import AsyncClientWithFixedJoin
-from .proposals import msc2545
 from .utils import Mentions, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
 
@@ -68,6 +67,8 @@ class NioBot(AsyncClientWithFixedJoin):
     :param max_message_cache: The maximum number of messages to cache. Defaults to 1000.
     :param ignore_self: Whether to ignore messages sent by the bot itself. Defaults to False. Useful for self-bots.
     :param import_keys: A key export file and password tuple. These keys will be imported at startup.
+    :param startup_presence: The presence to set on startup. `False` disables presence altogether, and `None`
+    is automatic based on the startup progress.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -99,6 +100,8 @@ class NioBot(AsyncClientWithFixedJoin):
         max_message_cache: int = 1000,
         ignore_self: bool = True,
         import_keys: typing.Tuple[os.PathLike, typing.Optional[str]] = None,
+        startup_presence: typing.Literal["online", "unavailable", "offline", False, None] = None,
+        sync_full_state: bool = True,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -227,6 +230,9 @@ class NioBot(AsyncClientWithFixedJoin):
         self.server_info: typing.Optional[dict] = None
         self.add_command(help_cmd)
 
+        self._startup_presence = startup_presence
+        self._sync_full_state = sync_full_state
+
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
         """
@@ -291,10 +297,7 @@ class NioBot(AsyncClientWithFixedJoin):
         """Callback for auto-joining rooms"""
         if self.auto_join_rooms:
             self.log.info("Joining room %s", room.room_id)
-            result = await self.join(
-                room.room_id,
-                reason=f"Auto-joining from invite sent by {event.sender}"
-            )
+            result = await self.join(room.room_id, reason=f"Auto-joining from invite sent by {event.sender}")
             if isinstance(result, nio.JoinError):
                 self.log.error("Failed to join room %s: %s", room.room_id, result.message)
             else:
@@ -1261,7 +1264,15 @@ class NioBot(AsyncClientWithFixedJoin):
             self.server_info = await response.json()
             self.log.debug("Server details: %r", self.server_info)
         self.log.info("Performing first sync...")
-        result = await self.sync(timeout=30000, full_state=True, set_presence="unavailable")
+
+        def presence_getter(stage: int) -> Optional[str]:
+            if self._startup_presence is False:
+                return
+            elif self._startup_presence is None:
+                return ("unavailable", "online")[stage]
+            return self._startup_presence
+
+        result = await self.sync(timeout=30000, full_state=self._sync_full_state, set_presence=presence_getter(0))
         if not isinstance(result, nio.SyncResponse):
             raise NioBotException("Failed to perform first sync.", result)
         self.is_ready.set()
@@ -1270,8 +1281,8 @@ class NioBot(AsyncClientWithFixedJoin):
         try:
             await self.sync_forever(
                 timeout=30000,
-                full_state=True,
-                set_presence="online",
+                full_state=self._sync_full_state,
+                set_presence=presence_getter(1),
             )
         finally:
             self.log.info("Closing http session.")
