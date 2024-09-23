@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.35">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.36">
     
     
       
@@ -24,7 +24,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.35f28582.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.06209087.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -1603,24 +1603,20 @@ within a couple seconds, your bot will automatically join your room!</p>
 </span></code></pre></div>
 </details>
 <h2 id="why-is-logging-in-with-a-password-so-bad">Why is logging in with a password so bad?<a class="headerlink" href="#why-is-logging-in-with-a-password-so-bad" title="Permanent link">&para;</a></h2>
-<p>You may get a notice in your console when you try to log in with a password.</p>
-<p>This is because logging in with a password is actually an awful idea.
-It will create an entirely new session, 9 times out of 10 a hard-coded password, can cause issues with e2ee, and is
-generally just a bad idea.</p>
+<p>Logging in with a password carries more risk than logging in with a token, and is more prone to error.
+When you log in with a password with nio-bot, you need to <em>store</em> that password.
+If your password is leaked, an attacker can create as many sessions as they want, reset your password, etc.
+However, with an access token, they're limited to that session, and cannot reset your password.</p>
+<p>Furthermore, if you log in with a password, some servers may generate you a completely new session, which
+is very slow, and can easily break any e2ee you have.
+Unless you are very careful with your environment, you may find yourself with slow startup times,
+session spam, and decryption errors.</p>
 <p>What you <strong>should</strong> do instead is get an access token.</p>
 <p>If you already know how to get yours, that's great! Otherwise, <code>niocli</code> has the solution:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>$<span class="w"> </span>niocli<span class="w"> </span>get-access-token
 </span></code></pre></div>
 <p>This will log into the account when prompted, and will grab you an access token, spitting it out into your terminal.</p>
 <p>From there, you can replace <code>bot.run(password="...")</code> with <code>bot.run(access_token="...")</code>, and you're good to go!</p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>You'll also notice that the bot starts up in a matter of seconds when using an access token.
-This is because the client has already logged in before, so rather than having to sync the entire state and history,
-it only downloads and syncs new events and data.</p>
-<p>In comparison to using a password, which creates a new session, meaning the client has to download and sync the
-entire history yet again.</p>
-</div>
 
 
 
@@ -1643,7 +1639,7 @@ entire history yet again.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">September 13, 2024 15:59:32</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">September 23, 2024 00:15:11</span>
   </span>
 
     
