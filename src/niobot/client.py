@@ -13,6 +13,7 @@ import typing
 import warnings
 from collections import deque
 from typing import Optional, Union as U
+from urllib.parse import urlparse
 
 import marko
 import nio
@@ -31,7 +32,7 @@ from .exceptions import (
     NioBotException,
 )
 from .patches.nio__api import AsyncClientWithFixedJoin
-from .utils import Mentions, Typing, deprecated, force_await, run_blocking
+from .utils import Mentions, Typing, deprecated, force_await, run_blocking, MXID_REGEX
 from .utils.help_command import DefaultHelpCommand
 
 try:
@@ -924,6 +925,20 @@ class NioBot(AsyncClientWithFixedJoin):
 
         return result
 
+    @staticmethod
+    def parse_user_mentions(content: str) -> typing.List[str]:
+        results = MXID_REGEX.findall(content)
+
+        def filter_func(mxid: str):
+            if len(mxid) > 255:
+                return False  # too long
+            _, server_name = mxid.split(":", 1)
+            parsed_sn = urlparse("https://" + server_name)
+            if not parsed_sn.hostname:
+                return False
+            return True
+        return list(filter(filter_func, results))
+
     async def send_message(
         self,
         room: U[nio.MatrixRoom, nio.MatrixUser, str],
@@ -1047,6 +1062,10 @@ class NioBot(AsyncClientWithFixedJoin):
         if reply_to:
             body["m.relates_to"] = {"m.in_reply_to": {"event_id": self._get_id(reply_to)}}
         if mentions:
+            body.update(mentions.as_body())
+        elif mentions is None and content:
+            mxids = self.parse_user_mentions(content)
+            mentions = Mentions("@room" in content, *mxids)
             body.update(mentions.as_body())
 
         if override:

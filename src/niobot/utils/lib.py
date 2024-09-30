@@ -1,10 +1,16 @@
 import functools
 import logging
+import re
 import warnings
 from types import FunctionType
 from typing import Optional as O, Union as U
 
-__all__ = ("deprecated", "silence_noisy_loggers")
+__all__ = ("deprecated", "silence_noisy_loggers", "MXID_REGEX")
+
+MXID_REGEX = re.compile(r"@[a-z0-9._=\-/+]+:\S+")
+# WARNING: this regex doe snot fully conform to the spec, nor do any validation.
+# However, it will cover the majority of cases.
+# Use `NioBot.parse_user_mentions` for more validation
 
 
 try:
