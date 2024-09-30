@@ -51,6 +51,7 @@ however that is preferrable to errors.
 * NioBot's auto-join feature now uses this to include a reason when automatically joining rooms
 * Fixed module event handlers, in debug logs, being named as anonymous functions, rather than their true names. This will make debugging issues with your event handlers easier.
 * Removed the password login critical log in favour of simply documenting the dangers of using a password
+* `NioBot.send_message` will now automatically parse mentions if not explicitly provided, to take full advantage of intentional mentions.
 
 ## v1.1.1 (2024-06-26)
 
