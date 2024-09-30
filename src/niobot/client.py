@@ -32,7 +32,7 @@ from .exceptions import (
     NioBotException,
 )
 from .patches.nio__api import AsyncClientWithFixedJoin
-from .utils import Mentions, Typing, deprecated, force_await, run_blocking, MXID_REGEX
+from .utils import MXID_REGEX, Mentions, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
 
 try:
@@ -937,6 +937,7 @@ class NioBot(AsyncClientWithFixedJoin):
             if not parsed_sn.hostname:
                 return False
             return True
+
         return list(filter(filter_func, results))
 
     async def send_message(
