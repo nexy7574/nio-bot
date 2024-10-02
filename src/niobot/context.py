@@ -13,6 +13,7 @@ if typing.TYPE_CHECKING:
     from .attachment import BaseAttachment
     from .client import NioBot
     from .commands import Command
+    from .utils.mentions import Mentions
 
 
 __all__ = ("Context", "ContextualResponse")
@@ -200,6 +201,7 @@ class Context:
         *,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
+        mentions: typing.Union["Mentions", typing.Literal[False], None] = None,
     ) -> ContextualResponse:
         """
         Responds to the current event.
@@ -214,5 +216,6 @@ class Context:
             message_type=message_type,
             content_type=content_type,
             override=override,
+            mentions=mentions
         )
         return ContextualResponse(self, result)
