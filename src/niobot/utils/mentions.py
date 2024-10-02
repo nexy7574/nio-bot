@@ -13,7 +13,7 @@ class Mentions:
     :param user_ids: List of user IDs mentioned in the event
     """
 
-    def __init__(self, room: bool, *user_ids: str):
+    def __init__(self, room: bool = False, *user_ids: str):
         self.room: bool = room
         """Whether this event mentions the entire room"""
         self.user_ids: List[str] = list(user_ids)
@@ -22,7 +22,7 @@ class Mentions:
     def __repr__(self) -> str:
         return f"Mentions({self.room}, *{self.user_ids})"
 
-    def as_body(self) -> Dict[str, Union[bool, list[str]]]:
+    def as_body(self) -> dict[str, dict[str, bool | list[str]]]:
         """Returns the mentions object as a body dict (e.g. `{m.mentions: {room: true, user_ids: []}}`)"""
         d = {}
         if self.room:
