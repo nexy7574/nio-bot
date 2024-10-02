@@ -399,14 +399,14 @@ class NioBot(nio.AsyncClient):
         matched_prefix = get_prefix(content)
         if matched_prefix:
             try:
-                command = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
+                command_name = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
             except IndexError:
                 self.log.info(
                     "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
                     event.body,
                 )
                 return
-            command = self.get_command(command)
+            command: typing.Optional[Command] = self.get_command(command_name)
             if command:
                 if command.disabled is True:
                     error = CommandDisabledError(command)
@@ -435,6 +435,10 @@ class NioBot(nio.AsyncClient):
                         self.dispatch("command_cancelled", context, t)
                     else:
                         if exc:
+                            if "command_error" not in self._events:
+                                self.log.exception(
+                                    "There was an error while running %r: %r", command, exc, exc_info=exc
+                                )
                             self.dispatch("command_error", context, CommandError(exception=exc))
                         else:
                             self.dispatch("command_complete", context, t)
@@ -453,7 +457,7 @@ class NioBot(nio.AsyncClient):
                 except CommandArgumentsError as e:
                     self.dispatch("command_error", context, e)
                 except Exception as e:
-                    self.log.exception("Failed to invoke command %s", command.name)
+                    self.log.exception("Failed to invoke command %s", command.name, exc_info=e)
                     self.dispatch("command_error", context, CommandError(exception=e))
                 else:
                     task.add_done_callback(_task_callback)
