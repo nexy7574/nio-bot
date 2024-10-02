@@ -70,6 +70,7 @@ class NioBot(AsyncClientWithFixedJoin):
     :param import_keys: A key export file and password tuple. These keys will be imported at startup.
     :param startup_presence: The presence to set on startup. `False` disables presence altogether, and `None`
     is automatic based on the startup progress.
+    :param default_parse_mentions: Whether to parse mentions in send_message by default to make them intentional.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -103,6 +104,7 @@ class NioBot(AsyncClientWithFixedJoin):
         import_keys: typing.Tuple[os.PathLike, typing.Optional[str]] = None,
         startup_presence: typing.Literal["online", "unavailable", "offline", False, None] = None,
         sync_full_state: bool = True,
+        default_parse_mentions: bool = True
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -233,6 +235,7 @@ class NioBot(AsyncClientWithFixedJoin):
 
         self._startup_presence = startup_presence
         self._sync_full_state = sync_full_state
+        self.default_parse_mentions = default_parse_mentions
 
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
@@ -241,6 +244,8 @@ class NioBot(AsyncClientWithFixedJoin):
 
         The only time `patch` is >0 is when the server is using a deprecated `r` release.
         All stable releases (`v1`) will have `patch` as 0.
+
+        This property returns `[(1, 1, 0)]` if no server info is available.
         """
         parsed = []
         if self.server_info:
@@ -954,7 +959,7 @@ class NioBot(AsyncClientWithFixedJoin):
         *,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
-        mentions: typing.Optional[Mentions] = None,
+        mentions: typing.Union[Mentions, typing.Literal[False], None] = None,
     ) -> nio.RoomSendResponse:
         """
         Sends a message. Doesn't get any more simple than this.
@@ -988,7 +993,7 @@ class NioBot(AsyncClientWithFixedJoin):
         :param override: A dictionary containing additional properties to pass to the body.
         Overrides existing properties.
         :param content_type: The type of content to send. Defaults to "markdown".
-        :param mentions: Intentional mentions to send with the message.
+        :param mentions: Intentional mentions to send with the message. If not provided, or `False`, then auto-detected.
         :return: The response from the server.
         :raises MessageException: If the message fails to send, or if the file fails to upload.
         :raises ValueError: You specified neither file nor content.
@@ -1066,9 +1071,9 @@ class NioBot(AsyncClientWithFixedJoin):
 
         if reply_to:
             body["m.relates_to"] = {"m.in_reply_to": {"event_id": self._get_id(reply_to)}}
-        if mentions:
+        if isinstance(mentions, Mentions):
             body.update(mentions.as_body())
-        elif mentions is None and content:
+        elif mentions is None and content and self.default_parse_mentions:
             mxids = self.parse_user_mentions(content)
             mentions = Mentions("@room" in content, *mxids)
             body.update(mentions.as_body())
