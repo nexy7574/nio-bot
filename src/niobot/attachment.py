@@ -2,6 +2,8 @@
 Matrix file attachments. Full e2ee support is implemented.
 """
 
+from __future__ import annotations
+
 import abc
 import enum
 import io
@@ -32,7 +34,7 @@ from .exceptions import (
     MediaUploadException,
     MetadataDetectionException,
 )
-from .utils import run_blocking
+from .utils import deprecated, run_blocking
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
@@ -311,7 +313,7 @@ def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
 
 
 @overload
-def _to_path(file: U[str, pathlib.Path]) -> pathlib.Path: ...
+def _to_path(file: U[str, os.PathLike, pathlib.Path]) -> pathlib.Path: ...
 
 
 @overload
@@ -320,16 +322,17 @@ def _to_path(file: io.BytesIO) -> io.BytesIO: ...
 
 def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> U[pathlib.Path, io.BytesIO]:
     """Converts a string to a Path object."""
-    if not isinstance(file, (str, pathlib.Path, io.BytesIO)):
+    if not isinstance(file, (str, pathlib.Path, os.PathLike, io.BytesIO)):
         raise TypeError("File must be a string, BytesIO, or Path object.")
-
-    if isinstance(file, io.BytesIO):
-        return file
 
     if isinstance(file, str):
         file = pathlib.Path(file)
-    file = file.resolve()
-    return file
+    elif isinstance(file, os.PathLike) and not isinstance(file, pathlib.Path):
+        file = pathlib.Path(file.__fspath__())
+    elif isinstance(file, io.BytesIO):
+        return file
+
+    return file.resolve()
 
 
 def _size(file: U[pathlib.Path, io.BytesIO]) -> int:
@@ -442,9 +445,31 @@ class BaseAttachment(abc.ABC):
         url: typing.Optional[str]
         keys: typing.Optional[dict[str, str]]
 
+    @typing.overload
     def __init__(
         self,
-        file: U[str, io.BytesIO, pathlib.Path],
+        file: io.BytesIO,
+        file_name: str,
+        mime_type: typing.Optional[str] = None,
+        size_bytes: typing.Optional[int] = None,
+        *,
+        attachment_type: AttachmentType = AttachmentType.FILE,
+    ): ...
+
+    @typing.overload
+    def __init__(
+        self,
+        file: U[str, os.PathLike, pathlib.Path],
+        file_name: typing.Optional[str] = None,
+        mime_type: typing.Optional[str] = None,
+        size_bytes: typing.Optional[int] = None,
+        *,
+        attachment_type: AttachmentType = AttachmentType.FILE,
+    ): ...
+
+    def __init__(
+        self,
+        file: U[str, io.BytesIO, os.PathLike, pathlib.Path],
         file_name: typing.Optional[str] = None,
         mime_type: typing.Optional[str] = None,
         size_bytes: typing.Optional[int] = None,
@@ -453,18 +478,24 @@ class BaseAttachment(abc.ABC):
     ):
         self.file = _to_path(file)
         # Ignore type error as the type is checked right afterwards
-        self.file_name = self.file.name if isinstance(self.file, pathlib.Path) else file_name  # type: ignore
+        self.file_name = file_name  # type: ignore
+        if file_name is None and hasattr(self.file, "name"):
+            self.file_name = file.name
+
         if not self.file_name:
             raise ValueError("file_name must be specified when uploading a BytesIO object.")
+
         self.mime_type = mime_type or detect_mime_type(self.file)
+
         if size_bytes:
             self.size = size_bytes
         elif isinstance(self.file, io.BytesIO):
             self.size = len(self.file.getbuffer())
         else:
-            os.path.getsize(self.file)
+            self.size = os.path.getsize(self.file)
 
         self.type = attachment_type
+
         self.url = None
         self.keys = None
 
@@ -750,31 +781,19 @@ class ImageAttachment(BaseAttachment):
             attachment_type=AttachmentType.IMAGE,
         )
         self.xyz_amorgan_blurhash = xyz_amorgan_blurhash
-        self.info = {
-            "h": height,
-            "w": width,
-            "mimetype": mime_type,
-            "size": size_bytes,
-        }
+        self.height = height
+        self.width = width
+        self.mime_type = mime_type
+        self.size = size_bytes
         self.thumbnail = thumbnail
 
     @property
-    def height(self) -> typing.Optional[int]:
-        """The height of this image in pixels"""
-        return self.info["h"]
+    @deprecated(BaseAttachment.as_body)
+    def info(self) -> typing.Dict:
+        """<legacy> returns the info dictionary for this image.
 
-    @height.setter
-    def height(self, value: typing.Optional[int]):
-        self.info["h"] = value
-
-    @property
-    def width(self) -> typing.Optional[int]:
-        """The width of this image in pixels"""
-        return self.info["w"]
-
-    @width.setter
-    def width(self, value: typing.Optional[int]):
-        self.info["w"] = value
+        Use `ImageAttachment.as_body()["info"]` instead."""
+        return {"h": self.height, "w": self.width, "mimetype": self.mime_type, "size": self.size}
 
     @classmethod
     async def from_file(
@@ -837,18 +856,16 @@ class ImageAttachment(BaseAttachment):
 
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
-        info = self.info.copy()
+        output_body["info"] = {"mimetype": self.mime_type, "size": self.size}
+        if self.height is not None:
+            output_body["info"]["h"] = self.height
+        if self.width is not None:
+            output_body["info"]["w"] - self.width
 
-        # Remove null elements for width and height
-        if info.get("h") is None:
-            info.pop("h", None)
-        if info.get("w") is None:
-            info.pop("w", None)
-        output_body["info"] = {**output_body["info"], **info}
         if self.thumbnail:
             if self.thumbnail.keys:
                 output_body["info"]["thumbnail_file"] = self.thumbnail.keys
-            output_body["info"]["thumbnail_info"] = self.thumbnail.info
+            output_body["info"]["thumbnail_info"] = self.thumbnail.as_body()["info"]
             output_body["info"]["thumbnail_url"] = self.thumbnail.url
         if self.xyz_amorgan_blurhash:
             output_body["info"]["xyz.amorgan.blurhash"] = self.xyz_amorgan_blurhash
@@ -955,41 +972,21 @@ class VideoAttachment(BaseAttachment):
         thumbnail: typing.Optional["ImageAttachment"] = None,
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.VIDEO)
-        self.info = {
-            "duration": duration,
-            "h": height,
-            "w": width,
-            "mimetype": mime_type,
-            "size": size_bytes,
-        }
+        self.width = width
+        self.height = height
+        self.duration = duration
         self.thumbnail = thumbnail
 
     @property
-    def duration(self) -> typing.Optional[int]:
-        """The duration of this video in milliseconds"""
-        return self.info["duration"]
-
-    @duration.setter
-    def duration(self, value: typing.Optional[int]):
-        self.info["duration"] = value
-
-    @property
-    def height(self) -> typing.Optional[int]:
-        """The height of this image in pixels"""
-        return self.info["h"]
-
-    @height.setter
-    def height(self, value: typing.Optional[int]):
-        self.info["h"] = value
-
-    @property
-    def width(self) -> typing.Optional[int]:
-        """The width of this image in pixels"""
-        return self.info["w"]
-
-    @width.setter
-    def width(self, value: typing.Optional[int]):
-        self.info["w"] = value
+    @deprecated(BaseAttachment.as_body)
+    def info(self):
+        return {
+            "duration": self.duration,
+            "h": self.height,
+            "w": self.width,
+            "mimetype": self.mime_type,
+            "size": self.size_bytes,
+        }
 
     @classmethod
     async def from_file(
@@ -1087,14 +1084,13 @@ class VideoAttachment(BaseAttachment):
 
     def as_body(self, body: typing.Optional[str] = None) -> dict:
         output_body = super().as_body(body)
-        info = self.info.copy()
-        # Remove null elements for width, height, and duration
-        if info.get("h") is None:
-            info.pop("h", None)
-        if info.get("w") is None:
-            info.pop("w", None)
-        if info.get("duration") is None:
-            info.pop("duration", None)
+        info = {"mimetype": self.mime_type, "size": self.size_bytes}
+        if self.height:
+            info["h"] = self.height
+        if self.width:
+            info["w"] = self.width
+        if self.duration:
+            info["duration"] = self.duration
         output_body["info"] = {**output_body["info"], **info}
         if self.thumbnail:
             if self.thumbnail.keys:

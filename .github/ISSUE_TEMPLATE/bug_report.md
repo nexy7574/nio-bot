@@ -3,7 +3,7 @@ name: Bug report
 about: Report a bug in the library
 title: "[BUG] <replace me>"
 labels: bug
-assignees: EEKIM10
+assignees: nexy7574
 
 ---
 

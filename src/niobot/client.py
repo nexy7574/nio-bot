@@ -13,6 +13,7 @@ import typing
 import warnings
 from collections import deque
 from typing import Optional, Union as U
+from urllib.parse import urlparse
 
 import marko
 import nio
@@ -30,7 +31,8 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import Mentions, Typing, deprecated, force_await, run_blocking
+from .patches.nio__api import AsyncClientWithFixedJoin
+from .utils import MXID_REGEX, Mentions, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
 
 try:
@@ -46,7 +48,7 @@ __all__ = ("NioBot",)
 T = typing.TypeVar("T")
 
 
-class NioBot(nio.AsyncClient):
+class NioBot(AsyncClientWithFixedJoin):
     """
     The main client for NioBot.
 
@@ -66,6 +68,8 @@ class NioBot(nio.AsyncClient):
     :param max_message_cache: The maximum number of messages to cache. Defaults to 1000.
     :param ignore_self: Whether to ignore messages sent by the bot itself. Defaults to False. Useful for self-bots.
     :param import_keys: A key export file and password tuple. These keys will be imported at startup.
+    :param startup_presence: The presence to set on startup. `False` disables presence altogether, and `None`
+    is automatic based on the startup progress.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -97,6 +101,8 @@ class NioBot(nio.AsyncClient):
         max_message_cache: int = 1000,
         ignore_self: bool = True,
         import_keys: typing.Tuple[os.PathLike, typing.Optional[str]] = None,
+        startup_presence: typing.Literal["online", "unavailable", "offline", False, None] = None,
+        sync_full_state: bool = True,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -225,6 +231,9 @@ class NioBot(nio.AsyncClient):
         self.server_info: typing.Optional[dict] = None
         self.add_command(help_cmd)
 
+        self._startup_presence = startup_presence
+        self._sync_full_state = sync_full_state
+
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
         """
@@ -285,11 +294,11 @@ class NioBot(nio.AsyncClient):
                         self.log.debug("Found DM room in sync: %s", room_id)
                         self.direct_rooms[event.state_key] = self.rooms[room_id]
 
-    async def _auto_join_room_callback(self, room: nio.MatrixRoom, _: nio.InviteMemberEvent):
+    async def _auto_join_room_callback(self, room: nio.MatrixRoom, event: nio.InviteMemberEvent):
         """Callback for auto-joining rooms"""
         if self.auto_join_rooms:
             self.log.info("Joining room %s", room.room_id)
-            result = await self.join(room.room_id)
+            result = await self.join(room.room_id, reason=f"Auto-joining from invite sent by {event.sender}")
             if isinstance(result, nio.JoinError):
                 self.log.error("Failed to join room %s: %s", room.room_id, result.message)
             else:
@@ -920,6 +929,21 @@ class NioBot(nio.AsyncClient):
 
         return result
 
+    @staticmethod
+    def parse_user_mentions(content: str) -> typing.List[str]:
+        results = MXID_REGEX.findall(content)
+
+        def filter_func(mxid: str):
+            if len(mxid) > 255:
+                return False  # too long
+            _, server_name = mxid.split(":", 1)
+            parsed_sn = urlparse("https://" + server_name)
+            if not parsed_sn.hostname:
+                return False
+            return True
+
+        return list(filter(filter_func, results))
+
     async def send_message(
         self,
         room: U[nio.MatrixRoom, nio.MatrixUser, str],
@@ -1043,6 +1067,10 @@ class NioBot(nio.AsyncClient):
         if reply_to:
             body["m.relates_to"] = {"m.in_reply_to": {"event_id": self._get_id(reply_to)}}
         if mentions:
+            body.update(mentions.as_body())
+        elif mentions is None and content:
+            mxids = self.parse_user_mentions(content)
+            mentions = Mentions("@room" in content, *mxids)
             body.update(mentions.as_body())
 
         if override:
@@ -1217,12 +1245,6 @@ class NioBot(nio.AsyncClient):
             await self.import_keys(*map(str, self.__key_import))
 
         if password or sso_token:
-            if password:
-                self.log.critical(
-                    "Logging in with a password is insecure, slow, and clunky. "
-                    "An access token will be issued after logging in, please use that. For more information, see:"
-                    "https://docs.nio-bot.dev/guides/001-getting-started/#why-is-logging-in-with-a-password-so-bad"
-                )
             self.log.info("Logging in with a password or SSO token")
             login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
             if isinstance(login_response, nio.LoginError):
@@ -1260,7 +1282,15 @@ class NioBot(nio.AsyncClient):
             self.server_info = await response.json()
             self.log.debug("Server details: %r", self.server_info)
         self.log.info("Performing first sync...")
-        result = await self.sync(timeout=30000, full_state=True, set_presence="unavailable")
+
+        def presence_getter(stage: int) -> Optional[str]:
+            if self._startup_presence is False:
+                return
+            elif self._startup_presence is None:
+                return ("unavailable", "online")[stage]
+            return self._startup_presence
+
+        result = await self.sync(timeout=30000, full_state=self._sync_full_state, set_presence=presence_getter(0))
         if not isinstance(result, nio.SyncResponse):
             raise NioBotException("Failed to perform first sync.", result)
         self.is_ready.set()
@@ -1269,8 +1299,8 @@ class NioBot(nio.AsyncClient):
         try:
             await self.sync_forever(
                 timeout=30000,
-                full_state=True,
-                set_presence="online",
+                full_state=self._sync_full_state,
+                set_presence=presence_getter(1),
             )
         finally:
             self.log.info("Closing http session.")
@@ -1297,3 +1327,26 @@ class NioBot(nio.AsyncClient):
         :return:
         """
         asyncio.run(self.start(password=password, access_token=access_token, sso_token=sso_token))
+
+    async def _resolve_room_or_user_id(self, target: U[nio.MatrixUser, nio.MatrixRoom, str]) -> str:
+        """Returns either a user ID (@example:example.example) or room ID (!123ABC:example.example)"""
+        if isinstance(target, nio.MatrixUser):
+            return target.user_id
+        elif isinstance(target, nio.MatrixRoom):
+            return target.room_id
+        elif isinstance(target, str):
+            if target.startswith("@"):
+                return target
+            if target.startswith("#"):
+                response = await self.room_resolve_alias(target)
+                if isinstance(response, nio.RoomResolveAliasError):
+                    raise GenericMatrixError("Unable to resolve room alias %r." % target, response=response)
+                room = self.rooms.get(response.room_id)
+                if not room:
+                    raise ValueError("Room with ID %r is not known." % response.room_id)
+
+                return room.room_id
+            else:
+                raise ValueError("target must be a room or user ID.")
+        else:
+            raise TypeError("target must be a MatrixUser, MatrixRoom, or string; got %r" % target)
