@@ -216,6 +216,6 @@ class Context:
             message_type=message_type,
             content_type=content_type,
             override=override,
-            mentions=mentions
+            mentions=mentions,
         )
         return ContextualResponse(self, result)

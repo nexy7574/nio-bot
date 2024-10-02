@@ -1,5 +1,4 @@
 import pytest
-
 from niobot.utils import unblocking
 
 

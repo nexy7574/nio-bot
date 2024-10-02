@@ -104,7 +104,7 @@ class NioBot(AsyncClientWithFixedJoin):
         import_keys: typing.Tuple[os.PathLike, typing.Optional[str]] = None,
         startup_presence: typing.Literal["online", "unavailable", "offline", False, None] = None,
         sync_full_state: bool = True,
-        default_parse_mentions: bool = True
+        default_parse_mentions: bool = True,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
