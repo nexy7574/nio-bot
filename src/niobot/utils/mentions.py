@@ -1,3 +1,4 @@
+import typing
 from typing import List
 
 __all__ = ("Mentions",)
@@ -22,7 +23,7 @@ class Mentions:
     def __repr__(self) -> str:
         return f"Mentions({self.room}, *{self.user_ids})"
 
-    def as_body(self) -> dict[str, dict[str, bool | list[str]]]:
+    def as_body(self) -> typing.Dict[str, typing.Dict[str, typing.Union[bool, typing.List[str]]]]:
         """Returns the mentions object as a body dict (e.g. `{m.mentions: {room: true, user_ids: []}}`)"""
         d = {}
         if self.room:
