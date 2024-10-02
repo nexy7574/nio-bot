@@ -37,3 +37,9 @@ class Mentions:
         if "m.mentions" in body:
             body = body["m.mentions"]
         return cls(body.get("room", False), *body.get("user_ids", []))
+
+    def add_user(self, mxid: str) -> "Mentions":
+        """Adds a user to the mentions list"""
+        if mxid not in self.user_ids:
+            self.user_ids.append(mxid)
+        return self
