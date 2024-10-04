@@ -719,8 +719,17 @@ class NioBot(AsyncClientWithFixedJoin):
             if event_id == event.event_id:
                 return room, event
 
-    async def fetch_message(self, room_id: str, event_id: str):
-        """Fetches a message from the server."""
+    async def fetch_message(self, room_id: str, event_id: str) -> typing.Tuple[
+        typing.Optional[nio.MatrixRoom], nio.Event
+    ]:
+        """
+        Fetches an event from the server.
+        
+        This function will try to get the event from the internal cache first, falling back to querying it from the 
+        homeserver.
+        
+        Note that the first value, room, may be None in some situations.
+        """
         cached = self.get_cached_message(event_id)
         if cached:
             return cached
@@ -729,7 +738,7 @@ class NioBot(AsyncClientWithFixedJoin):
         result = await self.room_get_event(room_id, event_id)
         if isinstance(result, nio.RoomGetEventError):
             raise NioBotException(f"Failed to fetch message {event_id} from {room_id}: {result}", original=result)
-        return result
+        return self.rooms.get(room_id), result.event
 
     async def wait_for_message(
         self,
@@ -854,6 +863,20 @@ class NioBot(AsyncClientWithFixedJoin):
             self.log.info("Uploading thumbnail %r (encrypted: %r)", base.thumbnail, encrypted)
             previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
         return previous
+
+    async def resolve_reply_chain(
+            self, 
+            room_id: str, 
+            event: nio.RoomMessage, 
+            depth: int = 0,
+            max_depth: int = 10
+    ) -> typing.List[nio.Event]:
+        """Resolves a reply chain for a given event."""
+        chain = [event]
+        if event.source.get("m.relates_to", {}).get("m.in_reply_to"):
+            _, reply = await self.fetch_message(room_id, event.source["m.relates_to"]["m.in_reply_to"]["event_id"])
+            chain += await self.resolve_reply_chain(room_id, reply, depth + 1, max_depth)  # type: ignore
+        return chain
 
     @typing.overload
     async def get_dm_rooms(self) -> typing.Dict[str, typing.List[str]]:
