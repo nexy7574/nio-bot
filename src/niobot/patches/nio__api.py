@@ -1,9 +1,20 @@
 # Join API fix
+import logging
 from typing import Union as U
 
-from nio import Api, AsyncClient, JoinError, JoinResponse, RoomLeaveError, RoomLeaveResponse
+from nio import (
+    Api,
+    AsyncClient,
+    DirectRoomsResponse,
+    JoinError,
+    JoinResponse,
+    Response,
+    RoomLeaveError,
+    RoomLeaveResponse,
+)
 
 __all__ = ("AsyncClientWithFixedJoin",)
+logger = logging.getLogger(__name__)
 
 
 class AsyncClientWithFixedJoin(AsyncClient):
@@ -21,4 +32,30 @@ class AsyncClientWithFixedJoin(AsyncClient):
         data = {}
         if reason is not None:
             data["reason"] = reason
-        return await self._send(RoomLeaveResponse, method, path, Api.to_json(data))
+        r = await self._send(RoomLeaveResponse, method, path, Api.to_json(data))
+        if isinstance(r, RoomLeaveResponse):
+            # Remove from account data
+            # First, need to get the DM list.
+            # THIS IS NOT THREAD SAFE
+            # hell it probably isn't even async safe.
+            rooms = await self.list_direct_rooms()
+            # NOW it's fine
+            cpy = rooms.rooms.copy()
+
+            updated = False
+            if isinstance(rooms, DirectRoomsResponse):
+                for user_id, dm_rooms in rooms.rooms.items():
+                    for dm_room_id in dm_rooms:
+                        if dm_room_id == room_id:
+                            cpy[user_id].remove(room_id)
+                            updated = True
+                            break
+                else:
+                    logger.warning("Room %s not found in DM list. Possibly not a DM.", room_id)
+
+            if updated:
+                logger.debug(f"Updating DM list in account data from {rooms.rooms} to {cpy}")
+                # Update the DM list
+                method, path = "PUT", Api._build_path(["user", self.user_id, "account_data", "m.direct"])
+                await self._send(Response, method, path, Api.to_json(cpy))
+        return r
