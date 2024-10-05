@@ -34,6 +34,7 @@ class AsyncClientWithFixedJoin(AsyncClient):
             data["reason"] = reason
         r = await self._send(RoomLeaveResponse, method, path, Api.to_json(data))
         if isinstance(r, RoomLeaveResponse):
+            logger.debug("Left a room successfully. Updating account data if it was a DM room.")
             # Remove from account data
             # First, need to get the DM list.
             # THIS IS NOT THREAD SAFE
@@ -57,5 +58,5 @@ class AsyncClientWithFixedJoin(AsyncClient):
                 logger.debug(f"Updating DM list in account data from {rooms.rooms} to {cpy}")
                 # Update the DM list
                 method, path = "PUT", Api._build_path(["user", self.user_id, "account_data", "m.direct"])
-                await self._send(Response, method, path, Api.to_json(cpy))
+                logger.debug("Account data response: %r", await self._send(Response, method, path, Api.to_json(cpy)))
         return r
