@@ -46,11 +46,11 @@ class AsyncClientWithFixedJoin(AsyncClient):
             updated = False
             if isinstance(rooms, DirectRoomsResponse):
                 for user_id, dm_rooms in rooms.rooms.items():
-                    for dm_room_id in dm_rooms:
-                        if dm_room_id == room_id:
-                            cpy[user_id].remove(room_id)
-                            updated = True
-                            break
+                    if room_id in dm_rooms:
+                        cpy[user_id].remove(room_id)
+                        logger.debug("Removed room ID %r from DM rooms with %r", room_id, user_id)
+                        updated = True
+                        break
                 else:
                     logger.warning("Room %s not found in DM list. Possibly not a DM.", room_id)
 
