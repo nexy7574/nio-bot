@@ -1636,6 +1636,17 @@
 
 
         <p>The main client for NioBot.</p>
+<div class="admonition warning">
+<p class="admonition-title">Forcing an initial sync is slow</p>
+<p>(for the <code>force_initial_sync</code> parameter)
+By default, nio-bot stores what the last sync token was, and will resume from that next time it starts.
+This allows you to start up near instantly, and makes development easier and faster.</p>
+<p>However, in some cases, especially if you are missing some metadata such as rooms or their members,
+you may need to perform an initial (sometimes referred to as "full") sync.
+An initial sync will fetch ALL the data from the server, rather than just what has changed since the last sync.</p>
+<p>This initial sync can take several minutes, especially the larger your bot gets, and should only be used
+if you are missing aforementioned data that you need.</p>
+</div>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1871,6 +1882,20 @@
             </td>
             <td>
                   <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>force_initial_sync</code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forcefully perform a full initial sync at startup.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
             </td>
           </tr>
       </tbody>
