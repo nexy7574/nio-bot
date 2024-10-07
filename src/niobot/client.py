@@ -43,8 +43,6 @@ if typing.TYPE_CHECKING:
     from .context import Context
 
 # Join API fix
-import logging
-from typing import Union as U
 
 from nio import (
     Api,
@@ -52,11 +50,9 @@ from nio import (
     DirectRoomsResponse,
     JoinError,
     JoinResponse,
-    Response,
     RoomLeaveError,
     RoomLeaveResponse,
 )
-from .exceptions import GenericMatrixError
 
 __all__ = ("NioBot",)
 
@@ -66,16 +62,16 @@ T = typing.TypeVar("T")
 class NioBot(AsyncClient):
     """
     The main client for NioBot.
-    
+
     !!! warning "Forcing an initial sync is slow"
         (for the `force_initial_sync` parameter)
         By default, nio-bot stores what the last sync token was, and will resume from that next time it starts.
         This allows you to start up near instantly, and makes development easier and faster.
-        
+
         However, in some cases, especially if you are missing some metadata such as rooms or their members,
         you may need to perform an initial (sometimes referred to as "full") sync.
         An initial sync will fetch ALL the data from the server, rather than just what has changed since the last sync.
-        
+
         This initial sync can take several minutes, especially the larger your bot gets, and should only be used
         if you are missing aforementioned data that you need.
 
@@ -133,7 +129,7 @@ class NioBot(AsyncClient):
         startup_presence: typing.Literal["online", "unavailable", "offline", False, None] = None,
         sync_full_state: bool = True,
         default_parse_mentions: bool = True,
-        force_initial_sync: bool = False
+        force_initial_sync: bool = False,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -156,10 +152,7 @@ class NioBot(AsyncClient):
 
         if ENCRYPTION_ENABLED:
             if not config:
-                config = nio.AsyncClientConfig(
-                    encryption_enabled=True, 
-                    store_sync_tokens=force_initial_sync is False
-                )
+                config = nio.AsyncClientConfig(encryption_enabled=True, store_sync_tokens=force_initial_sync is False)
                 self.log.info("Encryption support enabled automatically.")
                 if force_initial_sync:
                     self.log.warning("An initial sync is being forced. Your next/first sync() call will be slow.")
@@ -1389,13 +1382,11 @@ class NioBot(AsyncClient):
                 raise ValueError("target must be a room or user ID.")
         else:
             raise TypeError("target must be a MatrixUser, MatrixRoom, or string; got %r" % target)
-    
-    async def get_account_data(self, key: str, *, room_id: str = None) -> typing.Union[
-        dict, list, None
-    ]:
+
+    async def get_account_data(self, key: str, *, room_id: str = None) -> typing.Union[dict, list, None]:
         """
         Gets account data for the currently logged in account
-        
+
         :param key: the key to get
         :param room_id: The room ID to get account data from. If not provided, defaults to user-level.
         :returns: The account data, or None if it doesn't exist
@@ -1408,11 +1399,11 @@ class NioBot(AsyncClient):
             if response.status != 200:
                 return None
             return await response.json()
-    
+
     async def set_account_data(self, key: str, data: dict, *, room_id: str = None) -> None:
         """
         Sets account data for the currently logged in account
-        
+
         :param key: the key to set
         :param data: the data to set
         :param room_id: The room ID to set account data in. If not provided, defaults to user-level.
@@ -1429,7 +1420,7 @@ class NioBot(AsyncClient):
     async def join(self, room_id: str, reason: str = None, is_dm: bool = False) -> U[JoinResponse, JoinError]:
         """
         Joins a room. room_id must be a room ID, not alias
-        
+
         :param room_id: The room ID or alias to join
         :param reason: The reason for joining the room, if any
         :param is_dm: Manually marks this room as a direct message.
