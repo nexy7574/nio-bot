@@ -51,6 +51,18 @@ T = typing.TypeVar("T")
 class NioBot(AsyncClientWithFixedJoin):
     """
     The main client for NioBot.
+    
+    !!! warning "Forcing an initial sync is slow"
+        (for the `force_initial_sync` parameter)
+        By default, nio-bot stores what the last sync token was, and will resume from that next time it starts.
+        This allows you to start up near instantly, and makes development easier and faster.
+        
+        However, in some cases, especially if you are missing some metadata such as rooms or their members,
+        you may need to perform an initial (sometimes referred to as "full") sync.
+        An initial sync will fetch ALL the data from the server, rather than just what has changed since the last sync.
+        
+        This initial sync can take several minutes, especially the larger your bot gets, and should only be used
+        if you are missing aforementioned data that you need.
 
     :param homeserver: The homeserver to connect to. e.g. https://matrix-client.matrix.org
     :param user_id: The user ID to log in as. e.g. @user:matrix.org
@@ -71,6 +83,7 @@ class NioBot(AsyncClientWithFixedJoin):
     :param startup_presence: The presence to set on startup. `False` disables presence altogether, and `None`
     is automatic based on the startup progress.
     :param default_parse_mentions: Whether to parse mentions in send_message by default to make them intentional.
+    :param force_initial_sync: Forcefully perform a full initial sync at startup.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -105,6 +118,7 @@ class NioBot(AsyncClientWithFixedJoin):
         startup_presence: typing.Literal["online", "unavailable", "offline", False, None] = None,
         sync_full_state: bool = True,
         default_parse_mentions: bool = True,
+        force_initial_sync: bool = False
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -127,8 +141,13 @@ class NioBot(AsyncClientWithFixedJoin):
 
         if ENCRYPTION_ENABLED:
             if not config:
-                config = nio.AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True)
+                config = nio.AsyncClientConfig(
+                    encryption_enabled=True, 
+                    store_sync_tokens=force_initial_sync is False
+                )
                 self.log.info("Encryption support enabled automatically.")
+                if force_initial_sync:
+                    self.log.warning("An initial sync is being forced. Your next/first sync() call will be slow.")
         else:
             self.log.info("Encryption support is not available (are the e2ee extras installed?)")
 
