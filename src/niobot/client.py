@@ -31,7 +31,6 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .patches.nio__api import AsyncClientWithFixedJoin
 from .utils import MXID_REGEX, Mentions, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
 
@@ -43,12 +42,28 @@ except ImportError:
 if typing.TYPE_CHECKING:
     from .context import Context
 
+# Join API fix
+import logging
+from typing import Union as U
+
+from nio import (
+    Api,
+    AsyncClient,
+    DirectRoomsResponse,
+    JoinError,
+    JoinResponse,
+    Response,
+    RoomLeaveError,
+    RoomLeaveResponse,
+)
+from .exceptions import GenericMatrixError
+
 __all__ = ("NioBot",)
 
 T = typing.TypeVar("T")
 
 
-class NioBot(AsyncClientWithFixedJoin):
+class NioBot(AsyncClient):
     """
     The main client for NioBot.
     
@@ -519,7 +534,7 @@ class NioBot(AsyncClientWithFixedJoin):
             a running [asyncio][] event loop. If you use the event loop in `Module.__init__`, you will get an error,
             and the module will fail the mount.
 
-            You can get around this by deferring mounting your modules until the `bot.on_ready` event is fired,
+            You can get around this by deferring mounting your modules until the `ready` event is fired,
             at which point not only will the first full sync have completed (meaning the bot has all of its caches
             populated), but the event loop will be running.
 
@@ -1374,3 +1389,90 @@ class NioBot(AsyncClientWithFixedJoin):
                 raise ValueError("target must be a room or user ID.")
         else:
             raise TypeError("target must be a MatrixUser, MatrixRoom, or string; got %r" % target)
+    
+    async def get_account_data(self, key: str, *, room_id: str = None) -> typing.Union[
+        dict, list, None
+    ]:
+        """
+        Gets account data for the currently logged in account
+        
+        :param key: the key to get
+        :param room_id: The room ID to get account data from. If not provided, defaults to user-level.
+        :returns: The account data, or None if it doesn't exist
+        """
+        path = ["user", self.user_id, "account_data", key]
+        if room_id:
+            path = ["user", self.user_id, "rooms", room_id, "account_data", key]
+        method, path = "GET", Api._build_path(path)
+        async with self.send(method, path) as response:
+            if response.status != 200:
+                return None
+            return await response.json()
+    
+    async def set_account_data(self, key: str, data: dict, *, room_id: str = None) -> None:
+        """
+        Sets account data for the currently logged in account
+        
+        :param key: the key to set
+        :param data: the data to set
+        :param room_id: The room ID to set account data in. If not provided, defaults to user-level.
+        """
+        path = ["user", self.user_id, "account_data", key]
+        if room_id:
+            path = ["user", self.user_id, "rooms", room_id, "account_data", key]
+        method, path = "PUT", Api._build_path(path)
+        async with self.send(method, path, data, {"Content-Type": "application/json"}) as response:
+            if response.status != 200:
+                return None
+            return await response.json()
+
+    async def join(self, room_id: str, reason: str = None, is_dm: bool = False) -> U[JoinResponse, JoinError]:
+        """
+        Joins a room. room_id must be a room ID, not alias
+        
+        :param room_id: The room ID or alias to join
+        :param reason: The reason for joining the room, if any
+        :param is_dm: Manually marks this room as a direct message.
+        """
+        method, path = Api.join(self.access_token, room_id)
+        data = {}
+        if reason is not None:
+            data["reason"] = reason
+        r = await self._send(JoinResponse, method, path, Api.to_json(data))
+        if not isinstance(r, JoinResponse):
+            return r
+        return r
+
+    async def room_leave(self, room_id: str, reason: str = None) -> U[RoomLeaveError, RoomLeaveResponse]:
+        """Leaves a room. room_id must be an ID, not alias"""
+        method, path = Api.room_leave(self.access_token, room_id)
+        data = {}
+        if reason is not None:
+            data["reason"] = reason
+        r = await self._send(RoomLeaveResponse, method, path, Api.to_json(data))
+        if isinstance(r, RoomLeaveResponse):
+            self.log.debug("Left a room successfully. Updating account data if it was a DM room.")
+            # Remove from account data
+            # First, need to get the DM list.
+            # THIS IS NOT THREAD SAFE
+            # hell it probably isn't even async safe.
+            rooms = await self.list_direct_rooms()
+            # NOW it's fine
+            cpy = rooms.rooms.copy()
+
+            updated = False
+            if isinstance(rooms, DirectRoomsResponse):
+                for user_id, dm_rooms in rooms.rooms.items():
+                    if room_id in dm_rooms:
+                        cpy[user_id].remove(room_id)
+                        self.log.debug("Removed room ID %r from DM rooms with %r", room_id, user_id)
+                        updated = True
+                        break
+                else:
+                    self.log.warning("Room %s not found in DM list. Possibly not a DM.", room_id)
+
+            if updated:
+                self.log.debug(f"Updating DM list in account data from {rooms.rooms} to {cpy}")
+                # Update the DM list
+                self.log.debug("Account data response: %r", await self.set_account_data("m.direct", cpy))
+        return r
