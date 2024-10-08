@@ -1,15 +1,8 @@
 import asyncio
-import importlib.metadata
 import logging
-import pathlib
 import platform
 import re
-import shutil
 import sys
-import typing
-
-import packaging.specifiers
-import packaging.version
 
 import niobot
 
@@ -89,7 +82,7 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
     status_code = None
     try:
         response = httpx.post(
-            f"{homeserver}/_matrix/client/r0/login",
+            f"{homeserver}/_matrix/client/v3/login",
             json={
                 "type": "m.login.password",
                 "identifier": {"type": "m.id.user", "user": username},
