@@ -1356,6 +1356,7 @@ Guess what, you can do just that with nio-bot!</p>
 <ul>
 <li>Python with sqlite support</li>
 <li><code>libolm</code> (use your system package manager, like apt or pacman) in order to use end-to-end encryption.</li>
+<li><code>libmagic</code> (usually you can just install <code>python3-magic</code>) which is required for attachments.</li>
 <li>A decent network connection (at <em>least</em> a few megabits a second, preferably more)</li>
 <li>At least 100mb free storage space (for the database and other files)</li>
 </ul>
@@ -1367,33 +1368,6 @@ Guess what, you can do just that with nio-bot!</p>
 If you would like to install support for end-to-end encryption, you can install the following instead:
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>nio-bot<span class="o">[</span>cli,e2ee<span class="o">]</span>
 </span></code></pre></div></p>
-<p>After you've done that, verify everything installed fine by running <code>niocli version</code>:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span><span class="o">[</span>me@host<span class="w"> </span>test-niobot<span class="o">]</span>$<span class="w"> </span>niocli<span class="w"> </span>version
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>NioBot<span class="w"> </span>version:<span class="w"> </span><span class="m">1</span>.1.0b1.post2.dev18<span class="w"> </span><span class="o">(</span>v1.1.0,<span class="w"> </span>build<span class="w"> </span><span class="m">18</span>,<span class="w"> </span>pre<span class="w"> </span>b2,<span class="w"> </span>commit<span class="w"> </span>g38dc914<span class="o">)</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>matrix-nio<span class="w"> </span>version:<span class="w"> </span><span class="m">0</span>.22.1
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>Python<span class="w"> </span>version:<span class="w"> </span><span class="m">3</span>.11.5
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>Python<span class="w"> </span>implementation:<span class="w"> </span>CPython
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>Operating<span class="w"> </span>System:<span class="w"> </span>Linux-6.6.1-arch1-1-x86_64-with-glibc2.38<span class="w"> </span><span class="o">(</span>Arch<span class="w"> </span>Linux/Unknown<span class="w"> </span>-<span class="w"> </span>Arch<span class="w"> </span>Linux<span class="o">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>Architecture:<span class="w"> </span>x86_64
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>OLM<span class="w"> </span>Installed:<span class="w"> </span>Yes
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>Free<span class="w"> </span>Disk<span class="w"> </span>Space:<span class="w"> </span>/<span class="w"> </span><span class="o">(</span><span class="m">38</span>.3%<span class="o">)</span><span class="w"> </span>/boot<span class="w"> </span><span class="o">(</span><span class="m">66</span>.02%<span class="o">)</span>
-</span></code></pre></div></p>
-<div class="admonition info">
-<p class="admonition-title">Info</p>
-<p>Yes, this output is long and verbose. It is intentionally long and verbose in order to provide as much
-information as possible for bug reports. All you need to do is make sure there aren't too many red flags.</p>
-<p>For example, if you want end to end encryption, but <code>OLM Installed</code> is a red <code>No</code>, then you need to install
-<code>libolm</code>.</p>
-</div>
-<details class="warning">
-<summary>My architecture is red!</summary>
-<p>You will notice any sort of other architecture outside of <code>x86_64</code> is red - this does not mean that nio-bot won't
-work! Currently, nio-bot is mainly developed on an AMD64 architecture, so support is only officially for that
-arch. However, several people have run nio-bot on ARM64 (raspberry pi, at least), and it works fine.</p>
-<p>You can safely ignore this warning if you are running on a different architecture.</p>
-<p>If anything else is red though, you should look into it.</p>
-</details>
 <h2 id="creating-the-start-of-your-bot">Creating the start of your bot<a class="headerlink" href="#creating-the-start-of-your-bot" title="Permanent link">&para;</a></h2>
 <p>In our instance here, we'll create a few files:</p>
 <ol>
@@ -1407,12 +1381,12 @@ arch. However, several people have run nio-bot on ARM64 (raspberry pi, at least)
 </ol>
 <h3 id="file-structure">File structure<a class="headerlink" href="#file-structure" title="Permanent link">&para;</a></h3>
 <p>And as such, our directory structure will look like this:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>test-niobot/
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>├── config.py
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>├── fun.py
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>├── requirements.txt
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>├── store/
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>└── main.py
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>test-niobot/
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── config.py
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── fun.py
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├── requirements.txt
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>├── store/
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>└── main.py
 </span></code></pre></div></p>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
@@ -1422,44 +1396,45 @@ all of your personal information, such as your password, and should not be share
 encryption keys later on.</p>
 </div>
 <h3 id="setting-up-configpy">Setting up config.py<a class="headerlink" href="#setting-up-configpy" title="Permanent link">&para;</a></h3>
-<p>In our <code>config.py</code> file, we'll add the following:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">HOMESERVER</span> <span class="o">=</span> <span class="s2">&quot;https://matrix.org&quot;</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">USER_ID</span> <span class="o">=</span> <span class="s2">&quot;@my-username:matrix.org&quot;</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">PASSWORD</span> <span class="o">=</span> <span class="s2">&quot;my-password&quot;</span>
-</span></code></pre></div></p>
+<p>For this example, we will assume you are using <a href="https://matrix.org">https://matrix.org</a> as your homeserver.</p>
+<p>In our <code>config.py</code> file, we'll add the following:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">HOMESERVER</span> <span class="o">=</span> <span class="s2">&quot;https://matrix-client.matrix.org&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">USER_ID</span> <span class="o">=</span> <span class="s2">&quot;@my-username:matrix.org&quot;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">PASSWORD</span> <span class="o">=</span> <span class="s2">&quot;my-password&quot;</span>
+</span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Make sure to replace the above with your own homeserver, user ID, and password!</p>
 </div>
 <h3 id="making-the-bot-runtime-file">Making the bot runtime file<a class="headerlink" href="#making-the-bot-runtime-file" title="Permanent link">&para;</a></h3>
-<p>And, to make a simple bot, you can just copy the below template into your <code>main.py</code> file:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">import</span> <span class="nn">config</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">bot</span> <span class="o">=</span> <span class="n">niobot</span><span class="o">.</span><span class="n">NioBot</span><span class="p">(</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">homeserver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">HOMESERVER</span><span class="p">,</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">user_id</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">USER_ID</span><span class="p">,</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">device_id</span><span class="o">=</span><span class="s1">&#39;my-device-id&#39;</span><span class="p">,</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">store_path</span><span class="o">=</span><span class="s1">&#39;./store&#39;</span><span class="p">,</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">command_prefix</span><span class="o">=</span><span class="s2">&quot;!&quot;</span><span class="p">,</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">owner_id</span><span class="o">=</span><span class="s2">&quot;@my-matrix-username:matrix.org&quot;</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="p">)</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="c1"># We also want to load `fun.py`&#39;s commands before starting:</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="n">bot</span><span class="o">.</span><span class="n">mount_module</span><span class="p">(</span><span class="s2">&quot;fun&quot;</span><span class="p">)</span>  <span class="c1"># looks at ./fun.py</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;ready&quot;</span><span class="p">)</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">on_ready</span><span class="p">(</span><span class="n">_</span><span class="p">):</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    <span class="c1"># That first argument is needed as the first result of the sync loop is passed to ready. Without it, this event</span>
-</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    <span class="c1"># will fail to fire, and will cause a potentially catasrophic failure.</span>
-</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bot is ready!&quot;</span><span class="p">)</span>
-</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
-</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>
-</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
-</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>  <span class="c1"># can be invoked with &quot;!ping&quot;</span>
-</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Pong!&quot;</span><span class="p">)</span>
-</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>
-</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="n">bot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">password</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">PASSWORD</span><span class="p">)</span>
-</span></code></pre></div></p>
+<p>And, to make a simple bot, you can just copy the below template into your <code>main.py</code> file:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">import</span> <span class="nn">config</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">bot</span> <span class="o">=</span> <span class="n">niobot</span><span class="o">.</span><span class="n">NioBot</span><span class="p">(</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">homeserver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">HOMESERVER</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">user_id</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">USER_ID</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">device_id</span><span class="o">=</span><span class="s1">&#39;my-device-id&#39;</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">store_path</span><span class="o">=</span><span class="s1">&#39;./store&#39;</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">command_prefix</span><span class="o">=</span><span class="s2">&quot;!&quot;</span><span class="p">,</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">owner_id</span><span class="o">=</span><span class="s2">&quot;@my-matrix-username:matrix.org&quot;</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># We also want to load `fun.py`&#39;s commands before starting:</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="n">bot</span><span class="o">.</span><span class="n">mount_module</span><span class="p">(</span><span class="s2">&quot;fun&quot;</span><span class="p">)</span>  <span class="c1"># looks at ./fun.py</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;ready&quot;</span><span class="p">)</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">on_ready</span><span class="p">(</span><span class="n">_</span><span class="p">):</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    <span class="c1"># That first argument is needed as the first result of the sync loop is passed to ready. Without it, this event</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    <span class="c1"># will fail to fire, and will cause a potentially catasrophic failure.</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bot is ready!&quot;</span><span class="p">)</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>  <span class="c1"># can be invoked with &quot;!ping&quot;</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Pong!&quot;</span><span class="p">)</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="n">bot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">password</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">PASSWORD</span><span class="p">)</span>
+</span></code></pre></div>
 <details class="warning" open="open">
 <summary>About <code>owner_id</code></summary>
 <p><code>owner_id</code> is intended to tell nio-bot who owns the current instance.
@@ -1467,33 +1442,36 @@ encryption keys later on.</p>
 The only time you should do that is if you want to run the bot on the same account you use.</p>
 <p>Otherwise, set this to be your own user ID, so that you can use any "owner only" commands.</p>
 <p>It is not necessary to set this though, so it can be omitted or set to <code>None</code>. Just note that
-<code>NioBot.is_owner(...)</code> will raise an error when used.</p>
+<code>NioBot.is_owner(...)</code> will raise an error when used in that case.</p>
 </details>
 <h4 id="enabling-logging">Enabling logging<a class="headerlink" href="#enabling-logging" title="Permanent link">&para;</a></h4>
 <p>You'll probably find that it's useful to enable debug logging while you're developing your bot. To do that, you can
 add the following to your <code>main.py</code> file:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">import</span> <span class="nn">niobot</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># or to save to a file (uncomment):</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># logging.basicConfig(level=logging.DEBUG, filename=&quot;bot.log&quot;)</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">bot</span> <span class="o">=</span> <span class="n">niobot</span><span class="o">.</span><span class="n">NioBot</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="o">...</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">import</span> <span class="nn">niobot</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># or to save to a file (uncomment):</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># logging.basicConfig(level=logging.DEBUG, filename=&quot;bot.log&quot;)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">bot</span> <span class="o">=</span> <span class="n">niobot</span><span class="o">.</span><span class="n">NioBot</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="o">...</span>
 </span></code></pre></div></p>
+<p>This will print an awful lot of text to your console, but will ultimately be helpful for debugging any
+issues you are encountering, as it will show you a lot of what niobot is doing.</p>
 <h3 id="making-funpy">Making fun.py<a class="headerlink" href="#making-funpy" title="Permanent link">&para;</a></h3>
 <p>Now, fun.py is going to be a module.</p>
 <p>Modules are a great way to organize your code, and make it easier to manage. They also allow you to
 easily add new commands to your bot without having to edit the main file, which means you can split your code up, and
 make it... modular!</p>
-<p>To start, we need to make the fun.py python file, and add the following:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">class</span> <span class="nc">MyFunModule</span><span class="p">(</span><span class="n">niobot</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>  <span class="c1"># subclassing niobot.Module is mandatory for auto-detection.</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">):</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span>  <span class="c1"># bot is the NioBot instance you made in main.py!</span>
+<p>To start, we need to make the fun.py python file, and add the following:</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">class</span> <span class="nc">MyFunModule</span><span class="p">(</span><span class="n">niobot</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>  <span class="c1"># subclassing niobot.Module is mandatory for auto-detection.</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">):</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bot</span><span class="p">)</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="c1"># This gives you access to `self.bot`, which is the NioBot instance you made in main.py!</span>
 </span></code></pre></div>
 And that's it! You made your module!</p>
 <h4 id="but-wait-theres-more">But wait, there's more!<a class="headerlink" href="#but-wait-theres-more" title="Permanent link">&para;</a></h4>
@@ -1529,19 +1507,19 @@ with the bot, however is designed specifically with modules in mind.</p>
 </table>
 <p>Do be aware though, both decorators will take the exact same arguments as <a class="autorefs autorefs-internal" href="../../reference/commands/#niobot.commands.Command"><code>niobot.Command</code></a>.</p>
 <h4 id="adding-a-command-to-funpy">Adding a command to fun.py<a class="headerlink" href="#adding-a-command-to-funpy" title="Permanent link">&para;</a></h4>
-<p>So, let's add a command to our module:
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">class</span> <span class="nc">MyFunModule</span><span class="p">(</span><span class="n">niobot</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>  <span class="c1"># subclassing niobot.Module is mandatory for auto-detection.</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">):</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span>  <span class="c1"># bot is the NioBot instance you made in main.py!</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="nd">@niobot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Hello </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="n">ctx</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">sender</span><span class="p">)</span>
+<p>So, let's add a command to our module:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">class</span> <span class="nc">MyFunModule</span><span class="p">(</span><span class="n">niobot</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>  <span class="c1"># subclassing niobot.Module is mandatory for auto-detection.</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">):</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bot</span><span class="p">)</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="nd">@niobot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">niobot</span><span class="o">.</span><span class="n">Context</span><span class="p">):</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Hello </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="n">ctx</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">sender</span><span class="p">)</span>
 </span></code></pre></div>
-This will add a command, <code>!hello</code>, that will reply with "Hello {@author}!"</p>
+<p>This will add a command, <code>!hello</code>, that will reply with "Hello {@author}!"</p>
 <h3 id="starting-the-bot">Starting the bot<a class="headerlink" href="#starting-the-bot" title="Permanent link">&para;</a></h3>
 <p>Hold your horses, you're not quite ready yet!</p>
 <p>Generally, it's a terrible idea to always use a password in your code. It's a security risk,
@@ -1551,13 +1529,13 @@ and in matrix it can result in creating many sessions, which you don't want, esp
 the same session, and to avoid having to use your password in your code.</p>
 <p>You can get your password with <code>niocli get-access-token</code>.
 For example:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span><span class="o">[</span>me@host<span class="w"> </span>test-niobot<span class="o">]</span>$<span class="w"> </span>niocli<span class="w"> </span>get-access-token
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>User<span class="w"> </span>ID<span class="w"> </span><span class="o">(</span>@username:homeserver.tld<span class="o">)</span>:<span class="w"> </span>@test:matrix.org
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>Password<span class="w"> </span><span class="o">(</span>will<span class="w"> </span>not<span class="w"> </span><span class="nb">echo</span><span class="o">)</span>:
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>Device<span class="w"> </span>ID<span class="w"> </span><span class="o">(</span>a<span class="w"> </span>memorable<span class="w"> </span>display<span class="w"> </span>name<span class="w"> </span><span class="k">for</span><span class="w"> </span>this<span class="w"> </span>login,<span class="w"> </span>such<span class="w"> </span>as<span class="w"> </span><span class="s1">&#39;bot-production&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">[</span>host<span class="o">]</span>:
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>Resolving<span class="w"> </span>homeserver...<span class="w"> </span>OK
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>Getting<span class="w"> </span>access<span class="w"> </span>token...<span class="w"> </span>OK
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>Access<span class="w"> </span>token:<span class="w"> </span>syt_&lt;...&gt;
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span><span class="o">[</span>me@host<span class="w"> </span>test-niobot<span class="o">]</span>$<span class="w"> </span>niocli<span class="w"> </span>get-access-token
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>User<span class="w"> </span>ID<span class="w"> </span><span class="o">(</span>@username:homeserver.tld<span class="o">)</span>:<span class="w"> </span>@test:matrix.org
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Password<span class="w"> </span><span class="o">(</span>will<span class="w"> </span>not<span class="w"> </span><span class="nb">echo</span><span class="o">)</span>:
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Device<span class="w"> </span>ID<span class="w"> </span><span class="o">(</span>a<span class="w"> </span>memorable<span class="w"> </span>display<span class="w"> </span>name<span class="w"> </span><span class="k">for</span><span class="w"> </span>this<span class="w"> </span>login,<span class="w"> </span>such<span class="w"> </span>as<span class="w"> </span><span class="s1">&#39;bot-production&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">[</span>host<span class="o">]</span>:
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>Resolving<span class="w"> </span>homeserver...<span class="w"> </span>OK
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>Getting<span class="w"> </span>access<span class="w"> </span>token...<span class="w"> </span>OK
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>Access<span class="w"> </span>token:<span class="w"> </span>syt_&lt;...&gt;
 </span></code></pre></div></p>
 <p>What you're going to do now, is copy the full access token string, and open <code>config.py</code> again
 Now, replace <code>PASSWORD=...</code> with <code>ACCESS_TOKEN="syt_&lt;...&gt;"</code>. Make sure to keep the quotes!</p>
@@ -1571,10 +1549,10 @@ And if you do need it, you already know what it is, why you need it, and how to 
 </details>
 <h4 id="actually-running-the-bot">Actually running the bot<a class="headerlink" href="#actually-running-the-bot" title="Permanent link">&para;</a></h4>
 <p>This is the really simple part, actually. All you need to do now is run <code>main.py</code>!</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span><span class="o">[</span>me@host<span class="w"> </span>test-niobot<span class="o">]</span>$<span class="w"> </span>python<span class="w"> </span>main.py
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>&lt;insert<span class="w"> </span>log<span class="w"> </span>spam<span class="w"> </span>here&gt;
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>Bot<span class="w"> </span>is<span class="w"> </span>ready!
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>&lt;insert<span class="w"> </span>log<span class="w"> </span>spam<span class="w"> </span>here&gt;
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span><span class="o">[</span>me@host<span class="w"> </span>test-niobot<span class="o">]</span>$<span class="w"> </span>python<span class="w"> </span>main.py
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>&lt;insert<span class="w"> </span>log<span class="w"> </span>spam<span class="w"> </span>here&gt;
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>Bot<span class="w"> </span>is<span class="w"> </span>ready!
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>&lt;insert<span class="w"> </span>log<span class="w"> </span>spam<span class="w"> </span>here&gt;
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Its taking FOREVER to log in! is something going wrong?</p>
@@ -1613,56 +1591,56 @@ within a couple seconds, your bot will automatically join your room!</p>
 <h3 id="final-product">Final product<a class="headerlink" href="#final-product" title="Permanent link">&para;</a></h3>
 <details class="abstract">
 <summary>config.py</summary>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">HOMESERVER</span> <span class="o">=</span> <span class="s2">&quot;https://matrix.org&quot;</span>  <span class="c1"># or your homeserver</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">USER_ID</span> <span class="o">=</span> <span class="s2">&quot;@my-bot:matrix.org&quot;</span>  <span class="c1"># your bot account&#39;s user ID</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">ACCESS_TOKEN</span> <span class="o">=</span> <span class="s2">&quot;syt_&lt;...&gt;&quot;</span>  <span class="c1"># your bot account&#39;s access token</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">HOMESERVER</span> <span class="o">=</span> <span class="s2">&quot;https://matrix.org&quot;</span>  <span class="c1"># or your homeserver</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">USER_ID</span> <span class="o">=</span> <span class="s2">&quot;@my-bot:matrix.org&quot;</span>  <span class="c1"># your bot account&#39;s user ID</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">ACCESS_TOKEN</span> <span class="o">=</span> <span class="s2">&quot;syt_&lt;...&gt;&quot;</span>  <span class="c1"># your bot account&#39;s access token</span>
 </span></code></pre></div>
 </details>
 <details class="abstract">
 <summary>main.py</summary>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kn">import</span> <span class="nn">logging</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="kn">import</span> <span class="nn">config</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;bot.log&quot;</span><span class="p">)</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">bot</span> <span class="o">=</span> <span class="n">niobot</span><span class="o">.</span><span class="n">NioBot</span><span class="p">(</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="n">homeserver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">HOMESERVER</span><span class="p">,</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="n">user_id</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">USER_ID</span><span class="p">,</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">device_id</span><span class="o">=</span><span class="s1">&#39;my-device-id&#39;</span><span class="p">,</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="n">store_path</span><span class="o">=</span><span class="s1">&#39;./store&#39;</span><span class="p">,</span>
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    <span class="n">command_prefix</span><span class="o">=</span><span class="s2">&quot;!&quot;</span><span class="p">,</span>
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    <span class="n">owner_id</span><span class="o">=</span><span class="s2">&quot;@my-matrix-username:matrix.org&quot;</span>
-</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="p">)</span>
-</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="c1"># We also want to load `fun.py`&#39;s commands before starting:</span>
-</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="n">bot</span><span class="o">.</span><span class="n">mount_module</span><span class="p">(</span><span class="s2">&quot;fun&quot;</span><span class="p">)</span>
-</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>
-</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;ready&quot;</span><span class="p">)</span>
-</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">on_ready</span><span class="p">(</span><span class="n">_</span><span class="p">):</span>
-</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>    <span class="c1"># That first argument is needed as the first result of the sync loop is passed to ready. Without it, this event</span>
-</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>    <span class="c1"># will fail to fire, and will cause a potentially catasrophic failure.</span>
-</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bot is ready!&quot;</span><span class="p">)</span>
-</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>
-</span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>
-</span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
-</span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>  <span class="c1"># can be invoked with &quot;!ping&quot;</span>
-</span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>    <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Pong!&quot;</span><span class="p">)</span>
-</span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a>
-</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a><span class="n">bot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">access_token</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">ACCESS_TOKEN</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kn">import</span> <span class="nn">logging</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="kn">import</span> <span class="nn">config</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;bot.log&quot;</span><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">bot</span> <span class="o">=</span> <span class="n">niobot</span><span class="o">.</span><span class="n">NioBot</span><span class="p">(</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="n">homeserver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">HOMESERVER</span><span class="p">,</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>    <span class="n">user_id</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">USER_ID</span><span class="p">,</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="n">device_id</span><span class="o">=</span><span class="s1">&#39;my-device-id&#39;</span><span class="p">,</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>    <span class="n">store_path</span><span class="o">=</span><span class="s1">&#39;./store&#39;</span><span class="p">,</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>    <span class="n">command_prefix</span><span class="o">=</span><span class="s2">&quot;!&quot;</span><span class="p">,</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>    <span class="n">owner_id</span><span class="o">=</span><span class="s2">&quot;@my-matrix-username:matrix.org&quot;</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="p">)</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="c1"># We also want to load `fun.py`&#39;s commands before starting:</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="n">bot</span><span class="o">.</span><span class="n">mount_module</span><span class="p">(</span><span class="s2">&quot;fun&quot;</span><span class="p">)</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">on_event</span><span class="p">(</span><span class="s2">&quot;ready&quot;</span><span class="p">)</span>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">on_ready</span><span class="p">(</span><span class="n">_</span><span class="p">):</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>    <span class="c1"># That first argument is needed as the first result of the sync loop is passed to ready. Without it, this event</span>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>    <span class="c1"># will fail to fire, and will cause a potentially catasrophic failure.</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bot is ready!&quot;</span><span class="p">)</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="nd">@bot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+</span><span id="__span-11-26"><a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>  <span class="c1"># can be invoked with &quot;!ping&quot;</span>
+</span><span id="__span-11-27"><a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a>    <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Pong!&quot;</span><span class="p">)</span>
+</span><span id="__span-11-28"><a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>
+</span><span id="__span-11-29"><a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a><span class="n">bot</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">access_token</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">ACCESS_TOKEN</span><span class="p">)</span>
 </span></code></pre></div>
 </details>
 <details class="abstract">
 <summary>fun.py</summary>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="k">class</span> <span class="nc">MyFunModule</span><span class="p">(</span><span class="n">niobot</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>  <span class="c1"># subclassing niobot.Module is mandatory for auto-detection.</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">):</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span>  <span class="c1"># bot is the NioBot instance you made in main.py!</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>    <span class="nd">@niobot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>        <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Hello </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="n">ctx</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">sender</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">import</span> <span class="nn">niobot</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="k">class</span> <span class="nc">MyFunModule</span><span class="p">(</span><span class="n">niobot</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>  <span class="c1"># subclassing niobot.Module is mandatory for auto-detection.</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">):</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span>  <span class="c1"># bot is the NioBot instance you made in main.py!</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="nd">@niobot</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>        <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="s2">&quot;Hello </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="n">ctx</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">sender</span><span class="p">)</span>
 </span></code></pre></div>
 </details>
 <h2 id="why-is-logging-in-with-a-password-so-bad">Why is logging in with a password so bad?<a class="headerlink" href="#why-is-logging-in-with-a-password-so-bad" title="Permanent link">&para;</a></h2>
@@ -1676,7 +1654,7 @@ Unless you are very careful with your environment, you may find yourself with sl
 session spam, and decryption errors.</p>
 <p>What you <strong>should</strong> do instead is get an access token.</p>
 <p>If you already know how to get yours, that's great! Otherwise, <code>niocli</code> has the solution:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>$<span class="w"> </span>niocli<span class="w"> </span>get-access-token
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>$<span class="w"> </span>niocli<span class="w"> </span>get-access-token
 </span></code></pre></div>
 <p>This will log into the account when prompted, and will grab you an access token, spitting it out into your terminal.</p>
 <p>From there, you can replace <code>bot.run(password="...")</code> with <code>bot.run(access_token="...")</code>, and you're good to go!</p>
@@ -1702,7 +1680,7 @@ session spam, and decryption errors.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">September 23, 2024 00:15:11</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">October 8, 2024 12:40:29</span>
   </span>
 
     
