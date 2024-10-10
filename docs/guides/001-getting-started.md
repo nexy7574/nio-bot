@@ -15,6 +15,7 @@ And the following installed on the machine you want to run the bot on:
 
 * Python with sqlite support
 * `libolm` (use your system package manager, like apt or pacman) in order to use end-to-end encryption.
+* `libmagic` (usually you can just install `python3-magic`) which is required for attachments.
 * A decent network connection (at *least* a few megabits a second, preferably more)
 * At least 100mb free storage space (for the database and other files)
 
@@ -28,37 +29,6 @@ If you would like to install support for end-to-end encryption, you can install 
 ```bash
 python3 -m pip install nio-bot[cli,e2ee]
 ```
-
-After you've done that, verify everything installed fine by running `niocli version`:
-```bash
-(venv) [me@host test-niobot]$ niocli version
-
-NioBot version: 1.1.0b1.post2.dev18 (v1.1.0, build 18, pre b2, commit g38dc914)
-matrix-nio version: 0.22.1
-Python version: 3.11.5
-Python implementation: CPython
-Operating System: Linux-6.6.1-arch1-1-x86_64-with-glibc2.38 (Arch Linux/Unknown - Arch Linux)
-Architecture: x86_64
-OLM Installed: Yes
-Free Disk Space: / (38.3%) /boot (66.02%)
-
-```
-
-!!! info
-    Yes, this output is long and verbose. It is intentionally long and verbose in order to provide as much
-    information as possible for bug reports. All you need to do is make sure there aren't too many red flags.
-
-    For example, if you want end to end encryption, but `OLM Installed` is a red `No`, then you need to install
-    `libolm`.
-
-??? warning "My architecture is red!"
-    You will notice any sort of other architecture outside of `x86_64` is red - this does not mean that nio-bot won't
-    work! Currently, nio-bot is mainly developed on an AMD64 architecture, so support is only officially for that
-    arch. However, several people have run nio-bot on ARM64 (raspberry pi, at least), and it works fine.
-
-    You can safely ignore this warning if you are running on a different architecture.
-
-    If anything else is red though, you should look into it.
 
 
 ## Creating the start of your bot
@@ -90,9 +60,13 @@ test-niobot/
     encryption keys later on.
 
 ### Setting up config.py
+
+For this example, we will assume you are using <https://matrix.org> as your homeserver.
+
 In our `config.py` file, we'll add the following:
+
 ```python
-HOMESERVER = "https://matrix.org"
+HOMESERVER = "https://matrix-client.matrix.org"
 USER_ID = "@my-username:matrix.org"
 PASSWORD = "my-password"
 ```
@@ -100,7 +74,9 @@ PASSWORD = "my-password"
     Make sure to replace the above with your own homeserver, user ID, and password!
 
 ### Making the bot runtime file
+
 And, to make a simple bot, you can just copy the below template into your `main.py` file:
+
 ```python
 import niobot
 import config
@@ -138,9 +114,10 @@ bot.run(password=config.PASSWORD)
     Otherwise, set this to be your own user ID, so that you can use any "owner only" commands.
 
     It is not necessary to set this though, so it can be omitted or set to `None`. Just note that
-    `NioBot.is_owner(...)` will raise an error when used.
+    `NioBot.is_owner(...)` will raise an error when used in that case.
 
 #### Enabling logging
+
 You'll probably find that it's useful to enable debug logging while you're developing your bot. To do that, you can
 add the following to your `main.py` file:
 ```python
@@ -155,7 +132,11 @@ bot = niobot.NioBot(...)
 ...
 ```
 
+This will print an awful lot of text to your console, but will ultimately be helpful for debugging any
+issues you are encountering, as it will show you a lot of what niobot is doing.
+
 ### Making fun.py
+
 Now, fun.py is going to be a module.
 
 Modules are a great way to organize your code, and make it easier to manage. They also allow you to
@@ -163,18 +144,21 @@ easily add new commands to your bot without having to edit the main file, which 
 make it... modular!
 
 To start, we need to make the fun.py python file, and add the following:
+
 ```python
 import niobot
 
 
 class MyFunModule(niobot.Module):  # subclassing niobot.Module is mandatory for auto-detection.
     def __init__(self, bot):
-        self.bot = bot  # bot is the NioBot instance you made in main.py!
+        super().__init__(bot)
+        # This gives you access to `self.bot`, which is the NioBot instance you made in main.py!
 
 ```
 And that's it! You made your module!
 
 #### But wait, there's more!
+
 You may notice that with this being a separate module, you can't use `@bot.command`, or `@bot.on_event`, or reference
 `bot` at all!
 
@@ -196,22 +180,26 @@ Let's compare the two, for simplicity:
 Do be aware though, both decorators will take the exact same arguments as [`niobot.Command`][niobot.commands.Command].
 
 #### Adding a command to fun.py
+
 So, let's add a command to our module:
+
 ```python
 import niobot
 
 
 class MyFunModule(niobot.Module):  # subclassing niobot.Module is mandatory for auto-detection.
     def __init__(self, bot):
-        self.bot = bot  # bot is the NioBot instance you made in main.py!
+        super().__init__(bot)
 
     @niobot.command()
-    async def hello(self, ctx):
+    async def hello(self, ctx: niobot.Context):
         await ctx.respond("Hello %s!" % ctx.event.sender)
 ```
+
 This will add a command, `!hello`, that will reply with "Hello {@author}!"
 
 ### Starting the bot
+
 Hold your horses, you're not quite ready yet!
 
 Generally, it's a terrible idea to always use a password in your code. It's a security risk,
@@ -245,6 +233,7 @@ You will also need to go into `main.py`, down to the last line, and replace `pas
     And if you do need it, you already know what it is, why you need it, and how to get it.
 
 #### Actually running the bot
+
 This is the really simple part, actually. All you need to do now is run `main.py`!
 
 ```bash
@@ -268,6 +257,7 @@ Bot is ready!
       taken
 
 #### Interesting log output
+
 You may notice that, if you [enabled logging](#enabling-logging), you get some interesting log output.
 
 Some things you will want to keep an eye out for:
@@ -286,12 +276,14 @@ Some things you will want to keep an eye out for:
 You've successfully made a bot, and got it running!
 
 #### Wait, how do I use it?
+
 nio-bot has a handy dandy auto-join feature - if you just invite your bot's user to a room, assuming all is correct,
 within a couple seconds, your bot will automatically join your room!
 
 Then, you can run `!help` to get a list of commands, and `!help <command>` to get help on a specific command.
 
 ### Final product
+
 ??? abstract "config.py"
 
     ```python
