@@ -45,4 +45,8 @@ You can listen to these events with [niobot.NioBot.on_event][].
 See the [`matrix-nio`](https://matrix-nio.readthedocs.io/en/latest/nio.html#module-nio.events) documentation for the
 base-library set of events.
 
-Remember, you'll need to use [nio.Client.add_event_callback][] in order to listen to these!
+<del>Remember, you'll need to use [nio.Client.add_event_callback][] in order to listen to these!</del>
+
+!!! tip "New in v1.2.0"
+    You can now listen to `matrix-nio` events with [niobot.NioBot.on_event][]!
+    Just pass the raw event type to the decorator, rather than a string.
