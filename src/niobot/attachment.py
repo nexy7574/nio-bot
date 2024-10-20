@@ -25,7 +25,14 @@ import PIL.Image
 import aiofiles
 import aiohttp
 import blurhash
-import magic
+
+try:
+    import magic
+except ImportError:
+    logging.getLogger(__name__).critical(
+        "Failed to load magic. Automatic file type detection will be unavailable. Please install python3-magic."
+    )
+    magic = None
 import nio
 
 from .exceptions import (
@@ -95,7 +102,11 @@ def detect_mime_type(file: U[str, io.BytesIO, pathlib.Path]) -> str:
 
     :param file: The file to detect the mime type of. Can be a BytesIO.
     :return: The mime type of the file (e.g. `text/plain`, `image/png`, `application/pdf`, `video/webp` etc.)
+    :raises RuntimeError: If the `magic` library is not installed.
+    :raises TypeError: If the file is not a string, BytesIO, or Path object.
     """
+    if not magic:
+        raise RuntimeError("magic is not installed. Please install it to use this function.")
     if isinstance(file, str):
         file = pathlib.Path(file)
 
