@@ -213,7 +213,7 @@ class NioBot(AsyncClient):
                 self.log.warning(
                     "Manually changing default help command callback to %r. Please consider passing your own"
                     " Command instance instead.",
-                    cmd
+                    cmd,
                 )
                 help_cmd.callback = cmd
             else:
@@ -660,8 +660,9 @@ class NioBot(AsyncClient):
     def add_event_listener(self, event_type: typing.Union[str, nio.Event], func):
         self._events.setdefault(event_type, [])
         self._events[event_type].append(func)
-        
+
         if isinstance(event_type, nio.Event):
+
             @functools.wraps(func)
             async def event_safety_wrapper(*args):
                 # This is necessary to stop callbacks crashing the process
@@ -669,6 +670,7 @@ class NioBot(AsyncClient):
                     return await func(*args)
                 except Exception as e:
                     self.log.exception("Error in raw event listener %r", func, exc_info=e)
+
             func = event_safety_wrapper
             self.add_event_callback(func, event_type)
             self.log.debug("Added raw event listener %r for %r", func, event_type)

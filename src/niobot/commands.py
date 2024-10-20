@@ -345,7 +345,9 @@ class Command:
                     raise CheckFailure(name)
         return True
 
-    async def parse_args(self, ctx: Context) -> typing.Dict[Argument, typing.Union[typing.Any, typing.List[typing.Any]]]:
+    async def parse_args(
+        self, ctx: Context
+    ) -> typing.Dict[Argument, typing.Union[typing.Any, typing.List[typing.Any]]]:
         """
         Parses the arguments for the current command.
         """
@@ -354,9 +356,7 @@ class Command:
         hit_greedy = False
         for arg in self.arguments[1:]:  # 0 is ctx
             if hit_greedy:
-                raise TypeError(
-                    "Got an argument after a greedy=True argument."
-                )
+                raise TypeError("Got an argument after a greedy=True argument.")
             to_pass[arg] = sentinel
             if arg.greedy:
                 to_pass[arg] = []
@@ -368,9 +368,7 @@ class Command:
             try:
                 arg = self.arguments[next_arg]
             except IndexError:
-                raise CommandArgumentsError(
-                    f"Too many arguments given to command {self.name}"
-                )
+                raise CommandArgumentsError(f"Too many arguments given to command {self.name}")
 
             self.log.debug("Parsing argument %d: %r, with value %r", next_arg, arg, value)
             try:
@@ -388,9 +386,7 @@ class Command:
 
         for arg, value in to_pass.items():
             if value is sentinel and arg.required:
-                raise CommandArgumentsError(
-                    f"Missing required argument {arg.name}"
-                )
+                raise CommandArgumentsError(f"Missing required argument {arg.name}")
             if value is sentinel:
                 to_pass[arg] = arg.default
         return to_pass
