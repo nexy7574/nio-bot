@@ -1,6 +1,10 @@
 # Making NioBot better
 
-Pull requests and issues are always welcome for niobot! Here's a few things to keep in mind when contributing:
+Issues and pull requests are the lifeblood of nio-bot. Opening issues is one of the most helpful things you can do,
+and pull requests are even better. This document will guide you through the process of contributing to nio-bot.
+From hereon, the term "contributing" will refer to both opening issues and pull requests, picking which is applicable.
+
+Here's a few things to keep in mind when contributing:
 
 ## Scope
 
@@ -39,34 +43,25 @@ that is too complicated, it may be difficult to maintain, and may be removed in 
 
 ## Code style
 
-~~NioBot uses a very loose code style, however generally, make sure your code is readable, and that the max line length
-of your code is 120 characters at a max, preferably less than 119.~~
-
-~~If you are unsure about the style of your code, you should run `black ./src` and `isort` in the root directory of the
-project. In `pyproject.toml`, all the configuration for those tools is already set up, so you don't need to worry about
-command line flags.~~
-
-~~You should also ensure there are no warnings with `pycodestyle`.~~
-
 NioBot now makes use of `ruff` for code formatting, and this is automatically enforced by the CI.
 You should run `ruff format` in the root directory of the project to format your code before submitting a pull request.
 The rules that are used for formatting are already pre-created in the pyproject.toml file, so you do not need to worry
 about arguments.
 If you just want to check that your code is following the code style without making any changes, run `ruff check`.
 
+Pre-commit is available if you desire, and there are CI checks to ensure that your code is formatted correctly.
+
 ### Versions
 
-NioBot uses SemVer (semantic versioning) for versioning. This means that the version number is split into three parts:
-`Major`, `Minor` and `Patch`. As per the versioning, `Major` versions are not guaranteed to be backwards compatible,
-however `Minor` and `Patch` versions are.
+NioBot very loosely uses [Semantic Versioning](https://semver.org/).
+You've probably heard of semver before, but if you haven't there's 3 parts to a version number: `MAJOR.MINOR.PATCH`.
+These are incremented with MAJOR (API incompatible) changes, MINOR (backwards-compatible) changes,
+and PATCH (backwards-compatible bug fixes) changes.
 
-This means that there will always be a new `Major` increment when a backwards incompatible change is made, and a new
-`Minor` increment when a backwards compatible change is made. `Patch` versions are almost always bug fixes, and are
-always backwards compatible. If a bug fix is not backwards compatible, a new `Major` version will be released.
-
-Note that in the event a breaking however minor change is made, `Minor` will be the only one increased. For example,
-if there's a simple parameter change (e.g. name or type or becomes required), `Minor` will be incremented, however
-old signatures and methods will still exist for the rest of the current Major release, or for 5 future Minor versions.
+When "loosely uses" is used, it means that nio-bot will try to follow semver as closely as possible, however,
+the MAJOR segment does not get bumped with every breaking change, only if there are several.
+For example, if a non-core function signature changes incompatibly, it will not bump the major version. However, if
+several functions change incompatibly, it will bump the major version.
 
 Major changes may be pushed into their own branches for "feature previews". These branches will be prefixed with
 `feature/`, and will be merged into `master` when they are ready for release. For example, `feature/my-thing`,
@@ -91,12 +86,15 @@ release candidates.
 Furthermore, in the interest of backward compatibility, it may take a while until nio-bot supports the latest
 language features. Keep this in mind.
 
+**End of life versions are never actively supported**. See [EOL.date](https://endoflife.date/python) for more
+information.
+
 # Community
 
 The great thing about open source software is the ability for anyone to read, understand, and contribute to it.
 NioBot, with our strong copy-left [LGPLv3](/LICENSE) license, is no exception.
 
-If you think there's something that could benefit nio-bot users, however don't think its in scope or relevant to the
+If you think there's something that could benefit nio-bot users, however don't think it's in scope or relevant to the
 core library, you are welcome to create a community plugin. Community plugins are plugins that are not part of the
 core library, however can still be installed and used by nio-bot users.
 
