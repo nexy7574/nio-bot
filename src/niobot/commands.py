@@ -57,6 +57,11 @@ class Argument:
         required: bool = ...,
         parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
         greedy: bool = False,
+        raw_type: typing.Union[
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.KEYWORD_ONLY,
+        ],
         **kwargs,
     ):
         if default is inspect.Parameter.default:
@@ -73,6 +78,7 @@ class Argument:
         self.extra = kwargs
         self.parser = parser
         self.greedy = greedy
+        self.raw_type = raw_type
 
         if self.parser is ...:
             from .utils import BUILTIN_MAPPING
@@ -214,7 +220,14 @@ class Command:
                 self.arguments = []
             else:
                 self.arguments = self.autodetect_args(self.callback)
-        _CTX_ARG = Argument("ctx", Context, description="The context for the command", parser=lambda ctx, *_: ctx)
+        _CTX_ARG = Argument(
+            "ctx",
+            Context,
+            description="The context for the command",
+            parser=lambda ctx, *_: ctx,
+            greedy=False,
+            raw_type=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        )
         self.arguments.insert(0, _CTX_ARG)
         self.arguments: list[Argument]
         self.greedy = greedy
@@ -249,13 +262,17 @@ class Command:
                 continue
 
             # Disallow **kwargs
-            if parameter.kind in [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.VAR_KEYWORD]:
-                raise CommandArgumentsError("Cannot use keyword args in command callback (argument No. %d)" % n)
-            is_positional = parameter.kind == inspect.Parameter.VAR_POSITIONAL
+            if parameter.kind == inspect.Parameter.POSITIONAL_ONLY:
+                raise TypeError("Positional-only arguments are not supported.")
+            elif parameter.kind == inspect.Parameter.VAR_KEYWORD:
+                raise TypeError("Implicit keyword arguments (**kwargs) are not supported.")
+            is_positional = parameter.kind == inspect.Parameter.VAR_POSITIONAL  # *args
+            is_kwarg = parameter.kind == inspect.Parameter.KEYWORD_ONLY
+            greedy = is_positional or is_kwarg
 
             if parameter.annotation is inspect.Parameter.empty:
                 log.debug("Found argument %r, however no type was specified. Assuming string.", parameter)
-                a = Argument(parameter.name, str, default=parameter.default, greedy=is_positional)
+                a = Argument(parameter.name, str, default=parameter.default, greedy=greedy, raw_type=parameter.kind)
             else:
                 annotation = parameter.annotation
                 origin = typing.get_origin(annotation)
@@ -269,19 +286,34 @@ class Command:
                         type_parser,
                     )
                     a = Argument(
-                        parameter.name, real_type, default=parameter.default, parser=type_parser, greedy=is_positional
+                        parameter.name,
+                        real_type,
+                        default=parameter.default,
+                        parser=type_parser,
+                        greedy=greedy,
+                        raw_type=parameter.kind,
                     )
                 elif origin is typing.Union:
                     if len(annotation_args) == 2 and annotation_args[1] is type(None):
                         log.debug("Resolved Union[...] (%r) to optional type %r", annotation, annotation_args[0])
                         a = Argument(
-                            parameter.name, annotation_args[0], default=parameter.default, greedy=is_positional
+                            parameter.name,
+                            annotation_args[0],
+                            default=parameter.default,
+                            greedy=greedy,
+                            raw_type=parameter.kind,
                         )
                     else:
                         raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
                 else:
                     log.debug("Found argument %r with unknown annotated type %r", parameter, parameter.annotation)
-                    a = Argument(parameter.name, parameter.annotation)
+                    a = Argument(
+                        parameter.name,
+                        parameter.annotation,
+                        default=parameter.default,
+                        greedy=greedy,
+                        raw_type=parameter.kind,
+                    )
 
             if parameter.default is not inspect.Parameter.empty:
                 a.default = parameter.default
