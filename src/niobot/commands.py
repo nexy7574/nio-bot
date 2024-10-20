@@ -79,7 +79,6 @@ class Argument:
         self.parser = parser
         self.greedy = greedy
         self.raw_type = raw_type
-
         if self.parser is ...:
             from .utils import BUILTIN_MAPPING
 
@@ -123,6 +122,9 @@ class Argument:
                             " v1.2.0"
                         )
                     )
+
+        if raw_type == inspect.Parameter.KEYWORD_ONLY and self.type is not str:
+            raise TypeError("Keyword-only arguments must be of type str.")
 
     def __repr__(self):
         return (
@@ -319,6 +321,7 @@ class Command:
                 a.default = parameter.default
                 a.required = False
             args.append(a)
+            # NOTE: It may be worth breaking here, but an error should be raised if there are too many arguments.
         log.debug("Automatically detected the following arguments: %r", args)
         return args
 
@@ -421,6 +424,8 @@ class Command:
                 raise CommandArgumentsError(f"Missing required argument {arg.name}")
             if value is sentinel:
                 to_pass[arg] = arg.default
+            if arg.greedy and arg.raw_type == inspect.Parameter.KEYWORD_ONLY:
+                to_pass[arg] = " ".join(to_pass[arg])
         return to_pass
 
     async def invoke(self, ctx: Context) -> typing.Coroutine:
