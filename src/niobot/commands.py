@@ -345,6 +345,56 @@ class Command:
                     raise CheckFailure(name)
         return True
 
+    async def parse_args(self, ctx: Context) -> typing.Dict[Argument, typing.Union[typing.Any, typing.List[typing.Any]]]:
+        """
+        Parses the arguments for the current command.
+        """
+        sentinel = os.urandom(128)  # forbid passing arguments with this failsafe
+        to_pass = {}
+        hit_greedy = False
+        for arg in self.arguments[1:]:  # 0 is ctx
+            if hit_greedy:
+                raise TypeError(
+                    "Got an argument after a greedy=True argument."
+                )
+            to_pass[arg] = sentinel
+            if arg.greedy:
+                to_pass[arg] = []
+                hit_greedy = True
+        next_arg = 0
+
+        context_args = iter(ctx.args)
+        for value in context_args:
+            try:
+                arg = self.arguments[next_arg]
+            except IndexError:
+                raise CommandArgumentsError(
+                    f"Too many arguments given to command {self.name}"
+                )
+
+            self.log.debug("Parsing argument %d: %r, with value %r", next_arg, arg, value)
+            try:
+                parsed = await arg.parser(ctx, arg, value)
+                if inspect.iscoroutine(parsed):
+                    parsed = await parsed
+            except Exception as e:
+                raise CommandParserError(f"Error while parsing argument {arg.name}: {e}") from e
+            self.log.debug("Parsed argument %d (%r<%r>) to %r", next_arg, arg, value, parsed)
+            if arg.greedy:
+                to_pass[arg].append(parsed)
+            else:
+                to_pass[arg] = parsed
+                next_arg += 1
+
+        for arg, value in to_pass.items():
+            if value is sentinel and arg.required:
+                raise CommandArgumentsError(
+                    f"Missing required argument {arg.name}"
+                )
+            if value is sentinel:
+                to_pass[arg] = arg.default
+        return to_pass
+
     async def invoke(self, ctx: Context) -> typing.Coroutine:
         """
         Invokes the current command with the given context
@@ -353,58 +403,14 @@ class Command:
         :raises CommandArgumentsError: Too many/few arguments, or an error parsing an argument.
         :raises CheckFailure: A check failed
         """
-
-        parsed_args = []
-        if len(ctx.args) > (len(self.arguments) - 1) and self.greedy is False:
-            raise CommandArgumentsError(f"Too many arguments given to command {self.name}")
-        for index, argument in enumerate(self.arguments[1:]):
-            argument: Argument
-
-            if index >= len(ctx.args):
-                if argument.required:
-                    raise CommandArgumentsError(f"Missing required argument {argument.name}")
-                parsed_args.append(argument.default)
-                continue
-
-            self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
-            try:
-                parsed_argument = argument.parser(ctx, argument, ctx.args[index])
-                if inspect.iscoroutine(parsed_argument):
-                    parsed_argument = await parsed_argument
-            except Exception as e:
-                error = f"Error while parsing argument {argument.name}: {e}"
-                raise CommandArgumentsError(error) from e
-            parsed_args.append(parsed_argument)
-
-            # Greedy args support
-            if argument.greedy:
-                for arg in ctx.args[index + 1 :]:
-                    # noinspection PyBroadException
-                    try:
-                        parsed_argument = argument.parser(ctx, argument, arg)
-                        if inspect.iscoroutine(parsed_argument):
-                            parsed_argument = await parsed_argument
-                    except Exception:
-                        break
-                    parsed_args.append(parsed_argument)
-                    self.log.debug("Resolved greedy argument %s to %r", argument.name, arg)
-                break
-
-        parsed_args = [ctx, *parsed_args]
-        if len(parsed_args) < len(self.arguments):
-            self.log.warning(
-                "Parsed arguments length does not match registered arguments length. %d processed arguments, %d "
-                "arguments.",
-                len(parsed_args),
-                len(self.arguments),
-            )
-        self.log.debug("Arguments to pass: %r", parsed_args)
-        ctx.client.dispatch("command", ctx)
+        parsed_kwargs = await self.parse_args(ctx)
+        parsed_args = [ctx]
         if self.module:
-            self.log.debug("Will pass module instance")
-            return self.callback(self.module, *parsed_args)
-        else:
-            return self.callback(*parsed_args)
+            parsed_args.insert(0, self.module)
+        self.log.debug("Arguments to pass: %r", parsed_args)
+        self.log.debug("Keyword arguments to pass: %r", parsed_args)
+        ctx.client.dispatch("command", ctx)
+        return self.callback(*parsed_args, **parsed_kwargs)
 
     def construct_context(
         self,
