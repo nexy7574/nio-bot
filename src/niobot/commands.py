@@ -399,6 +399,7 @@ class Command:
         next_arg = 0
 
         context_args = iter(ctx.args)
+        next(context_args)  # skip ctx
         for value in context_args:
             try:
                 arg = self.arguments[next_arg]
