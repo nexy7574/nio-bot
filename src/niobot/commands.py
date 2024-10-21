@@ -389,6 +389,7 @@ class Command:
         sentinel = os.urandom(128)  # forbid passing arguments with this failsafe
         to_pass = {}
         hit_greedy = False
+        self.log.debug("Parsing arguments for command %r: %r", self, self.arguments)
         for arg in self.arguments[1:]:  # 0 is ctx
             if hit_greedy:
                 raise TypeError("Got an argument after a greedy=True argument.")
