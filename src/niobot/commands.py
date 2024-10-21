@@ -397,7 +397,7 @@ class Command:
             if arg.greedy:
                 to_pass[arg] = []
                 hit_greedy = True
-        next_arg = 0
+        next_arg = 1
 
         context_args = iter(ctx.args)
         for value in context_args:
