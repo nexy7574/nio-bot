@@ -408,7 +408,7 @@ class Command:
 
             self.log.debug("Parsing argument %d: %r, with value %r", next_arg, arg, value)
             try:
-                parsed = await arg.parser(ctx, arg, value)
+                parsed = arg.parser(ctx, arg, value)
                 if inspect.iscoroutine(parsed):
                     parsed = await parsed
             except Exception as e:
