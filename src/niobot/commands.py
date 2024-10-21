@@ -443,9 +443,9 @@ class Command:
         if self.module:
             parsed_args.insert(0, self.module)
         self.log.debug("Arguments to pass: %r", parsed_args)
-        self.log.debug("Keyword arguments to pass: %r", parsed_args)
+        self.log.debug("Keyword arguments to pass: %r", parsed_kwargs)
         ctx.client.dispatch("command", ctx)
-        return self.callback(*parsed_args, **parsed_kwargs)
+        return self.callback(*parsed_args, **{x.name: y for x, y in parsed_kwargs.items()})
 
     def construct_context(
         self,
