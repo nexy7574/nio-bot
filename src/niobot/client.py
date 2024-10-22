@@ -445,15 +445,7 @@ class NioBot(AsyncClient):
 
             def get_prefix(c: str) -> typing.Union[str, None]:
                 if c.startswith(">"):
-                    for line in c.splitlines():
-                        # Strip out replies
-                        if line.startswith(">"):
-                            continue
-                        elif line == "":
-                            continue
-                        else:
-                            c = line
-                            break
+                    _, c = c.split("\n\n", 1)
                 if isinstance(self.command_prefix, re.Pattern):
                     _m = re.match(self.command_prefix, c)
                     if _m:
