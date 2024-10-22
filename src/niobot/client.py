@@ -444,8 +444,6 @@ class NioBot(AsyncClient):
                 content = event.body
 
             def get_prefix(c: str) -> typing.Union[str, None]:
-                if c.startswith(">"):
-                    _, c = c.split("\n\n", 1)
                 if isinstance(self.command_prefix, re.Pattern):
                     _m = re.match(self.command_prefix, c)
                     if _m:
@@ -455,6 +453,8 @@ class NioBot(AsyncClient):
                         if c.startswith(pfx):
                             return pfx
 
+            if content.startswith(">"):
+                _, content = content.split("\n\n", 1)
             matched_prefix = get_prefix(content)
             if matched_prefix:
                 try:
