@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import functools
 import getpass
 import importlib
@@ -265,6 +266,8 @@ class NioBot(AsyncClient):
         self._sync_full_state = sync_full_state
         self.default_parse_mentions = default_parse_mentions
 
+        self._event_id_cache = collections.deque(maxlen=1000)
+
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
         """
@@ -407,9 +410,12 @@ class NioBot(AsyncClient):
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessage) -> None:
         """Processes a message and runs the command it is trying to invoke if any."""
+        if event.event_id in self._event_id_cache:
+            self.log.warning("Not processing duplicate message event %r.", event.event_id)
+            return
         if self.start_time is None:
             raise RuntimeError("Bot has not started yet!")
-
+        self._event_id_cache.append(event.event_id)
         self.message_cache.append((room, event))
         self.dispatch("message", room, event)
         if not isinstance(event, nio.RoomMessageText):
