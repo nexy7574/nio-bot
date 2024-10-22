@@ -54,7 +54,8 @@ however that is preferrable to errors.
 * `NioBot.send_message` will now automatically parse mentions if not explicitly provided, to take full advantage of intentional mentions.
 * Added `force_initial_sync` to `NioBot`, which will force the bot to sync all rooms before starting the event loop.
 * DM rooms are now removed properly from account data when leaving.
-  * Fixed [niobot.NioBot.on_event][] not properly accepting raw [nio.Event][] types
+* Fixed [niobot.NioBot.on_event][] not properly accepting raw [nio.Event][] types
+* Fixed some faulty sync responses triggering commands twice
 
 ## v1.1.1 (2024-06-26)
 
