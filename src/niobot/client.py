@@ -194,10 +194,18 @@ class NioBot(AsyncClient):
                 self.log.warning(
                     "The prefix '/' may interfere with client-side commands on some clients, such as Element."
                 )
+            if self.command_prefix.match(">"):
+                self.log.warning(
+                    "The prefix '>' may interfere with fallback reply stripping in command parsing."
+                )
         else:
             if "/" in self.command_prefix:
                 self.log.warning(
                     "The prefix '/' may interfere with client-side commands on some clients, such as Element."
+                )
+            if ">" in self.command_prefix:
+                self.log.warning(
+                    "The prefix '>' may interfere with fallback reply stripping in command parsing."
                 )
             if re.search(r"\s", ";".join(command_prefix)):
                 raise RuntimeError("Command prefix cannot contain whitespace.")
@@ -435,6 +443,19 @@ class NioBot(AsyncClient):
             content = event.body
 
         def get_prefix(c: str) -> typing.Union[str, None]:
+            if c.startswith("> <"):
+                for line in c.splitlines():
+                    # Strip out replies
+                    if line.startswith("> "):
+                        continue
+                    elif not line.strip():
+                        continue
+                    else:
+                        break
+                else:
+                    # could not determine reply
+                    line = c
+                c = line
             if isinstance(self.command_prefix, re.Pattern):
                 _m = re.match(self.command_prefix, c)
                 if _m:
