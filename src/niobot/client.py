@@ -14,7 +14,7 @@ import time
 import typing
 import warnings
 from collections import deque
-from typing import Optional, Union as U
+from typing import Optional, Union as U, Type
 from urllib.parse import urlparse
 
 import marko
@@ -428,7 +428,7 @@ class NioBot(AsyncClient):
             self.message_cache.append((room, event))
             self.dispatch("message", room, event)
             if not isinstance(event, nio.RoomMessageText):
-                self.log.debug("Ignoring non-text message %r", event)
+                self.log.debug("Ignoring non-text message %r", event.event_id)
                 return
             if event.sender == self.user and self.ignore_self is True:
                 self.log.debug("Ignoring message sent by self.")
@@ -454,7 +454,12 @@ class NioBot(AsyncClient):
                             return pfx
 
             if content.startswith(">"):
-                _, content = content.split("\n\n", 1)
+                rep, content = content.split("\n\n", 1)
+                self.log.debug(
+                    "Parsed message, split into reply and content: %r, %r",
+                    rep[:50],
+                    content[:50]
+                )
             matched_prefix = get_prefix(content)
             if matched_prefix:
                 try:
@@ -673,7 +678,7 @@ class NioBot(AsyncClient):
 
         return decorator
 
-    def add_event_listener(self, event_type: typing.Union[str, nio.Event], func):
+    def add_event_listener(self, event_type: typing.Union[str, nio.Event, Type[nio.Event]], func):
         self._events.setdefault(event_type, [])
         self._events[event_type].append(func)
 
@@ -692,7 +697,7 @@ class NioBot(AsyncClient):
             self.log.debug("Added raw event listener %r for %r", func, event_type)
         self.log.debug("Added event listener %r for %r", func, event_type)
 
-    def on_event(self, event_type: typing.Optional[typing.Union[str, nio.Event]] = None):
+    def on_event(self, event_type: typing.Optional[typing.Union[str, Type[nio.Event]]] = None):
         """Wrapper that allows you to register an event handler.
 
         Event handlers **must** be async.
