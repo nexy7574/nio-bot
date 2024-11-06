@@ -56,6 +56,7 @@ however that is preferrable to errors.
 * DM rooms are now removed properly from account data when leaving.
 * Fixed [niobot.NioBot.on_event][] not properly accepting raw [nio.Event][] types
 * Fixed some faulty sync responses triggering commands twice
+* Fixed a bug in the default help command that would display hidden commands regardless.
 
 ## v1.1.1 (2024-06-26)
 

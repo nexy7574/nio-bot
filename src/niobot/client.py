@@ -14,7 +14,7 @@ import time
 import typing
 import warnings
 from collections import deque
-from typing import Optional, Union as U, Type
+from typing import Optional, Type, Union as U
 from urllib.parse import urlparse
 
 import marko
@@ -455,11 +455,7 @@ class NioBot(AsyncClient):
 
             if content.startswith(">"):
                 rep, content = content.split("\n\n", 1)
-                self.log.debug(
-                    "Parsed message, split into reply and content: %r, %r",
-                    rep[:50],
-                    content[:50]
-                )
+                self.log.debug("Parsed message, split into reply and content: %r, %r", rep[:50], content[:50])
             matched_prefix = get_prefix(content)
             if matched_prefix:
                 try:
