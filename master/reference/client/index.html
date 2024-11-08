@@ -2009,6 +2009,22 @@ if you are missing aforementioned data that you need.</p>
                   <code>False</code>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>use_fallback_replies</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to force the usage of deprecated fallback replies. Not recommended outside of compatibility reasons.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -3293,10 +3309,6 @@ Otherwise, it returns None.</p>
             <span class="doc doc-object-name doc-function-name">generate_mx_reply</span>
 
 
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
-  </span>
-
 <a href="#niobot.client.NioBot.generate_mx_reply" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">generate_mx_reply</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">room</span><span class="p">:</span> <span class="n"><span title="nio.MatrixRoom">MatrixRoom</span></span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n"><span title="nio.RoomMessageText">RoomMessageText</span></span>
@@ -3305,7 +3317,7 @@ Otherwise, it returns None.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Generates a reply string for a given event.</p>
+        <p>Fallback replies have been removed by MSC2781. Do not use this anymore.</p>
 
     </div>
 
