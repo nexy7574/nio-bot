@@ -97,6 +97,8 @@ class NioBot(AsyncClient):
     is automatic based on the startup progress.
     :param default_parse_mentions: Whether to parse mentions in send_message by default to make them intentional.
     :param force_initial_sync: Forcefully perform a full initial sync at startup.
+    :param use_fallback_replies: Whether to force the usage of deprecated fallback replies. Not recommended outside
+    of compatibility reasons.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -132,6 +134,7 @@ class NioBot(AsyncClient):
         sync_full_state: bool = True,
         default_parse_mentions: bool = True,
         force_initial_sync: bool = False,
+        use_fallback_replies: bool = False,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -231,6 +234,7 @@ class NioBot(AsyncClient):
         self.ignore_old_events = ignore_old_events
         self.auto_join_rooms = auto_join_rooms
         self.auto_read_messages = auto_read_messages
+        self.use_fallback_replies = use_fallback_replies
 
         self.add_event_callback(self.process_message, nio.RoomMessage)  # type: ignore
         self.direct_rooms: dict[str, nio.MatrixRoom] = {}
@@ -883,9 +887,11 @@ class NioBot(AsyncClient):
             return obj
         raise ValueError("Unable to determine ID of object: %r" % obj)
 
-    @staticmethod
-    def generate_mx_reply(room: nio.MatrixRoom, event: nio.RoomMessageText) -> str:
-        """Generates a reply string for a given event."""
+    @deprecated(None)
+    def generate_mx_reply(self, room: nio.MatrixRoom, event: nio.RoomMessageText) -> str:
+        """Fallback replies have been removed by MSC2781. Do not use this anymore."""
+        if not self.use_fallback_replies:
+            return ""
         return (
             "<mx-reply>"
             "<blockquote>"
@@ -1123,11 +1129,6 @@ class NioBot(AsyncClient):
             elif content_type == "html.raw":
                 body["formatted_body"] = content
                 body["format"] = "org.matrix.custom.html"
-        if reply_to and isinstance(reply_to, nio.RoomMessageText) and isinstance(room, nio.MatrixRoom):
-            body["formatted_body"] = "{}{}".format(
-                self.generate_mx_reply(room, reply_to), body.get("formatted_body", body["body"])
-            )
-            body["format"] = "org.matrix.custom.html"
 
         if reply_to:
             body["m.relates_to"] = {"m.in_reply_to": {"event_id": self._get_id(reply_to)}}

@@ -57,6 +57,7 @@ however that is preferrable to errors.
 * Fixed [niobot.NioBot.on_event][] not properly accepting raw [nio.Event][] types
 * Fixed some faulty sync responses triggering commands twice
 * Fixed a bug in the default help command that would display hidden commands regardless.
+* Removed fallback replies in messages (see: [MSC2781](https://github.com/matrix-org/matrix-spec-proposals/pull/2781))
 
 ## v1.1.1 (2024-06-26)
 
