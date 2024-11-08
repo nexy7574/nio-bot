@@ -1550,31 +1550,31 @@ are often not properly battle-tested.</p>
 <li>Fixed <code>niocli get-access-token</code> crashing on windows</li>
 <li>Fixed <code>NioBot</code> throwing a warning about failing key uploads without logging the actual error</li>
 <li>Allowed <code>command_prefix</code> to be an iterable, converting single-strings into a single-item iterable too.</li>
-<li>Changed the event type of the <code>message</code> event to be any <code>RoomMessage</code>, not just <code>Text</code>.</li>
-<li>Merged <code>xyzamorganblurhash</code> into <code>ImageAttachment</code></li>
+<li>Changed the event type of the <code>message</code> event to be any <a class="autorefs autorefs-external" href="https://matrix-nio.readthedocs.io/en/latest/nio.html#nio.events.room_events.RoomMessage">nio.RoomMessage</a>, not just <code>Text</code>.</li>
+<li>Merged <code>xyzamorganblurhash</code> into <a class="autorefs autorefs-internal" href="../reference/attachment/#niobot.attachment.ImageAttachment"><code>ImageAttachment</code></a></li>
 <li>Removed deprecated <code>automatic_markdown_parser</code> option and functionality in NioBot</li>
-<li>Fixed <code>niobot.utils.parsers.EventParser</code> raising an error when used</li>
+<li>Fixed <a class="autorefs autorefs-internal" href="../reference/utils/parsers/#niobot.utils.parsers.EventParser"><code>niobot.utils.parsers.EventParser</code></a> raising an error when used</li>
 <li>Added beautifulsoup4 as a hard dependency. Backwards compatibility is still kept in case bs4 is not installed.</li>
 <li>Fixed some typing dotted around the client</li>
 <li>Removed the deprecated <code>name</code> parameter from niobot checks</li>
-<li>Added support for passing raw <code>nio.Event</code> types to event listeners</li>
-<li>Added proper support for <code>typing.Optional</code> in automatic argument detection</li>
+<li>Added support for passing raw <a class="autorefs autorefs-external" href="https://matrix-nio.readthedocs.io/en/latest/nio.html#nio.events.room_events.Event"><code>nio.Event</code></a> types to event listeners</li>
+<li>Added proper support for <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/typing.html#typing.Optional"><code>typing.Optional</code></a> in automatic argument detection</li>
 <li>Added support for <code>*args</code> in automatic argument detection</li>
 <li>Fixed niobot attachments (Image/Video/Audio) sending <code>null</code> for metadata, which may cause incorrect client behaviours</li>
-<li>Added <code>niobot.utils.Mentions</code> to handle intentional mentions in messages</li>
-<li>(Typing) send_message can now reply to any RoomMessage, not just RoomMessageText.</li>
+<li>Added <a class="autorefs autorefs-internal" href="../reference/utils/mentions/#niobot.utils.mentions.Mentions"><code>niobot.utils.Mentions</code></a> to handle intentional mentions in messages</li>
+<li>(Typing) send_message can now reply to any <a class="autorefs autorefs-external" href="https://matrix-nio.readthedocs.io/en/latest/nio.html#nio.events.room_events.RoomMessage">RoomMessage</a>, not just <a class="autorefs autorefs-external" href="https://matrix-nio.readthedocs.io/en/latest/nio.html#nio.events.room_events.RoomMessageText">RoomMessageText</a>.</li>
 <li><code>niobot.util.help_command.help_command_callback</code> was removed, in line with deprecation.</li>
-<li><code>start()</code> will now query <code>/_matrix/client/versions</code> to fetch server version metadata.</li>
+<li><a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.start">niobot.NioBot.start</a> will now query <code>/_matrix/client/versions</code> to fetch server version metadata.</li>
 <li>Fix RuntimeError due to concurrent typing in send_message</li>
 <li>Updated the documentation index page and added documentation for Mentions</li>
 <li>Fixed the versioned docs deployment</li>
 <li>Updated the help command<ul>
-<li>Unified all of the functions into a single class, <code>DefaultHelpCommand</code>, to make subclassing easier.</li>
-<li><code>default_help_command</code> was replaced with <code>DefaultHelpCommand().repond</code>.</li>
+<li>Unified all of the functions into a single class, <a class="autorefs autorefs-internal" href="../reference/utils/help_command/#niobot.utils.help_command.DefaultHelpCommand"><code>niobot.utils.help_command.DefaultHelpCommand</code></a>, to make subclassing easier.</li>
+<li><code>default_help_command</code> was replaced with <a class="autorefs autorefs-internal" href="../reference/utils/help_command/#niobot.utils.help_command.DefaultHelpCommand.respond"><code>DefaultHelpCommand().respond</code></a>.</li>
 <li>Help command will no longer display commands in the command list that the current user cannot run</li>
 </ul>
 </li>
-<li>Added <code>Command.can_run(ctx)</code>, which runs through and makes sure that all of the command checks pass.</li>
+<li>Added <a class="autorefs autorefs-internal" href="../reference/commands/#niobot.commands.Command.can_run"><code>Command.can_run(ctx)</code></a>, which runs through and makes sure that all of the command checks pass.</li>
 <li>Added backwards compatibility support for legacy media endpoints (servers that don't support matrix v1.11 yet). Authenticated media will still be used by default.</li>
 <li>Python 3.13 is now officially supported in time for v1.2.0a2</li>
 <li>niobot attachment types now support os.PathLike, as well as str, BytesIO, and Pathlib, in case you had some freaky custom path type</li>
@@ -1583,19 +1583,19 @@ throw an error if there is a mid-air collision. Instead, a warning will be logge
 the operation will be a no-op. This may cause some inconsistencies in the typing indicators sent by nio-bot,
 however that is preferrable to errors.</li>
 <li>You can now have a little bit more control over the sync loop<ul>
-<li><code>NioBot()</code> now allows you to pass a static presence (<code>online</code>, <code>unavailable</code>, <code>offline</code>), <code>False</code> to outright disable presence, and <code>None</code> (default) to set it automatically based on the startup stage (recommended for slower connections)</li>
+<li><a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot"><code>niobot.NioBot</code></a> now allows you to pass a static presence (<code>online</code>, <code>unavailable</code>, <code>offline</code>), <code>False</code> to outright disable presence, and <code>None</code> (default) to set it automatically based on the startup stage (recommended for slower connections)</li>
 <li>You can now, if you needed to for some reason, disable full state sync via <code>sync_full_state=False</code>.</li>
 </ul>
 </li>
-<li>Fixed <code>NioBot.join()</code> throwing a JSON EOF in some cases</li>
-<li>Added the <code>reason</code> parameter to <code>NioBot.join</code> and <code>NioBot.room_leave</code> as optional strings</li>
+<li>Fixed <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.join"><code>niobot.NioBot.join</code></a> throwing a JSON EOF in some cases</li>
+<li>Added the <code>reason</code> parameter to <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.join"><code>niobot.NioBot.join</code></a> and <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.room_leave"><code>niobot.NioBot.room_leave</code></a> as optional strings</li>
 <li>NioBot's auto-join feature now uses this to include a reason when automatically joining rooms</li>
 <li>Fixed module event handlers, in debug logs, being named as anonymous functions, rather than their true names. This will make debugging issues with your event handlers easier.</li>
 <li>Removed the password login critical log in favour of simply documenting the dangers of using a password</li>
-<li><code>NioBot.send_message</code> will now automatically parse mentions if not explicitly provided, to take full advantage of intentional mentions.</li>
-<li>Added <code>force_initial_sync</code> to <code>NioBot</code>, which will force the bot to sync all rooms before starting the event loop.</li>
+<li><a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.send_message"><code>niobot.NioBot.send_message</code></a> will now automatically parse mentions if not explicitly provided, to take full advantage of intentional mentions.</li>
+<li>Added <code>force_initial_sync</code> to <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot"><code>niobot.NioBot</code></a>, which will force the bot to sync all rooms before starting the event loop.</li>
 <li>DM rooms are now removed properly from account data when leaving.</li>
-<li>Fixed <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.on_event">niobot.NioBot.on_event</a> not properly accepting raw [nio.Event][] types</li>
+<li>Fixed <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.on_event">niobot.NioBot.on_event</a> not properly accepting raw <a class="autorefs autorefs-external" href="https://matrix-nio.readthedocs.io/en/latest/nio.html#nio.events.room_events.Event">nio.Event</a> types</li>
 <li>Fixed some faulty sync responses triggering commands twice</li>
 <li>Fixed a bug in the default help command that would display hidden commands regardless.</li>
 <li>Removed fallback replies in messages (see: <a href="https://github.com/matrix-org/matrix-spec-proposals/pull/2781">MSC2781</a>)</li>
@@ -1786,7 +1786,7 @@ We love new contributors!</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">November 8, 2024 21:34:13</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">November 8, 2024 21:49:25</span>
   </span>
 
     
