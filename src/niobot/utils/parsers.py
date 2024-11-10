@@ -417,6 +417,7 @@ class MatrixUserParser(StatelessParser):
 
 
 BUILTIN_MAPPING = {
+    str: str,
     bool: BooleanParser(),
     float: FloatParser(),
     int: IntegerParser(),

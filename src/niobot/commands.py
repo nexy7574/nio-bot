@@ -124,7 +124,7 @@ class Argument:
                     )
 
         if raw_type == inspect.Parameter.KEYWORD_ONLY and self.type is not str:
-            raise TypeError("Keyword-only arguments must be of type str.")
+            raise TypeError("Keyword-only arguments must be of type str, not %r." % self.type)
 
     def __repr__(self):
         return (
