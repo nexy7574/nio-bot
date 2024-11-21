@@ -3,7 +3,7 @@
 import typing as t
 
 if t.TYPE_CHECKING:
-    from . import CommandError, Context, MatrixRoom, RoomMessage, SyncResponse, Event
+    from . import CommandError, Context, Event, MatrixRoom, RoomMessage, SyncResponse
 
 
 async def event_loop_running() -> t.Optional[t.Any]:
@@ -129,22 +129,22 @@ async def command_error(ctx: "Context", error: "CommandError") -> t.Optional[t.A
 async def raw(room: "MatrixRoom", event: "Event") -> t.Optional[t.Any]:
     """
     This is a special event that is handled when you directly pass a `niobot.Event` to `on_event`.
-    
+
     You cannot listen to this in the traditional sense of "on_event('name')" as it is not a named event.
     But, this extensibility allows you to listen directly for events not covered by the library.
-    
+
     ??? example
         The below code will listen directly for the redaction event and will print out the redaction details.
-        
+
         See [the nio events](https://matrix-nio.readthedocs.io/en/latest/nio.html#module-nio.events) documentation
         for more details and a list of available events.x
 
         ```python
         import niobot
-        
+
         @bot.on_event(niobot.RedactionEvent)  # listen for redactions
         async def on_redaction(room, event):
             print(f"{event.sender} redacted {event.redacts} for {event.reason!r} in {room.display_name}")
-        ```  
+        ```
     """
     ...

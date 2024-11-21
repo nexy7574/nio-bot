@@ -133,8 +133,8 @@ class DefaultHelpCommand:
             added = []
             # Display global help.
             for command in sorted(ctx.client.commands.values(), key=lambda c: c.name):
-                if command in added or command.disabled is True:
-                    continue  # command is disabled.
+                if command in added or command.disabled is True or command.hidden is True:
+                    continue  # command is already listed, disabled, or hidden.
                 try:
                     await command.can_run(ctx)
                 except CheckFailure:

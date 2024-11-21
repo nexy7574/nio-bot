@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import functools
 import getpass
 import importlib
@@ -13,7 +14,7 @@ import time
 import typing
 import warnings
 from collections import deque
-from typing import Optional, Union as U
+from typing import Optional, Type, Union as U
 from urllib.parse import urlparse
 
 import marko
@@ -96,6 +97,8 @@ class NioBot(AsyncClient):
     is automatic based on the startup progress.
     :param default_parse_mentions: Whether to parse mentions in send_message by default to make them intentional.
     :param force_initial_sync: Forcefully perform a full initial sync at startup.
+    :param use_fallback_replies: Whether to force the usage of deprecated fallback replies. Not recommended outside
+    of compatibility reasons.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -131,6 +134,7 @@ class NioBot(AsyncClient):
         sync_full_state: bool = True,
         default_parse_mentions: bool = True,
         force_initial_sync: bool = False,
+        use_fallback_replies: bool = False,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -193,11 +197,15 @@ class NioBot(AsyncClient):
                 self.log.warning(
                     "The prefix '/' may interfere with client-side commands on some clients, such as Element."
                 )
+            if self.command_prefix.match(">"):
+                self.log.warning("The prefix '>' may interfere with fallback reply stripping in command parsing.")
         else:
             if "/" in self.command_prefix:
                 self.log.warning(
                     "The prefix '/' may interfere with client-side commands on some clients, such as Element."
                 )
+            if ">" in self.command_prefix:
+                self.log.warning("The prefix '>' may interfere with fallback reply stripping in command parsing.")
             if re.search(r"\s", ";".join(command_prefix)):
                 raise RuntimeError("Command prefix cannot contain whitespace.")
 
@@ -226,6 +234,7 @@ class NioBot(AsyncClient):
         self.ignore_old_events = ignore_old_events
         self.auto_join_rooms = auto_join_rooms
         self.auto_read_messages = auto_read_messages
+        self.use_fallback_replies = use_fallback_replies
 
         self.add_event_callback(self.process_message, nio.RoomMessage)  # type: ignore
         self.direct_rooms: dict[str, nio.MatrixRoom] = {}
@@ -264,6 +273,9 @@ class NioBot(AsyncClient):
         self._startup_presence = startup_presence
         self._sync_full_state = sync_full_state
         self.default_parse_mentions = default_parse_mentions
+
+        self._event_id_cache = collections.deque(maxlen=1000)
+        self._message_process_lock = asyncio.Lock()
 
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
@@ -407,104 +419,114 @@ class NioBot(AsyncClient):
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessage) -> None:
         """Processes a message and runs the command it is trying to invoke if any."""
-        if self.start_time is None:
-            raise RuntimeError("Bot has not started yet!")
-
-        self.message_cache.append((room, event))
-        self.dispatch("message", room, event)
-        if not isinstance(event, nio.RoomMessageText):
-            self.log.debug("Ignoring non-text message %r", event)
-            return
-        if event.sender == self.user and self.ignore_self is True:
-            self.log.debug("Ignoring message sent by self.")
-            return
-        if self.is_old(event):
-            age = self.start_time - event.server_timestamp / 1000
-            self.log.debug("Ignoring message sent {:.0f} seconds before startup.".format(age))
-            return
-
-        if self.case_insensitive:
-            content = event.body.casefold()
-        else:
-            content = event.body
-
-        def get_prefix(c: str) -> typing.Union[str, None]:
-            if isinstance(self.command_prefix, re.Pattern):
-                _m = re.match(self.command_prefix, c)
-                if _m:
-                    return _m.group(0)
-            else:
-                for pfx in self.command_prefix:
-                    if c.startswith(pfx):
-                        return pfx
-
-        matched_prefix = get_prefix(content)
-        if matched_prefix:
-            try:
-                command_name = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
-            except IndexError:
-                self.log.info(
-                    "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
-                    event.body,
-                )
+        lock = self._message_process_lock
+        if lock is None:
+            lock = asyncio.Lock()
+        async with lock:
+            if event.event_id in self._event_id_cache:
+                self.log.warning("Not processing duplicate message event %r.", event.event_id)
                 return
-            command: typing.Optional[Command] = self.get_command(command_name)
-            if command:
-                if command.disabled is True:
-                    error = CommandDisabledError(command)
-                    self.dispatch("command_error", command, error)
-                    return
+            if self.start_time is None:
+                raise RuntimeError("Bot has not started yet!")
+            self._event_id_cache.append(event.event_id)
+            self.message_cache.append((room, event))
+            self.dispatch("message", room, event)
+            if not isinstance(event, nio.RoomMessageText):
+                self.log.debug("Ignoring non-text message %r", event.event_id)
+                return
+            if event.sender == self.user and self.ignore_self is True:
+                self.log.debug("Ignoring message sent by self.")
+                return
+            if self.is_old(event):
+                age = self.start_time - event.server_timestamp / 1000
+                self.log.debug("Ignoring message sent {:.0f} seconds before startup.".format(age))
+                return
 
-                context = command.construct_context(
-                    self,
-                    room=room,
-                    src_event=event,
-                    invoking_prefix=matched_prefix,
-                    meta=matched_prefix + original_command,
-                )
-
-                try:
-                    if not await context.command.can_run(context):
-                        raise CheckFailure(None, "Unknown check failure")
-                except CheckFailure as err:
-                    self.dispatch("command_error", context, err)
-                    return
-
-                def _task_callback(t: asyncio.Task):
-                    try:
-                        exc = t.exception()
-                    except asyncio.CancelledError:
-                        self.dispatch("command_cancelled", context, t)
-                    else:
-                        if exc:
-                            if "command_error" not in self._events:
-                                self.log.exception(
-                                    "There was an error while running %r: %r", command, exc, exc_info=exc
-                                )
-                            self.dispatch("command_error", context, CommandError(exception=exc))
-                        else:
-                            self.dispatch("command_complete", context, t)
-                    if hasattr(context, "_perf_timer"):
-                        self.log.debug(
-                            "Command %r finished in %.2f seconds",
-                            command.name,
-                            time.perf_counter() - context._perf_timer,
-                        )
-
-                self.log.debug(f"Running command {command.name} with context {context!r}")
-                try:
-                    task = asyncio.create_task(await command.invoke(context))
-                    context._task = task
-                    context._perf_timer = time.perf_counter()
-                except CommandArgumentsError as e:
-                    self.dispatch("command_error", context, e)
-                except Exception as e:
-                    self.log.exception("Failed to invoke command %s", command.name, exc_info=e)
-                    self.dispatch("command_error", context, CommandError(exception=e))
-                else:
-                    task.add_done_callback(_task_callback)
+            if self.case_insensitive:
+                content = event.body.casefold()
             else:
-                self.log.debug(f"Command {original_command!r} not found.")
+                content = event.body
+
+            def get_prefix(c: str) -> typing.Union[str, None]:
+                if isinstance(self.command_prefix, re.Pattern):
+                    _m = re.match(self.command_prefix, c)
+                    if _m:
+                        return _m.group(0)
+                else:
+                    for pfx in self.command_prefix:
+                        if c.startswith(pfx):
+                            return pfx
+
+            if content.startswith(">"):
+                rep, content = content.split("\n\n", 1)
+                self.log.debug("Parsed message, split into reply and content: %r, %r", rep[:50], content[:50])
+            matched_prefix = get_prefix(content)
+            if matched_prefix:
+                try:
+                    command_name = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
+                except IndexError:
+                    self.log.info(
+                        "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
+                        event.body,
+                    )
+                    return
+                command: typing.Optional[Command] = self.get_command(command_name)
+                if command:
+                    if command.disabled is True:
+                        error = CommandDisabledError(command)
+                        self.dispatch("command_error", command, error)
+                        return
+
+                    context = command.construct_context(
+                        self,
+                        room=room,
+                        src_event=event,
+                        invoking_prefix=matched_prefix,
+                        meta=matched_prefix + original_command,
+                    )
+
+                    try:
+                        if not await context.command.can_run(context):
+                            raise CheckFailure(None, "Unknown check failure")
+                    except CheckFailure as err:
+                        self.dispatch("command_error", context, err)
+                        return
+
+                    def _task_callback(t: asyncio.Task):
+                        try:
+                            exc = t.exception()
+                        except asyncio.CancelledError:
+                            self.dispatch("command_cancelled", context, t)
+                        else:
+                            if exc:
+                                if "command_error" not in self._events:
+                                    self.log.exception(
+                                        "There was an error while running %r: %r", command, exc, exc_info=exc
+                                    )
+                                self.dispatch("command_error", context, CommandError(exception=exc))
+                            else:
+                                self.dispatch("command_complete", context, t)
+                        if hasattr(context, "_perf_timer"):
+                            self.log.debug(
+                                "Command %r finished in %.2f seconds",
+                                command.name,
+                                time.perf_counter() - context._perf_timer,
+                            )
+
+                    self.log.debug(f"Running command {command.name} with context {context!r}")
+                    try:
+                        task = asyncio.create_task(await command.invoke(context))
+                        context._task = task
+                        context._perf_timer = time.perf_counter()
+                    except CommandArgumentsError as e:
+                        self.dispatch("command_error", context, e)
+                    except Exception as e:
+                        self.log.exception("Failed to invoke command %s", command.name, exc_info=e)
+                        self.dispatch("command_error", context, CommandError(exception=e))
+                    else:
+                        task.add_done_callback(_task_callback)
+                else:
+                    self.log.debug(f"Command {original_command!r} not found.")
 
     def is_owner(self, user_id: str) -> bool:
         """
@@ -656,11 +678,12 @@ class NioBot(AsyncClient):
 
         return decorator
 
-    def add_event_listener(self, event_type: typing.Union[str, nio.Event], func):
+    def add_event_listener(self, event_type: typing.Union[str, nio.Event, Type[nio.Event]], func):
         self._events.setdefault(event_type, [])
         self._events[event_type].append(func)
-        
+
         if isinstance(event_type, nio.Event):
+
             @functools.wraps(func)
             async def event_safety_wrapper(*args):
                 # This is necessary to stop callbacks crashing the process
@@ -668,12 +691,13 @@ class NioBot(AsyncClient):
                     return await func(*args)
                 except Exception as e:
                     self.log.exception("Error in raw event listener %r", func, exc_info=e)
+
             func = event_safety_wrapper
             self.add_event_callback(func, event_type)
             self.log.debug("Added raw event listener %r for %r", func, event_type)
         self.log.debug("Added event listener %r for %r", func, event_type)
 
-    def on_event(self, event_type: typing.Optional[typing.Union[str, nio.Event]] = None):
+    def on_event(self, event_type: typing.Optional[typing.Union[str, Type[nio.Event]]] = None):
         """Wrapper that allows you to register an event handler.
 
         Event handlers **must** be async.
@@ -863,9 +887,11 @@ class NioBot(AsyncClient):
             return obj
         raise ValueError("Unable to determine ID of object: %r" % obj)
 
-    @staticmethod
-    def generate_mx_reply(room: nio.MatrixRoom, event: nio.RoomMessageText) -> str:
-        """Generates a reply string for a given event."""
+    @deprecated(None)
+    def generate_mx_reply(self, room: nio.MatrixRoom, event: nio.RoomMessageText) -> str:
+        """Fallback replies have been removed by MSC2781. Do not use this anymore."""
+        if not self.use_fallback_replies:
+            return ""
         return (
             "<mx-reply>"
             "<blockquote>"
@@ -1103,11 +1129,6 @@ class NioBot(AsyncClient):
             elif content_type == "html.raw":
                 body["formatted_body"] = content
                 body["format"] = "org.matrix.custom.html"
-        if reply_to and isinstance(reply_to, nio.RoomMessageText) and isinstance(room, nio.MatrixRoom):
-            body["formatted_body"] = "{}{}".format(
-                self.generate_mx_reply(room, reply_to), body.get("formatted_body", body["body"])
-            )
-            body["format"] = "org.matrix.custom.html"
 
         if reply_to:
             body["m.relates_to"] = {"m.in_reply_to": {"event_id": self._get_id(reply_to)}}
