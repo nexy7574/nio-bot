@@ -221,7 +221,8 @@ class NioBot(AsyncClient):
             elif asyncio.iscoroutinefunction(cmd) or inspect.isfunction(cmd):
                 self.log.warning(
                     "Manually changing default help command callback to %r. Please consider passing your own"
-                    " Command instance instead."
+                    " Command instance instead.",
+                    cmd,
                 )
                 help_cmd.callback = cmd
             else:
