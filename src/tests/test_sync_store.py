@@ -38,3 +38,7 @@ async def test_sync_store(resolve_state):
 
         assert await sync_manager.get_next_batch("@example:matrix.example") == "42219939"
         assert len(client.rooms) == 2
+
+        # Teardown
+        await sync_manager.close()
+        await client.close()

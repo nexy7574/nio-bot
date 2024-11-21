@@ -1305,6 +1305,11 @@ class NioBot(AsyncClient):
             raise MessageException("Failed to delete reaction.", response)
         return response
 
+    async def close(self):
+        if self.sync_store:
+            await self.sync_store.close()
+        await super().close()
+
     async def start(
         self,
         password: typing.Optional[str] = None,
