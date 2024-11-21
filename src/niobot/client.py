@@ -33,7 +33,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import MXID_REGEX, Mentions, Typing, deprecated, force_await, run_blocking
+from .utils import MXID_REGEX, Mentions, Typing, deprecated, force_await, run_blocking, SyncStore, Membership
 from .utils.help_command import DefaultHelpCommand
 
 try:
@@ -135,6 +135,7 @@ class NioBot(AsyncClient):
         default_parse_mentions: bool = True,
         force_initial_sync: bool = False,
         use_fallback_replies: bool = False,
+        onsite_state_resolution: bool = False
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -277,6 +278,14 @@ class NioBot(AsyncClient):
         self._event_id_cache = collections.deque(maxlen=1000)
         self._message_process_lock = asyncio.Lock()
 
+        self.sync_store: typing.Optional[SyncStore] = None
+        if self.store_path:
+            self.sync_store = SyncStore(
+                self,
+                self.store_path + "/sync.db",
+                resolve_state=onsite_state_resolution
+            )
+
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
         """
@@ -327,6 +336,8 @@ class NioBot(AsyncClient):
         sync = await super().sync(*args, **kwargs)
         if isinstance(sync, nio.SyncResponse):
             self._populate_dm_rooms(sync)
+            if self.sync_store:
+                await self.sync_store.handle_sync(sync)
         return sync
 
     def _populate_dm_rooms(self, sync: nio.SyncResponse):
@@ -1347,6 +1358,18 @@ class NioBot(AsyncClient):
         else:
             self.server_info = await response.json()
             self.log.debug("Server details: %r", self.server_info)
+
+        if self.sync_store:
+            self.log.info("Resuming from sync store...")
+            try:
+                payload = await self.sync_store.generate_sync()
+                assert isinstance(payload, nio.SyncResponse), "Sync store did not return a SyncResponse."
+                self.log.info("Replaying sync...")
+                await self._handle_sync(payload)
+                self.log.info("Successfully resumed from store.")
+            except Exception as e:
+                self.log.error("Failed to replay sync: %r. Will not resume.", e, exc_info=e)
+
         self.log.info("Performing first sync...")
 
         def presence_getter(stage: int) -> Optional[str]:
