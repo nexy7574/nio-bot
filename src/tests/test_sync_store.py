@@ -1,10 +1,11 @@
 import json
+import pathlib
 import tempfile
 
 import nio
-import pytest
-import pathlib
 import niobot
+import pytest
+
 # from .. import niobot
 
 

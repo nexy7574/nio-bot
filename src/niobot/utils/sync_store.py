@@ -1,16 +1,18 @@
+import dataclasses
 import enum
 import json
 import logging
-import typing
 import os
-import dataclasses
+import typing
 
 import aiosqlite
 import nio
 
-
 if typing.TYPE_CHECKING:
     from ..client import NioBot
+
+
+__all__ = ("Membership", "SyncStore")
 
 
 class Membership(enum.Enum):
@@ -35,6 +37,7 @@ class SyncStore:
     Enabling this will reduce the size of your sync store, and may improve load times,
     but may impact save times and resource consuming.
     """
+
     IMPORTANT_TIMELINE_EVENTS = (
         "m.room.create",
         "m.room.join_rules",
@@ -57,7 +60,7 @@ class SyncStore:
                     state TEXT NOT NULL
                 );
                 """,
-                []
+                [],
             ),
             (
                 """
@@ -69,7 +72,7 @@ class SyncStore:
                     timeline TEXT NOT NULL
                 );
                 """,
-                []
+                [],
             ),
             (
                 """
@@ -78,7 +81,7 @@ class SyncStore:
                     state TEXT NOT NULL
                 );
                 """,
-                []
+                [],
             ),
             (
                 """
@@ -89,7 +92,7 @@ class SyncStore:
                     timeline TEXT NOT NULL
                 );
                 """,
-                []
+                [],
             ),
             (
                 """
@@ -98,18 +101,18 @@ class SyncStore:
                     next_batch TEXT DEFAULT ''
                 )
                 """,
-                ()
-            )
+                (),
+            ),
         ]
     ]
     log = logging.getLogger(__name__)
 
     def __init__(
-            self,
-            client: "NioBot",
-            db_path: typing.Union[os.PathLike, str] = None,
-            important_events: typing.Iterable[str] = IMPORTANT_TIMELINE_EVENTS,
-            resolve_state: bool = False
+        self,
+        client: "NioBot",
+        db_path: typing.Union[os.PathLike, str] = None,
+        important_events: typing.Iterable[str] = IMPORTANT_TIMELINE_EVENTS,
+        resolve_state: bool = False,
     ):
         self._client = client
         self._db_path = db_path
@@ -148,9 +151,7 @@ class SyncStore:
         for old_state in old_states:
             self.log.debug("Removing %r from the %r state, if it is in there.", room_id, old_state)
             table = f"rooms.{old_state}"
-            await self._db.execute(
-                f"DELETE FROM \"{table}\" WHERE room_id=?", (room_id,)
-            )
+            await self._db.execute(f'DELETE FROM "{table}" WHERE room_id=?', (room_id,))
 
     async def process_invite(self, room_id: str, info: nio.InviteInfo) -> None:
         """
@@ -164,7 +165,7 @@ class SyncStore:
         self.log.debug("Processing room invite for %r: %r.", room_id, info)
         await self._db.execute(
             "INSERT OR IGNORE INTO 'rooms.invite' (room_id, state) VALUES (?, ?)",
-            (room_id, self.dumps([dataclasses.asdict(x) for x in info.invite_state]))
+            (room_id, self.dumps([dataclasses.asdict(x) for x in info.invite_state])),
         )
 
     @staticmethod
@@ -172,7 +173,7 @@ class SyncStore:
         d = {
             "m.heroes": summary.heroes,
             "m.invited_member_count": summary.invited_member_count,
-            "m.joined_member_count": summary.joined_member_count
+            "m.joined_member_count": summary.joined_member_count,
         }
         for k, v in d.copy().items():
             if v is None:
@@ -196,10 +197,10 @@ class SyncStore:
             (
                 room_id,
                 self.dumps([dataclasses.asdict(x) for x in info.account_data]),
-                '[]',
+                "[]",
                 self.dumps(self.summary_to_json(info.summary)),
-                '[]'
-            )
+                "[]",
+            ),
         )
         self.log.debug("Inserting state events")
         for state_event in info.state:
@@ -221,8 +222,8 @@ class SyncStore:
                 room_id,
                 self.dumps([dataclasses.asdict(x) for x in info.account_data]),
                 self.dumps([dataclasses.asdict(x) for x in info.state]),
-                self.dumps([dataclasses.asdict(x) for x in info.timeline.events])
-            )
+                self.dumps([dataclasses.asdict(x) for x in info.timeline.events]),
+            ),
         )
 
     async def get_state_for(self, room_id: str, membership: Membership) -> typing.List[typing.Dict]:
@@ -231,21 +232,14 @@ class SyncStore:
         """
         await self._init_db()
         state_table = f"rooms.{membership.value}"
-        async with self._db.execute(
-            f"SELECT state FROM \"{state_table}\" WHERE room_id=?", (room_id,)
-        ) as cursor:
+        async with self._db.execute(f'SELECT state FROM "{state_table}" WHERE room_id=?', (room_id,)) as cursor:
             result = await cursor.fetchone()
             if result:
                 return json.loads(result["state"])
             return []
 
     async def insert_state_event(
-            self,
-            room_id: str,
-            membership: Membership,
-            new_event: typing.Union[dict, nio.Event],
-            *,
-            force: bool = False
+        self, room_id: str, membership: Membership, new_event: typing.Union[dict, nio.Event], *, force: bool = False
     ) -> None:
         """
         Inserts a new event into the state store for a specified room
@@ -275,11 +269,7 @@ class SyncStore:
         if replaces_state and self.resolve_state:
             for event in existing_state:
                 if event.get("event_id", None) == replaces_state:
-                    self.log.debug(
-                        "State event %r replaced state event %r.",
-                        new_event["event_id"],
-                        replaces_state
-                    )
+                    self.log.debug("State event %r replaced state event %r.", new_event["event_id"], replaces_state)
                     existing_state.remove(event)
                     break
             else:
@@ -287,24 +277,18 @@ class SyncStore:
                     "Got a state event (%r) that is meant to replace another one (%r), however we do not have"
                     " the latter.",
                     new_event["event_id"],
-                    replaces_state
+                    replaces_state,
                 )
 
         self.log.debug("Appending event %r to state %r.", new_event, existing_state)
         existing_state.append(new_event)
         self.log.debug("Room %r now has %d state events.", room_id, len(existing_state))
         await self._db.execute(
-            f"UPDATE \"{state_table}\" SET state=? WHERE room_id=?",
-            (self.dumps(existing_state), room_id)
+            f'UPDATE "{state_table}" SET state=? WHERE room_id=?', (self.dumps(existing_state), room_id)
         )
 
     async def insert_timeline_event(
-            self,
-            room_id: str,
-            membership: Membership,
-            new_event: typing.Union[dict, nio.Event],
-            *,
-            force: bool = False
+        self, room_id: str, membership: Membership, new_event: typing.Union[dict, nio.Event], *, force: bool = False
     ) -> None:
         """
         Inserts a new event into the timeline store for a specified room
@@ -332,16 +316,11 @@ class SyncStore:
         existing_timeline.append(new_event)
         self.log.debug("Room %r now has %d timeline events.", room_id, len(existing_timeline))
         await self._db.execute(
-            f"UPDATE \"{table}\" SET timeline=? WHERE room_id=?",
-            (self.dumps(existing_timeline), room_id)
+            f'UPDATE "{table}" SET timeline=? WHERE room_id=?', (self.dumps(existing_timeline), room_id)
         )
 
     async def remove_event(
-            self,
-            room_id: str,
-            membership: Membership,
-            event_id: str,
-            event_type: typing.Literal["timeline", "state"]
+        self, room_id: str, membership: Membership, event_id: str, event_type: typing.Literal["timeline", "state"]
     ) -> None:
         """
         Forcibly removes an event from the store.
@@ -358,17 +337,14 @@ class SyncStore:
                 existing_data.remove(event)
                 break
         await self._db.execute(
-            f"UPDATE \"{table}\" SET {event_type}=? WHERE room_id=?",
-            (self.dumps(existing_data), room_id)
+            f'UPDATE "{table}" SET {event_type}=? WHERE room_id=?', (self.dumps(existing_data), room_id)
         )
 
     async def get_next_batch(self, user_id: str = None) -> str:
         """Returns the next batch token for the given user ID (or the client's user ID)"""
         await self._init_db()
         user_id = user_id or self._client.user_id
-        async with self._db.execute(
-            "SELECT next_batch FROM \"meta\" WHERE user_id=?", (user_id,)
-        ) as cursor:
+        async with self._db.execute('SELECT next_batch FROM "meta" WHERE user_id=?', (user_id,)) as cursor:
             result = await cursor.fetchone()
             if result:
                 self.log.debug("Next batch record: %r", result)
@@ -381,8 +357,7 @@ class SyncStore:
         await self._init_db()
         self.log.debug("Setting next batch to %r for %r.", next_batch, user_id)
         await self._db.execute(
-            "INSERT OR REPLACE INTO \"meta\" (user_id, next_batch) VALUES (?, ?)",
-            (user_id, next_batch)
+            'INSERT OR REPLACE INTO "meta" (user_id, next_batch) VALUES (?, ?)', (user_id, next_batch)
         )
 
     async def handle_sync(self, response: nio.SyncResponse) -> None:
@@ -405,7 +380,7 @@ class SyncStore:
             self.log.debug(
                 "Processed sync response %r, next batch is now %r.",
                 await self.get_next_batch(self._client.user_id),
-                response.next_batch
+                response.next_batch,
             )
         await self.set_next_batch(self._client.user_id, response.next_batch)
 
@@ -415,15 +390,9 @@ class SyncStore:
         """
         payload = {
             "next_batch": await self.get_next_batch(self._client.user_id),
-            "rooms": {
-                "invite": {},
-                "join": {},
-                "leave": {}
-            }
+            "rooms": {"invite": {}, "join": {}, "leave": {}},
         }
-        async with self._db.execute(
-            "SELECT * FROM \"rooms.join\""
-        ) as cursor:
+        async with self._db.execute('SELECT * FROM "rooms.join"') as cursor:
             async for row in cursor:
                 summary = json.loads(row["summary"])
 
@@ -432,27 +401,21 @@ class SyncStore:
                     "state": {"events": json.loads(row["state"])},
                     "account_data": {"events": json.loads(row["account_data"])},
                     "summary": summary,
-                    "ephemeral": {}
+                    "ephemeral": {},
                 }
 
-        async with self._db.execute(
-            "SELECT room_id, state FROM \"rooms.invite\""
-        ) as cursor:
+        async with self._db.execute('SELECT room_id, state FROM "rooms.invite"') as cursor:
             async for row in cursor:
-                payload["rooms"]["invite"][row["room_id"]] = {
-                    "invite_state": {"events": json.loads(row["state"])}
-                }
+                payload["rooms"]["invite"][row["room_id"]] = {"invite_state": {"events": json.loads(row["state"])}}
 
-        async with self._db.execute(
-            "SELECT * FROM \"rooms.leave\""
-        ) as cursor:
+        async with self._db.execute('SELECT * FROM "rooms.leave"') as cursor:
             async for row in cursor:
                 payload["rooms"]["leave"][row["room_id"]] = {
                     "timeline": {"events": json.loads(row["timeline"])},
                     "state": {"events": json.loads(row["state"])},
                     "account_data": {"events": json.loads(row["account_data"])},
                     "summary": {},
-                    "ephemeral": {}
+                    "ephemeral": {},
                 }
 
         return nio.SyncResponse.from_dict(payload)

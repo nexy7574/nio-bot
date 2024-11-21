@@ -33,7 +33,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import MXID_REGEX, Mentions, Typing, deprecated, force_await, run_blocking, SyncStore, Membership
+from .utils import MXID_REGEX, Mentions, SyncStore, Typing, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
 
 try:
@@ -135,7 +135,7 @@ class NioBot(AsyncClient):
         default_parse_mentions: bool = True,
         force_initial_sync: bool = False,
         use_fallback_replies: bool = False,
-        onsite_state_resolution: bool = False
+        onsite_state_resolution: bool = False,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -280,11 +280,7 @@ class NioBot(AsyncClient):
 
         self.sync_store: typing.Optional[SyncStore] = None
         if self.store_path:
-            self.sync_store = SyncStore(
-                self,
-                self.store_path + "/sync.db",
-                resolve_state=onsite_state_resolution
-            )
+            self.sync_store = SyncStore(self, self.store_path + "/sync.db", resolve_state=onsite_state_resolution)
 
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
