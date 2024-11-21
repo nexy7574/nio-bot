@@ -57,6 +57,7 @@ class Argument:
         required: bool = ...,
         parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
         greedy: bool = False,
+        raw_type: type(inspect.Parameter.POSITIONAL_OR_KEYWORD),
         **kwargs,
     ):
         if default is inspect.Parameter.default:
@@ -73,7 +74,7 @@ class Argument:
         self.extra = kwargs
         self.parser = parser
         self.greedy = greedy
-
+        self.raw_type = raw_type
         if self.parser is ...:
             from .utils import BUILTIN_MAPPING
 
@@ -117,6 +118,9 @@ class Argument:
                             " v1.2.0"
                         )
                     )
+
+        if raw_type == inspect.Parameter.KEYWORD_ONLY and self.type is not str:
+            raise TypeError("Keyword-only arguments must be of type str, not %r." % self.type)
 
     def __repr__(self):
         return (
@@ -214,7 +218,14 @@ class Command:
                 self.arguments = []
             else:
                 self.arguments = self.autodetect_args(self.callback)
-        _CTX_ARG = Argument("ctx", Context, description="The context for the command", parser=lambda ctx, *_: ctx)
+        _CTX_ARG = Argument(
+            "ctx",
+            Context,
+            description="The context for the command",
+            parser=lambda ctx, *_: ctx,
+            greedy=False,
+            raw_type=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        )
         self.arguments.insert(0, _CTX_ARG)
         self.arguments: list[Argument]
         self.greedy = greedy
@@ -249,13 +260,17 @@ class Command:
                 continue
 
             # Disallow **kwargs
-            if parameter.kind in [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.VAR_KEYWORD]:
-                raise CommandArgumentsError("Cannot use keyword args in command callback (argument No. %d)" % n)
-            is_positional = parameter.kind == inspect.Parameter.VAR_POSITIONAL
+            if parameter.kind == inspect.Parameter.POSITIONAL_ONLY:
+                raise TypeError("Positional-only arguments are not supported.")
+            elif parameter.kind == inspect.Parameter.VAR_KEYWORD:
+                raise TypeError("Implicit keyword arguments (**kwargs) are not supported.")
+            is_positional = parameter.kind == inspect.Parameter.VAR_POSITIONAL  # *args
+            is_kwarg = parameter.kind == inspect.Parameter.KEYWORD_ONLY
+            greedy = is_positional or is_kwarg
 
             if parameter.annotation is inspect.Parameter.empty:
                 log.debug("Found argument %r, however no type was specified. Assuming string.", parameter)
-                a = Argument(parameter.name, str, default=parameter.default, greedy=is_positional)
+                a = Argument(parameter.name, str, default=parameter.default, greedy=greedy, raw_type=parameter.kind)
             else:
                 annotation = parameter.annotation
                 origin = typing.get_origin(annotation)
@@ -269,24 +284,40 @@ class Command:
                         type_parser,
                     )
                     a = Argument(
-                        parameter.name, real_type, default=parameter.default, parser=type_parser, greedy=is_positional
+                        parameter.name,
+                        real_type,
+                        default=parameter.default,
+                        parser=type_parser,
+                        greedy=greedy,
+                        raw_type=parameter.kind,
                     )
                 elif origin is typing.Union:
                     if len(annotation_args) == 2 and annotation_args[1] is type(None):
                         log.debug("Resolved Union[...] (%r) to optional type %r", annotation, annotation_args[0])
                         a = Argument(
-                            parameter.name, annotation_args[0], default=parameter.default, greedy=is_positional
+                            parameter.name,
+                            annotation_args[0],
+                            default=parameter.default,
+                            greedy=greedy,
+                            raw_type=parameter.kind,
                         )
                     else:
                         raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
                 else:
                     log.debug("Found argument %r with unknown annotated type %r", parameter, parameter.annotation)
-                    a = Argument(parameter.name, parameter.annotation)
+                    a = Argument(
+                        parameter.name,
+                        parameter.annotation,
+                        default=parameter.default,
+                        greedy=greedy,
+                        raw_type=parameter.kind,
+                    )
 
             if parameter.default is not inspect.Parameter.empty:
                 a.default = parameter.default
                 a.required = False
             args.append(a)
+            # NOTE: It may be worth breaking here, but an error should be raised if there are too many arguments.
         log.debug("Automatically detected the following arguments: %r", args)
         return args
 
@@ -345,6 +376,55 @@ class Command:
                     raise CheckFailure(name)
         return True
 
+    async def parse_args(
+        self, ctx: Context
+    ) -> typing.Dict[Argument, typing.Union[typing.Any, typing.List[typing.Any]]]:
+        """
+        Parses the arguments for the current command.
+        """
+        sentinel = os.urandom(128)  # forbid passing arguments with this failsafe
+        to_pass = {}
+        hit_greedy = False
+        self.log.debug("Parsing arguments for command %r: %r", self, self.arguments)
+        for arg in self.arguments[1:]:  # 0 is ctx
+            if hit_greedy:
+                raise TypeError("Got an argument after a greedy=True argument.")
+            to_pass[arg] = sentinel
+            if arg.greedy:
+                to_pass[arg] = []
+                hit_greedy = True
+        next_arg = 1
+
+        context_args = iter(ctx.args)
+        for value in context_args:
+            try:
+                arg = self.arguments[next_arg]
+            except IndexError:
+                raise CommandArgumentsError(f"Too many arguments given to command {self.name}")
+
+            self.log.debug("Parsing argument %d: %r, with value %r", next_arg, arg, value)
+            try:
+                parsed = arg.parser(ctx, arg, value)
+                if inspect.iscoroutine(parsed):
+                    parsed = await parsed
+            except Exception as e:
+                raise CommandParserError(f"Error while parsing argument {arg.name}: {e}") from e
+            self.log.debug("Parsed argument %d (%r<%r>) to %r", next_arg, arg, value, parsed)
+            if arg.greedy:
+                to_pass[arg].append(parsed)
+            else:
+                to_pass[arg] = parsed
+                next_arg += 1
+
+        for arg, value in to_pass.items():
+            if value is sentinel and arg.required:
+                raise CommandArgumentsError(f"Missing required argument {arg.name}")
+            if value is sentinel:
+                to_pass[arg] = arg.default
+            if arg.greedy and arg.raw_type == inspect.Parameter.KEYWORD_ONLY:
+                to_pass[arg] = " ".join(to_pass[arg])
+        return to_pass
+
     async def invoke(self, ctx: Context) -> typing.Coroutine:
         """
         Invokes the current command with the given context
@@ -353,58 +433,14 @@ class Command:
         :raises CommandArgumentsError: Too many/few arguments, or an error parsing an argument.
         :raises CheckFailure: A check failed
         """
-
-        parsed_args = []
-        if len(ctx.args) > (len(self.arguments) - 1) and self.greedy is False:
-            raise CommandArgumentsError(f"Too many arguments given to command {self.name}")
-        for index, argument in enumerate(self.arguments[1:]):
-            argument: Argument
-
-            if index >= len(ctx.args):
-                if argument.required:
-                    raise CommandArgumentsError(f"Missing required argument {argument.name}")
-                parsed_args.append(argument.default)
-                continue
-
-            self.log.debug("Resolved argument %s to %r", argument.name, ctx.args[index])
-            try:
-                parsed_argument = argument.parser(ctx, argument, ctx.args[index])
-                if inspect.iscoroutine(parsed_argument):
-                    parsed_argument = await parsed_argument
-            except Exception as e:
-                error = f"Error while parsing argument {argument.name}: {e}"
-                raise CommandArgumentsError(error) from e
-            parsed_args.append(parsed_argument)
-
-            # Greedy args support
-            if argument.greedy:
-                for arg in ctx.args[index + 1 :]:
-                    # noinspection PyBroadException
-                    try:
-                        parsed_argument = argument.parser(ctx, argument, arg)
-                        if inspect.iscoroutine(parsed_argument):
-                            parsed_argument = await parsed_argument
-                    except Exception:
-                        break
-                    parsed_args.append(parsed_argument)
-                    self.log.debug("Resolved greedy argument %s to %r", argument.name, arg)
-                break
-
-        parsed_args = [ctx, *parsed_args]
-        if len(parsed_args) < len(self.arguments):
-            self.log.warning(
-                "Parsed arguments length does not match registered arguments length. %d processed arguments, %d "
-                "arguments.",
-                len(parsed_args),
-                len(self.arguments),
-            )
-        self.log.debug("Arguments to pass: %r", parsed_args)
-        ctx.client.dispatch("command", ctx)
+        parsed_kwargs = await self.parse_args(ctx)
+        parsed_args = [ctx]
         if self.module:
-            self.log.debug("Will pass module instance")
-            return self.callback(self.module, *parsed_args)
-        else:
-            return self.callback(*parsed_args)
+            parsed_args.insert(0, self.module)
+        self.log.debug("Arguments to pass: %r", parsed_args)
+        self.log.debug("Keyword arguments to pass: %r", parsed_kwargs)
+        ctx.client.dispatch("command", ctx)
+        return self.callback(*parsed_args, **{x.name: y for x, y in parsed_kwargs.items()})
 
     def construct_context(
         self,

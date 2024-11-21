@@ -115,6 +115,11 @@ class StatelessParser(Parser, abc.ABC):
         return cls()(ctx, arg, value)
 
 
+class _StringParser(StatelessParser):
+    def __call__(self, ctx, arg, value) -> str:
+        return str(value)
+
+
 class BooleanParser(StatelessParser):
     """
     Converts a given string into a boolean. Value is casefolded before being parsed.
@@ -417,6 +422,7 @@ class MatrixUserParser(StatelessParser):
 
 
 BUILTIN_MAPPING = {
+    str: _StringParser(),
     bool: BooleanParser(),
     float: FloatParser(),
     int: IntegerParser(),
