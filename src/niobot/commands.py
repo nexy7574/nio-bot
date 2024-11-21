@@ -57,11 +57,7 @@ class Argument:
         required: bool = ...,
         parser: typing.Callable[["Context", "Argument", str], typing.Optional[_T]] = ...,
         greedy: bool = False,
-        raw_type: typing.Union[
-            inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            inspect.Parameter.VAR_POSITIONAL,
-            inspect.Parameter.KEYWORD_ONLY,
-        ],
+        raw_type: type(inspect.Parameter.POSITIONAL_OR_KEYWORD),
         **kwargs,
     ):
         if default is inspect.Parameter.default:
