@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import typing
+import uuid
 
 import aiosqlite
 import nio
@@ -399,7 +400,7 @@ class SyncStore:
         Handles a sync response from the server
         """
         await self._init_db()
-        self.log.debug("Handling sync: %r", response)
+        self.log.debug("Handling sync: %r", response.uuid or uuid.uuid4())
         for room_id, room in response.rooms.invite.items():
             self.log.debug("Processing invited room %r: %r", room_id, room)
             await self.process_invite(room_id, room)
