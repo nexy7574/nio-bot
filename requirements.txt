@@ -6,3 +6,4 @@ pillow>=9.3.0
 beautifulsoup4~=4.12
 pydantic~=2.9
 aiosqlite~=0.20
+orjson~=3.10

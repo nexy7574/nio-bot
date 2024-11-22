@@ -1,5 +1,7 @@
+import asyncio
 import dataclasses
 import enum
+import functools
 import json
 import logging
 import os
@@ -8,6 +10,11 @@ import uuid
 
 import aiosqlite
 import nio
+
+try:
+    import orjson
+except ImportError:
+    orjson = None
 
 if typing.TYPE_CHECKING:
     from ..client import NioBot
@@ -73,7 +80,7 @@ class SyncStore:
                 """
                 CREATE TABLE IF NOT EXISTS "rooms.invite" (
                     room_id TEXT PRIMARY KEY,
-                    state TEXT NOT NULL
+                    state BLOB NOT NULL
                 );
                 """,
                 [],
@@ -82,10 +89,10 @@ class SyncStore:
                 """
                 CREATE TABLE IF NOT EXISTS "rooms.join" (
                     room_id TEXT PRIMARY KEY,
-                    account_data TEXT NOT NULL,
-                    state TEXT NOT NULL,
-                    summary TEXT NOT NULL,
-                    timeline TEXT NOT NULL
+                    account_data BLOB NOT NULL,
+                    state BLOB NOT NULL,
+                    summary BLOB NOT NULL,
+                    timeline BLOB NOT NULL
                 );
                 """,
                 [],
@@ -94,7 +101,7 @@ class SyncStore:
                 """
                 CREATE TABLE IF NOT EXISTS "rooms.knock" (
                     room_id TEXT PRIMARY KEY,
-                    state TEXT NOT NULL
+                    state BLOB NOT NULL
                 );
                 """,
                 [],
@@ -103,9 +110,9 @@ class SyncStore:
                 """
                 CREATE TABLE IF NOT EXISTS "rooms.leave" (
                     room_id TEXT PRIMARY KEY,
-                    account_data TEXT NOT NULL,
-                    state TEXT NOT NULL,
-                    timeline TEXT NOT NULL
+                    account_data BLOB NOT NULL,
+                    state BLOB NOT NULL,
+                    timeline BLOB NOT NULL
                 );
                 """,
                 [],
@@ -167,8 +174,32 @@ class SyncStore:
         self.log.debug("SyncStore closed via context manager.")
 
     @staticmethod
-    def dumps(obj: typing.Any) -> str:
-        return json.dumps(obj, separators=(",", ":"))
+    def _loads_sync(obj: typing.Union[str, bytes]) -> typing.Any:
+        if orjson:
+            return orjson.loads(obj)
+        if isinstance(obj, bytes):
+            obj = obj.decode()
+        return json.loads(obj)
+
+    @staticmethod
+    def _dumps_sync(obj: typing.Any) -> bytes:
+        if orjson:
+            return orjson.dumps(obj)
+        return json.dumps(obj, separators=(",", ":")).encode()
+
+    @staticmethod
+    async def aloads(obj: bytes) -> typing.Any:
+        """Asynchronously loads a JSON string into an object"""
+        event_loop = asyncio.get_event_loop()
+        call = functools.partial(SyncStore._loads_sync, obj)
+        return await event_loop.run_in_executor(None, call)
+
+    @staticmethod
+    async def adumps(obj: typing.Any) -> bytes:
+        """Asynchronously dumps an object to a JSON byte string"""
+        event_loop = asyncio.get_event_loop()
+        call = functools.partial(SyncStore._dumps_sync, obj)
+        return await event_loop.run_in_executor(None, call)
 
     async def _pop_from(self, room_id: str, *old_states: str) -> None:
         """Removes the given room ID from *old_states"""
@@ -189,9 +220,10 @@ class SyncStore:
         await self._init_db()
         await self._pop_from(room_id, "join", "knock", "leave")
         self.log.debug("Processing join room %r.", room_id)
+        state = await self.adumps([dataclasses.asdict(x) for x in info.invite_state])
         await self._db.execute(
             "INSERT OR IGNORE INTO 'rooms.invite' (room_id, state) VALUES (?, ?)",
-            (room_id, self.dumps([dataclasses.asdict(x) for x in info.invite_state])),
+            (room_id, state),
         )
 
     @staticmethod
@@ -225,10 +257,10 @@ class SyncStore:
                     """,
                     (
                         room_id,
-                        self.dumps([dataclasses.asdict(x) for x in info.account_data]),
-                        "[]",
-                        self.dumps(self.summary_to_json(info.summary)),
-                        "[]",
+                        await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
+                        b"[]",
+                        await self.adumps(self.summary_to_json(info.summary)),
+                        b"[]",
                     ),
                 )
         self.log.debug("Processing joined room %r.", room_id)
@@ -249,9 +281,9 @@ class SyncStore:
             "INSERT OR IGNORE INTO 'rooms.leave' (room_id, account_data, state, timeline) VALUES (?, ?, ?, ?)",
             (
                 room_id,
-                self.dumps([dataclasses.asdict(x) for x in info.account_data]),
-                self.dumps([dataclasses.asdict(x) for x in info.state]),
-                self.dumps([dataclasses.asdict(x) for x in info.timeline.events]),
+                await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
+                await self.adumps([dataclasses.asdict(x) for x in info.state]),
+                await self.adumps([dataclasses.asdict(x) for x in info.timeline.events]),
             ),
         )
 
@@ -264,7 +296,7 @@ class SyncStore:
         async with self._db.execute(f'SELECT state FROM "{state_table}" WHERE room_id=?', (room_id,)) as cursor:
             result = await cursor.fetchone()
             if result:
-                return json.loads(result["state"])
+                return await self.aloads(result["state"])
             return []
 
     async def insert_state_event(
@@ -309,14 +341,14 @@ class SyncStore:
                     replaces_state,
                 )
         if self.log.isEnabledFor(logging.DEBUG):
-            dumped_state = json.dumps(existing_state, separators=(",", ":"))
+            dumped_state = (await self.adumps(existing_state)).decode()
             if len(dumped_state) > 512:
                 dumped_state = dumped_state[:512] + "..."
             self.log.debug("Appending event %r to state %r.", new_event, dumped_state)
         existing_state.append(new_event)
         self.log.debug("Room %r now has %d state events.", room_id, len(existing_state))
         await self._db.execute(
-            f'UPDATE "{state_table}" SET state=? WHERE room_id=?', (self.dumps(existing_state), room_id)
+            f'UPDATE "{state_table}" SET state=? WHERE room_id=?', (await self.adumps(existing_state), room_id)
         )
 
     async def insert_timeline_event(
@@ -345,14 +377,14 @@ class SyncStore:
         table = f"rooms.{membership.value}"
         existing_timeline = await self.get_state_for(room_id, membership)
         if self.log.isEnabledFor(logging.DEBUG):
-            dumped_timeline = json.dumps(existing_timeline, separators=(",", ":"))
+            dumped_timeline = (await self.adumps(existing_timeline)).decode()
             if len(dumped_timeline) > 512:
                 dumped_timeline = dumped_timeline[:512] + "..."
             self.log.debug("Appending event %r to timeline %r.", new_event, dumped_timeline)
         existing_timeline.append(new_event)
         self.log.debug("Room %r now has %d timeline events.", room_id, len(existing_timeline))
         await self._db.execute(
-            f'UPDATE "{table}" SET timeline=? WHERE room_id=?', (self.dumps(existing_timeline), room_id)
+            f'UPDATE "{table}" SET timeline=? WHERE room_id=?', (await self.adumps(existing_timeline), room_id)
         )
 
     async def remove_event(
@@ -373,7 +405,7 @@ class SyncStore:
                 existing_data.remove(event)
                 break
         await self._db.execute(
-            f'UPDATE "{table}" SET {event_type}=? WHERE room_id=?', (self.dumps(existing_data), room_id)
+            f'UPDATE "{table}" SET {event_type}=? WHERE room_id=?', (await self.adumps(existing_data), room_id)
         )
 
     async def get_next_batch(self, user_id: str = None) -> str:
@@ -438,11 +470,14 @@ class SyncStore:
         }
         async with self._db.execute('SELECT * FROM "rooms.join"') as cursor:
             async for row in cursor:
-                summary = json.loads(row["summary"])
+                summary = await self.aloads(row["summary"])
+                timeline_events = await self.aloads(row["timeline"])
+                state_events = await self.aloads(row["state"])
+                account_data = await self.aloads(row["account_data"])
                 payload["rooms"]["join"][row["room_id"]] = {
-                    "timeline": {"events": json.loads(row["timeline"])},
-                    "state": {"events": json.loads(row["state"])},
-                    "account_data": {"events": json.loads(row["account_data"])},
+                    "timeline": {"events": timeline_events},
+                    "state": {"events": state_events},
+                    "account_data": {"events": account_data},
                     "summary": summary,
                     "ephemeral": {},
                 }
