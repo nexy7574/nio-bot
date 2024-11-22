@@ -155,7 +155,7 @@ class SyncStore:
             await self._db.close()
         self._db = None
 
-    async def __aenter__(self) -> typing.Self:
+    async def __aenter__(self) -> "SyncStore":
         await self._init_db()
         self.log.debug("SyncStore initialised via context manager.")
         return self
