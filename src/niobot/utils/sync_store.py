@@ -137,13 +137,15 @@ class SyncStore:
         db_path: typing.Union[os.PathLike, str] = None,
         important_events: typing.Iterable[str] = IMPORTANT_TIMELINE_EVENTS,
         resolve_state: bool = False,
-        checkpoint_every: int = 25,
+        checkpoint_every: int = 100,
     ):
         self._client = client
         self._db_path = db_path
         self.important_events = tuple(important_events)
         self.resolve_state = resolve_state
         self._db: typing.Optional[aiosqlite.Connection] = None
+        self._change_count = 0
+        self.checkpoint_every = checkpoint_every
 
     async def _init_db(self):
         if self._db:
@@ -478,9 +480,11 @@ class SyncStore:
                 response.next_batch,
             )
         await self.set_next_batch(self._client.user_id, response.next_batch)
-        if self._db.total_changes >= 25:
-            self.log.debug("%d total changes, autosaving to database.", self._db.total_changes)
+        changes = (self._db.total_changes - self._change_count)
+        if changes >= self.checkpoint_every:
+            self.log.debug("%d total changes, autosaving to database.", changes)
             await self.commit()
+            self._change_count = self._db.total_changes
 
     async def generate_sync(self) -> nio.SyncResponse:
         """
