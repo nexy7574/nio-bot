@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
     from ..client import NioBot
 
 
-__all__ = ("Membership", "SyncStore")
+__all__ = ("Membership", "SyncStore", "_DudSyncStore")
 
 
 class Membership(enum.Enum):
@@ -20,6 +20,21 @@ class Membership(enum.Enum):
     JOIN = "join"
     KNOCK = "knock"
     LEAVE = "leave"
+
+
+class _DudSyncStore:
+    """
+    Shell class context manager. Doesn't do anything.
+    """
+
+    def __bool__(self):
+        return False
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 class SyncStore:
@@ -140,6 +155,13 @@ class SyncStore:
             await self._db.close()
         self._db = None
 
+    async def __aenter__(self) -> typing.Self:
+        await self._init_db()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
     @staticmethod
     def dumps(obj: typing.Any) -> str:
         return json.dumps(obj, separators=(",", ":"))
@@ -197,17 +219,12 @@ class SyncStore:
             (
                 room_id,
                 self.dumps([dataclasses.asdict(x) for x in info.account_data]),
-                "[]",
+                self.dumps([dataclasses.asdict(x) for x in info.state]),
                 self.dumps(self.summary_to_json(info.summary)),
-                "[]",
+                json.dumps([dataclasses.asdict(x) for x in info.timeline.events], separators=(",", ":")),
             ),
         )
-        self.log.debug("Inserting state events")
-        for state_event in info.state:
-            await self.insert_state_event(room_id, Membership.JOIN, state_event)
-        self.log.debug("Inserting timeline events")
-        for timeline_event in info.timeline.events:
-            await self.insert_timeline_event(room_id, Membership.JOIN, timeline_event)
+        self.log.debug("Processed join in %r.", room_id)
 
     async def process_leave(self, room_id: str, info: nio.RoomInfo) -> None:
         """
@@ -279,8 +296,11 @@ class SyncStore:
                     new_event["event_id"],
                     replaces_state,
                 )
-
-        self.log.debug("Appending event %r to state %r.", new_event, existing_state)
+        if self.log.isEnabledFor(logging.DEBUG):
+            dumped_state = json.dumps(existing_state, separators=(",", ":"))
+            if len(dumped_state) > 512:
+                dumped_state = dumped_state[:512] + "..."
+            self.log.debug("Appending event %r to state %r.", new_event, dumped_state)
         existing_state.append(new_event)
         self.log.debug("Room %r now has %d state events.", room_id, len(existing_state))
         await self._db.execute(
@@ -423,3 +443,6 @@ class SyncStore:
     async def commit(self) -> None:
         """forcefully writes unsaved changes to the database, without closing the connection"""
         await self._db.commit()
+
+    def __bool__(self):
+        return True
