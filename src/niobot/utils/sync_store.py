@@ -152,6 +152,7 @@ class SyncStore:
         Closes the database connection, committing any unsaved data.
         """
         if self._db:
+            await self._db.commit()
             await self._db.close()
         self._db = None
 
