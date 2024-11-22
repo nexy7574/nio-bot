@@ -59,6 +59,7 @@ class SyncStore:
     :param resolve_state: Whether to resolve the state of the room when storing events.
     Enabling this will reduce the size of your sync store, and may improve load times,
     but may impact save times and resource consuming.
+    :param checkpoint_every: The number of changes to make before committing to the database
     """
 
     IMPORTANT_TIMELINE_EVENTS = (
@@ -136,6 +137,7 @@ class SyncStore:
         db_path: typing.Union[os.PathLike, str] = None,
         important_events: typing.Iterable[str] = IMPORTANT_TIMELINE_EVENTS,
         resolve_state: bool = False,
+        checkpoint_every: int = 25,
     ):
         self._client = client
         self._db_path = db_path
@@ -476,6 +478,9 @@ class SyncStore:
                 response.next_batch,
             )
         await self.set_next_batch(self._client.user_id, response.next_batch)
+        if self._db.total_changes >= 25:
+            self.log.debug("%d total changes, autosaving to database.", self._db.total_changes)
+            await self.commit()
 
     async def generate_sync(self) -> nio.SyncResponse:
         """
