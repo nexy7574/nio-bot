@@ -480,7 +480,7 @@ class SyncStore:
                 response.next_batch,
             )
         await self.set_next_batch(self._client.user_id, response.next_batch)
-        changes = (self._db.total_changes - self._change_count)
+        changes = self._db.total_changes - self._change_count
         if changes >= self.checkpoint_every:
             self.log.debug("%d total changes, autosaving to database.", changes)
             await self.commit()
