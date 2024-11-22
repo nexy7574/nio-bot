@@ -250,6 +250,7 @@ class SyncStore:
         async with self._db.execute('SELECT room_id FROM "rooms.join" WHERE room_id=?', (room_id,)) as cursor:
             result = await cursor.fetchone()
             if not result:
+                self.log.debug("Processing new joined room %r.", room_id)
                 await self._db.execute(
                     """
                     INSERT OR IGNORE INTO 'rooms.join' (room_id, account_data, state, summary, timeline)
@@ -258,16 +259,17 @@ class SyncStore:
                     (
                         room_id,
                         await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
-                        b"[]",
+                        await self.adumps([dataclasses.asdict(x) for x in info.state]),
                         await self.adumps(self.summary_to_json(info.summary)),
-                        b"[]",
+                        await self.adumps([dataclasses.asdict(x) for x in info.timeline.events]),
                     ),
                 )
-        self.log.debug("Processing joined room %r.", room_id)
-        for event in info.state:
-            await self.insert_state_event(room_id, Membership.JOIN, event)
-        for event in info.timeline.events:
-            await self.insert_timeline_event(room_id, Membership.JOIN, event)
+            else:
+                self.log.debug("Processing previously joined room %r.", room_id)
+                for event in info.state:
+                    await self.insert_state_event(room_id, Membership.JOIN, event)
+                for event in info.timeline.events:
+                    await self.insert_timeline_event(room_id, Membership.JOIN, event)
         self.log.debug("Processed join in %r.", room_id)
 
     async def process_leave(self, room_id: str, info: nio.RoomInfo) -> None:
