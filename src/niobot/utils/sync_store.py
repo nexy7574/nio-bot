@@ -375,7 +375,7 @@ class SyncStore:
         async with self._db.execute("SELECT next_batch FROM meta WHERE user_id=?", (user_id,)) as cursor:
             result = await cursor.fetchone()
             if result:
-                self.log.debug("Next batch record for %r: %r", result["user_id"], result["next_batch"])
+                self.log.debug("Next batch record for %r: %r", user_id, result["next_batch"])
                 return result["next_batch"]
             self.log.debug("No next batch stored, returning empty token.")
             return ""
@@ -402,13 +402,13 @@ class SyncStore:
         await self._init_db()
         self.log.debug("Handling sync: %r", response.uuid or uuid.uuid4())
         for room_id, room in response.rooms.invite.items():
-            self.log.debug("Processing invited room %r: %r", room_id, room)
+            self.log.debug("Processing invited room %r", room_id, room)
             await self.process_invite(room_id, room)
         for room_id, room in response.rooms.join.items():
-            self.log.debug("Processing joined room %r: %r", room_id, room)
+            self.log.debug("Processing joined room %r", room_id, room)
             await self.process_join(room_id, room)
         for room_id, room in response.rooms.leave.items():
-            self.log.debug("Processing left room %r: %r", room_id, room)
+            self.log.debug("Processing left room %r", room_id, room)
             await self.process_leave(room_id, room)
 
         if self.log.isEnabledFor(logging.DEBUG):
