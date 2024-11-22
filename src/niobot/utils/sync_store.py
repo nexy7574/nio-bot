@@ -215,19 +215,27 @@ class SyncStore:
         """
         await self._init_db()
         await self._pop_from(room_id, "invite", "knock", "leave")
+        async with self._db.execute('SELECT room_id FROM "rooms.join" WHERE room_id=?', (room_id,)) as cursor:
+            result = await cursor.fetchone()
+            if not result:
+                await self._db.execute(
+                    """
+                    INSERT OR IGNORE INTO 'rooms.join' (room_id, account_data, state, summary, timeline)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        room_id,
+                        self.dumps([dataclasses.asdict(x) for x in info.account_data]),
+                        "[]",
+                        self.dumps(self.summary_to_json(info.summary)),
+                        "[]",
+                    ),
+                )
         self.log.debug("Processing joined room %r.", room_id)
-        await self._db.execute(
-            """
-            INSERT OR IGNORE INTO 'rooms.join' (room_id, account_data, state, summary, timeline) VALUES (?, ?, ?, ?, ?)
-            """,
-            (
-                room_id,
-                self.dumps([dataclasses.asdict(x) for x in info.account_data]),
-                self.dumps([dataclasses.asdict(x) for x in info.state]),
-                self.dumps(self.summary_to_json(info.summary)),
-                json.dumps([dataclasses.asdict(x) for x in info.timeline.events], separators=(",", ":")),
-            ),
-        )
+        for event in info.state:
+            await self.insert_state_event(room_id, Membership.JOIN, event)
+        for event in info.timeline.events:
+            await self.insert_timeline_event(room_id, Membership.JOIN, event)
         self.log.debug("Processed join in %r.", room_id)
 
     async def process_leave(self, room_id: str, info: nio.RoomInfo) -> None:
