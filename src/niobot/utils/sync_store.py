@@ -186,7 +186,7 @@ class SyncStore:
         """
         await self._init_db()
         await self._pop_from(room_id, "join", "knock", "leave")
-        self.log.debug("Processing room invite for %r: %r.", room_id, info)
+        self.log.debug("Processing join room %r.", room_id)
         await self._db.execute(
             "INSERT OR IGNORE INTO 'rooms.invite' (room_id, state) VALUES (?, ?)",
             (room_id, self.dumps([dataclasses.asdict(x) for x in info.invite_state])),
@@ -213,7 +213,7 @@ class SyncStore:
         """
         await self._init_db()
         await self._pop_from(room_id, "invite", "knock", "leave")
-        self.log.debug("Joining room %r", room_id)
+        self.log.debug("Processing joined room %r.", room_id)
         await self._db.execute(
             """
             INSERT OR IGNORE INTO 'rooms.join' (room_id, account_data, state, summary, timeline) VALUES (?, ?, ?, ?, ?)
@@ -234,7 +234,7 @@ class SyncStore:
         """
         await self._init_db()
         await self._pop_from(room_id, "invite", "knock", "join")
-        self.log.debug("Leaving room %r.", room_id)
+        self.log.debug("Processing leave room %r.", room_id)
         await self._db.execute(
             "INSERT OR IGNORE INTO 'rooms.leave' (room_id, account_data, state, timeline) VALUES (?, ?, ?, ?)",
             (
@@ -334,7 +334,11 @@ class SyncStore:
         await self._init_db()
         table = f"rooms.{membership.value}"
         existing_timeline = await self.get_state_for(room_id, membership)
-        self.log.debug("Adding event %r to timeline %r.", new_event, existing_timeline)
+        if self.log.isEnabledFor(logging.DEBUG):
+            dumped_timeline = json.dumps(existing_timeline, separators=(",", ":"))
+            if len(dumped_timeline) > 512:
+                dumped_timeline = dumped_timeline[:512] + "..."
+            self.log.debug("Appending event %r to timeline %r.", new_event, dumped_timeline)
         existing_timeline.append(new_event)
         self.log.debug("Room %r now has %d timeline events.", room_id, len(existing_timeline))
         await self._db.execute(
@@ -366,10 +370,10 @@ class SyncStore:
         """Returns the next batch token for the given user ID (or the client's user ID)"""
         await self._init_db()
         user_id = user_id or self._client.user_id
-        async with self._db.execute('SELECT next_batch FROM meta WHERE user_id=?', (user_id,)) as cursor:
+        async with self._db.execute("SELECT next_batch FROM meta WHERE user_id=?", (user_id,)) as cursor:
             result = await cursor.fetchone()
             if result:
-                self.log.debug("Next batch record: %r", result)
+                self.log.debug("Next batch record for %r: %r", result["user_id"], result["next_batch"])
                 return result["next_batch"]
             self.log.debug("No next batch stored, returning empty token.")
             return ""
@@ -386,7 +390,7 @@ class SyncStore:
                 UPDATE SET next_batch=excluded.next_batch
                 WHERE user_id=excluded.user_id
             """,
-            (user_id, next_batch)
+            (user_id, next_batch),
         )
 
     async def handle_sync(self, response: nio.SyncResponse) -> None:
