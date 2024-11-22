@@ -1,6 +1,7 @@
 import json
 import pathlib
 import tempfile
+import time
 
 import nio
 import niobot
@@ -36,10 +37,12 @@ async def test_sync_store(resolve_state):
 
             replay = await sync_manager.generate_sync()
             assert isinstance(replay, nio.SyncResponse), "Failed to generate replay sync: %r" % replay
+            assert replay.next_batch == "42219939"
+            client.access_token = "fake"
+            client.start_time = time.time()
             await client._handle_sync(replay)
-
             assert await sync_manager.get_next_batch("@example:matrix.example") == "42219939"
             assert len(client.rooms) == 2
 
         # Teardown
-        await client.close()
+        # await client.close()

@@ -220,7 +220,7 @@ class SyncStore:
         await self._init_db()
         await self._pop_from(room_id, "join", "knock", "leave")
         self.log.debug("Processing join room %r.", room_id)
-        state = await self.adumps([dataclasses.asdict(x) for x in info.invite_state])
+        state = await self.adumps([dataclasses.asdict(x)["source"] for x in info.invite_state])
         await self._db.execute(
             "INSERT OR IGNORE INTO 'rooms.invite' (room_id, state) VALUES (?, ?)",
             (room_id, state),
@@ -259,9 +259,9 @@ class SyncStore:
                     (
                         room_id,
                         await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
-                        await self.adumps([dataclasses.asdict(x) for x in info.state]),
+                        await self.adumps([dataclasses.asdict(x)["source"] for x in info.state]),
                         await self.adumps(self.summary_to_json(info.summary)),
-                        await self.adumps([dataclasses.asdict(x) for x in info.timeline.events]),
+                        await self.adumps([dataclasses.asdict(x)["source"] for x in info.timeline.events]),
                     ),
                 )
             else:
@@ -284,8 +284,8 @@ class SyncStore:
             (
                 room_id,
                 await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
-                await self.adumps([dataclasses.asdict(x) for x in info.state]),
-                await self.adumps([dataclasses.asdict(x) for x in info.timeline.events]),
+                await self.adumps([dataclasses.asdict(x)["source"] for x in info.state]),
+                await self.adumps([dataclasses.asdict(x)["source"] for x in info.timeline.events]),
             ),
         )
 
@@ -313,7 +313,7 @@ class SyncStore:
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
         if isinstance(new_event, nio.Event):
-            new_event = new_event.source
+            new_event = new_event.source["source"]
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
@@ -365,7 +365,7 @@ class SyncStore:
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
         if isinstance(new_event, nio.Event):
-            new_event = new_event.source
+            new_event = new_event.source["source"]
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
