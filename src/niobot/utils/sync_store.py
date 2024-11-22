@@ -157,10 +157,12 @@ class SyncStore:
 
     async def __aenter__(self) -> typing.Self:
         await self._init_db()
+        self.log.debug("SyncStore initialised via context manager.")
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
+        self.log.debug("SyncStore closed via context manager.")
 
     @staticmethod
     def dumps(obj: typing.Any) -> str:
