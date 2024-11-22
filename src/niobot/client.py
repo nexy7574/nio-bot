@@ -1382,7 +1382,7 @@ class NioBot(AsyncClient):
                     return ("unavailable", "online")[stage]
                 return self._startup_presence
 
-            result = await self.sync(timeout=30000, full_state=self._sync_full_state, set_presence=presence_getter(0))
+            result = await self.sync(timeout=0, full_state=self._sync_full_state, set_presence=presence_getter(0))
             if not isinstance(result, nio.SyncResponse):
                 raise NioBotException("Failed to perform first sync.", result)
             self.is_ready.set()
