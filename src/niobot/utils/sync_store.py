@@ -410,6 +410,7 @@ class SyncStore:
         """
         Generates a sync response, ready for replaying.
         """
+        log = self.log.getChild("generate_sync")
         payload = {
             "next_batch": await self.get_next_batch(self._client.user_id),
             "rooms": {"invite": {}, "join": {}, "leave": {}},
@@ -417,7 +418,6 @@ class SyncStore:
         async with self._db.execute('SELECT * FROM "rooms.join"') as cursor:
             async for row in cursor:
                 summary = json.loads(row["summary"])
-
                 payload["rooms"]["join"][row["room_id"]] = {
                     "timeline": {"events": json.loads(row["timeline"])},
                     "state": {"events": json.loads(row["state"])},
@@ -425,10 +425,12 @@ class SyncStore:
                     "summary": summary,
                     "ephemeral": {},
                 }
+                log.debug("Added room %r to `rooms.join`", row["room_id"])
 
         async with self._db.execute('SELECT room_id, state FROM "rooms.invite"') as cursor:
             async for row in cursor:
                 payload["rooms"]["invite"][row["room_id"]] = {"invite_state": {"events": json.loads(row["state"])}}
+                log.debug("Added room %r to `rooms.invite`", row["room_id"])
 
         async with self._db.execute('SELECT * FROM "rooms.leave"') as cursor:
             async for row in cursor:
@@ -439,6 +441,7 @@ class SyncStore:
                     "summary": {},
                     "ephemeral": {},
                 }
+                log.debug("Added room %r to `rooms.leave`", row["room_id"])
 
         return nio.SyncResponse.from_dict(payload)
 
