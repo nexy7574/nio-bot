@@ -316,7 +316,7 @@ class SyncStore:
             try:
                 new_event = new_event.source["source"]
             except KeyError:
-                new_event = new_event
+                new_event = new_event.source
                 self.log.warning(
                     "Event %r does not have a source key, falling back to the event itself. This may result in "
                     "an invalid replay.",
@@ -376,7 +376,7 @@ class SyncStore:
             try:
                 new_event = new_event.source["source"]
             except KeyError:
-                new_event = new_event
+                new_event = new_event.source
                 self.log.warning(
                     "Event %r does not have a source key, falling back to the event itself. This may result in "
                     "an invalid replay.",
