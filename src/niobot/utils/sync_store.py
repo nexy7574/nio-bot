@@ -410,13 +410,13 @@ class SyncStore:
         await self._init_db()
         self.log.debug("Handling sync: %r", response.uuid or uuid.uuid4())
         for room_id, room in response.rooms.invite.items():
-            self.log.debug("Processing invited room %r", room_id, room)
+            self.log.debug("Processing invited room %r", room_id)
             await self.process_invite(room_id, room)
         for room_id, room in response.rooms.join.items():
-            self.log.debug("Processing joined room %r", room_id, room)
+            self.log.debug("Processing joined room %r", room_id)
             await self.process_join(room_id, room)
         for room_id, room in response.rooms.leave.items():
-            self.log.debug("Processing left room %r", room_id, room)
+            self.log.debug("Processing left room %r", room_id)
             await self.process_leave(room_id, room)
 
         if self.log.isEnabledFor(logging.DEBUG):
