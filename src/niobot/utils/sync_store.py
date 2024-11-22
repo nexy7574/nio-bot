@@ -366,7 +366,7 @@ class SyncStore:
         """Returns the next batch token for the given user ID (or the client's user ID)"""
         await self._init_db()
         user_id = user_id or self._client.user_id
-        async with self._db.execute('SELECT next_batch FROM "meta" WHERE user_id=?', (user_id,)) as cursor:
+        async with self._db.execute('SELECT next_batch FROM meta WHERE user_id=?', (user_id,)) as cursor:
             result = await cursor.fetchone()
             if result:
                 self.log.debug("Next batch record: %r", result)
@@ -379,7 +379,14 @@ class SyncStore:
         await self._init_db()
         self.log.debug("Setting next batch to %r for %r.", next_batch, user_id)
         await self._db.execute(
-            'INSERT OR REPLACE INTO "meta" (user_id, next_batch) VALUES (?, ?)', (user_id, next_batch)
+            """
+            INSERT INTO meta (user_id, next_batch) VALUES (?, ?)
+            ON CONFLICT(user_id) 
+            DO 
+                UPDATE SET next_batch=excluded.next_batch
+                WHERE user_id=excluded.user_id
+            """,
+            (user_id, next_batch)
         )
 
     async def handle_sync(self, response: nio.SyncResponse) -> None:
