@@ -279,7 +279,7 @@ class SyncStore:
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
         if isinstance(new_event, nio.Event):
-            new_event = new_event.source["source"]
+            new_event = new_event.source
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
@@ -331,7 +331,7 @@ class SyncStore:
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
         if isinstance(new_event, nio.Event):
-            new_event = new_event.source["source"]
+            new_event = new_event.source
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
