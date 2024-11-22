@@ -25,20 +25,21 @@ async def test_sync_store(resolve_state):
             "https://matrix.example", "@example:matrix.example", store_path=store_dir, command_prefix="!"
         )
         sync_manager = niobot.SyncStore(client, store_dir + "/sync.db", resolve_state=resolve_state)
-        for file in SYNC_FILES:
-            parsed = json.loads(file.read_text())
-            sync = niobot.SyncResponse.from_dict(parsed)
-            assert isinstance(sync, niobot.SyncResponse), "Failed to parse test data: %r" % sync
-            await sync_manager.handle_sync(sync)
-            await sync_manager.commit()
+        async with sync_manager:
+            for file in SYNC_FILES:
+                parsed = json.loads(file.read_text())
+                sync = niobot.SyncResponse.from_dict(parsed)
+                assert isinstance(sync, niobot.SyncResponse), "Failed to parse test data: %r" % sync
+                await sync_manager.handle_sync(sync)
+                assert await sync_manager.get_next_batch("@example:matrix.example") == sync.next_batch
+                await sync_manager.commit()
 
-        replay = await sync_manager.generate_sync()
-        assert isinstance(replay, nio.SyncResponse), "Failed to generate replay sync: %r" % replay
-        await client._handle_sync(replay)
+            replay = await sync_manager.generate_sync()
+            assert isinstance(replay, nio.SyncResponse), "Failed to generate replay sync: %r" % replay
+            await client._handle_sync(replay)
 
-        assert await sync_manager.get_next_batch("@example:matrix.example") == "42219939"
-        assert len(client.rooms) == 2
+            assert await sync_manager.get_next_batch("@example:matrix.example") == "42219939"
+            assert len(client.rooms) == 2
 
         # Teardown
-        await sync_manager.close()
         await client.close()
