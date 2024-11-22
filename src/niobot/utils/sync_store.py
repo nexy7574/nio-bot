@@ -313,7 +313,15 @@ class SyncStore:
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
         if isinstance(new_event, nio.Event):
-            new_event = new_event.source["source"]
+            try:
+                new_event = new_event.source["source"]
+            except KeyError:
+                new_event = new_event
+                self.log.warning(
+                    "Event %r does not have a source key, falling back to the event itself. This may result in "
+                    "an invalid replay.",
+                    new_event
+                )
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
@@ -365,7 +373,15 @@ class SyncStore:
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
         if isinstance(new_event, nio.Event):
-            new_event = new_event.source["source"]
+            try:
+                new_event = new_event.source["source"]
+            except KeyError:
+                new_event = new_event
+                self.log.warning(
+                    "Event %r does not have a source key, falling back to the event itself. This may result in "
+                    "an invalid replay.",
+                    new_event
+                )
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
