@@ -320,7 +320,7 @@ class SyncStore:
                 self.log.warning(
                     "Event %r does not have a source key, falling back to the event itself. This may result in "
                     "an invalid replay.",
-                    new_event
+                    new_event,
                 )
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
@@ -380,7 +380,7 @@ class SyncStore:
                 self.log.warning(
                     "Event %r does not have a source key, falling back to the event itself. This may result in "
                     "an invalid replay.",
-                    new_event
+                    new_event,
                 )
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
@@ -481,6 +481,12 @@ class SyncStore:
         """
         Generates a sync response, ready for replaying.
         """
+        # I wonder if an incremental sync would make sense here
+        # Large accounts in lots of rooms or with complex states will struggle with this replay
+        # because the construction of the SyncResponse dataclass does a lot of validation and is
+        # very expensive.
+        # Incrementally returning little bits of the sync would probably be better in this scenario, but I feel there
+        # may be unintended side effects of this.
         log = self.log.getChild("generate_sync")
         payload = {
             "next_batch": await self.get_next_batch(self._client.user_id),
