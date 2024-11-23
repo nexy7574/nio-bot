@@ -316,6 +316,9 @@ class SyncStore:
         :param new_event: The new event to insert
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
+        if isinstance(new_event, nio.BadEvent):
+            self.log.warning("Rejecting malformed event %r.", new_event)
+            return
         if isinstance(new_event, nio.Event):
             try:
                 new_event = new_event.source["source"]
@@ -376,6 +379,9 @@ class SyncStore:
         :param new_event: The new event to insert
         :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
         """
+        if isinstance(new_event, nio.BadEvent):
+            self.log.warning("Rejecting malformed event %r.", new_event)
+            return
         if isinstance(new_event, nio.Event):
             try:
                 new_event = new_event.source["source"]
