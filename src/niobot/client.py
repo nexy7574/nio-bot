@@ -33,7 +33,7 @@ from .exceptions import (
     MessageException,
     NioBotException,
 )
-from .utils import MXID_REGEX, Mentions, Typing, deprecated, force_await, run_blocking
+from .utils import MXID_REGEX, Mentions, SyncStore, Typing, _DudSyncStore, deprecated, force_await, run_blocking
 from .utils.help_command import DefaultHelpCommand
 
 try:
@@ -135,6 +135,7 @@ class NioBot(AsyncClient):
         default_parse_mentions: bool = True,
         force_initial_sync: bool = False,
         use_fallback_replies: bool = False,
+        onsite_state_resolution: bool = False,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -278,6 +279,10 @@ class NioBot(AsyncClient):
         self._event_id_cache = collections.deque(maxlen=1000)
         self._message_process_lock = asyncio.Lock()
 
+        self.sync_store: typing.Union[SyncStore, _DudSyncStore] = _DudSyncStore()
+        if self.store_path:
+            self.sync_store = SyncStore(self, self.store_path + "/sync.db", resolve_state=onsite_state_resolution)
+
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
         """
@@ -328,6 +333,8 @@ class NioBot(AsyncClient):
         sync = await super().sync(*args, **kwargs)
         if isinstance(sync, nio.SyncResponse):
             self._populate_dm_rooms(sync)
+            if self.sync_store:
+                await self.sync_store.handle_sync(sync)
         return sync
 
     def _populate_dm_rooms(self, sync: nio.SyncResponse):
@@ -1298,6 +1305,11 @@ class NioBot(AsyncClient):
             raise MessageException("Failed to delete reaction.", response)
         return response
 
+    async def close(self):
+        if self.sync_store:
+            await self.sync_store.close()
+        await super().close()
+
     async def start(
         self,
         password: typing.Optional[str] = None,
@@ -1311,67 +1323,80 @@ class NioBot(AsyncClient):
             self.log.info("Starting automatic key import")
             await self.import_keys(*map(str, self.__key_import))
 
-        if password or sso_token:
-            self.log.info("Logging in with a password or SSO token")
-            login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
-            if isinstance(login_response, nio.LoginError):
-                raise LoginException("Failed to log in.", login_response)
+        async with self.sync_store:
+            if password or sso_token:
+                self.log.info("Logging in with a password or SSO token")
+                login_response = await self.login(password=password, token=sso_token, device_name=self.device_id)
+                if isinstance(login_response, nio.LoginError):
+                    raise LoginException("Failed to log in.", login_response)
 
-            self.log.info("Logged in as %s", login_response.user_id)
-            self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
-            self.start_time = time.time()
-        elif access_token:
-            self.log.info("Logging in with existing access token.")
-            if self.store_path:
-                try:
-                    self.load_store()
-                except FileNotFoundError:
-                    self.log.warning("Failed to load store.")
-                except nio.LocalProtocolError as e:
-                    self.log.warning("No store? %r", e, exc_info=e)
-            self.access_token = access_token
-            self.start_time = time.time()
-        else:
-            raise LoginException("You must specify either a password/SSO token or an access token.")
-
-        if self.should_upload_keys:
-            self.log.info("Uploading encryption keys...")
-            response = await self.keys_upload()
-            if isinstance(response, nio.KeysUploadError):
-                self.log.critical("Failed to upload encryption keys. Encryption may not work. Error: %r", response)
+                self.log.info("Logged in as %s", login_response.user_id)
+                self.log.debug("Logged in: {0.access_token}, {0.user_id}".format(login_response))
+                self.start_time = time.time()
+            elif access_token:
+                self.log.info("Logging in with existing access token.")
+                if self.store_path:
+                    try:
+                        self.load_store()
+                    except FileNotFoundError:
+                        self.log.warning("Failed to load store.")
+                    except nio.LocalProtocolError as e:
+                        self.log.warning("No store? %r", e, exc_info=e)
+                self.access_token = access_token
+                self.start_time = time.time()
             else:
-                self.log.info("Uploaded encryption keys.")
-        self.log.info("Fetching server details...")
-        response = await self.send("GET", "/_matrix/client/versions")
-        if response.status != 200:
-            self.log.warning("Failed to fetch server details. Status: %d", response.status)
-        else:
-            self.server_info = await response.json()
-            self.log.debug("Server details: %r", self.server_info)
-        self.log.info("Performing first sync...")
+                raise LoginException("You must specify either a password/SSO token or an access token.")
 
-        def presence_getter(stage: int) -> Optional[str]:
-            if self._startup_presence is False:
-                return
-            elif self._startup_presence is None:
-                return ("unavailable", "online")[stage]
-            return self._startup_presence
+            if self.should_upload_keys:
+                self.log.info("Uploading encryption keys...")
+                response = await self.keys_upload()
+                if isinstance(response, nio.KeysUploadError):
+                    self.log.critical("Failed to upload encryption keys. Encryption may not work. Error: %r", response)
+                else:
+                    self.log.info("Uploaded encryption keys.")
+            self.log.info("Fetching server details...")
+            response = await self.send("GET", "/_matrix/client/versions")
+            if response.status != 200:
+                self.log.warning("Failed to fetch server details. Status: %d", response.status)
+            else:
+                self.server_info = await response.json()
+                self.log.debug("Server details: %r", self.server_info)
 
-        result = await self.sync(timeout=30000, full_state=self._sync_full_state, set_presence=presence_getter(0))
-        if not isinstance(result, nio.SyncResponse):
-            raise NioBotException("Failed to perform first sync.", result)
-        self.is_ready.set()
-        self.dispatch("ready", result)
-        self.log.info("Starting sync loop")
-        try:
-            await self.sync_forever(
-                timeout=30000,
-                full_state=self._sync_full_state,
-                set_presence=presence_getter(1),
-            )
-        finally:
-            self.log.info("Closing http session.")
-            await self.close()
+            if self.sync_store:
+                self.log.info("Resuming from sync store...")
+                try:
+                    payload = await self.sync_store.generate_sync()
+                    assert isinstance(payload, nio.SyncResponse), "Sync store did not return a SyncResponse."
+                    self.log.info("Replaying sync...")
+                    await self._handle_sync(payload)
+                    self.log.info("Successfully resumed from store.")
+                except Exception as e:
+                    self.log.error("Failed to replay sync: %r. Will not resume.", e, exc_info=e)
+
+            self.log.info("Performing first sync...")
+
+            def presence_getter(stage: int) -> Optional[str]:
+                if self._startup_presence is False:
+                    return
+                elif self._startup_presence is None:
+                    return ("unavailable", "online")[stage]
+                return self._startup_presence
+
+            result = await self.sync(timeout=0, full_state=self._sync_full_state, set_presence=presence_getter(0))
+            if not isinstance(result, nio.SyncResponse):
+                raise NioBotException("Failed to perform first sync.", result)
+            self.is_ready.set()
+            self.dispatch("ready", result)
+            self.log.info("Starting sync loop")
+            try:
+                await self.sync_forever(
+                    timeout=30000,
+                    full_state=self._sync_full_state,
+                    set_presence=presence_getter(1),
+                )
+            finally:
+                self.log.info("Closing http session.")
+                await self.close()
 
     def run(
         self,
