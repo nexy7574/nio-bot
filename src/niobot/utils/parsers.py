@@ -12,7 +12,6 @@ from typing import Union as U
 import nio
 
 from ..exceptions import CommandParserError
-from .lib import deprecated
 
 if typing.TYPE_CHECKING:
     from ..commands import Argument
@@ -40,15 +39,6 @@ __all__ = (
     "MatrixMXCUrl",
     "MatrixToParser",
     "MXCParser",
-    # And the deprecated aliases
-    "boolean_parser",
-    "float_parser",
-    "integer_parser",
-    "json_parser",
-    "room_parser",
-    "event_parser",
-    "matrix_to_parser",
-    "mxc_parser",
 )
 MATRIX_TO_REGEX = re.compile(
     r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/?&#]+))?(?P<qs>([&?](via=[^&]+))*)?",
@@ -434,85 +424,3 @@ BUILTIN_MAPPING = {
     nio.MatrixUser: MatrixUserParser(),
     MatrixToLink: MatrixDotToParser(),
 }
-# Now add the aliases for backward compatability with <1.1.0
-# These will be removed in 1.2.0.
-
-
-@deprecated("niobot.utils.parsers.BooleanParser")
-def boolean_parser(*args, **kwargs):
-    """Deprecated boolean parser. Please use niobot.utils.parsers.BooleanParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return BooleanParser.parse(*args, **kwargs)
-
-
-@deprecated("niobot.utils.parsers.FloatParser")
-def float_parser(*args, **kwargs):
-    """Deprecated float parser. Please use niobot.utils.parsers.FloatParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return FloatParser.parse(*args, **kwargs)
-
-
-@deprecated("niobot.utils.parsers.IntegerParser")
-def integer_parser(allow_floats: bool = False, base: int = 10):
-    """Deprecated integer parser. Please use niobot.utils.parsers.IntegerParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return IntegerParser(allow_floats, base)
-
-
-@deprecated("niobot.utils.parsers.JSONParser")
-def json_parser(*args, **kwargs):
-    """Deprecated integer parser. Please use niobot.utils.parsers.JSONParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return JSONParser.parse(*args, **kwargs)
-
-
-@deprecated("niobot.utils.parsers.RoomParser")
-def room_parser(*args, **kwargs):
-    """Deprecated room parser. Please use niobot.utils.parsers.RoomParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return RoomParser.parse(*args, **kwargs)
-
-
-@deprecated("niobot.utils.parsers.EventParser")
-def event_parser(event_type: typing.Optional[str] = None):
-    """Deprecated event parser. Please use niobot.utils.parsers.EventParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return EventParser(event_type)
-
-
-@deprecated("niobot.utils.parsers.MatrixDotToParser")
-def matrix_to_parser(require_room: bool = True, require_event: bool = False, allow_user_as_room: bool = True):
-    """Deprecated matrix.to parser. Please use niobot.utils.parsers.MatrixDotToParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return MatrixDotToParser("matrix.to", require_room, require_event, allow_user_as_room)
-
-
-@deprecated("niobot.utils.parsers.MXCParser")
-def mxc_parser(*args, **kwargs):
-    """Deprecated MXC parser. Please use niobot.utils.parsers.MXCParser instead.
-
-    !!! danger "Deprecated function"
-        This function is deprecated and will be removed in 1.2.0.
-    """
-    return MXCParser.parse(*args, **kwargs)

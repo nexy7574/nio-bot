@@ -58,6 +58,7 @@ however that is preferrable to errors.
 * Fixed some faulty sync responses triggering commands twice
 * Fixed a bug in the default help command that would display hidden commands regardless.
 * Removed fallback replies in messages (see: [MSC2781](https://github.com/matrix-org/matrix-spec-proposals/pull/2781))
+* Removed the legacy function-based argument parsers in favour of the class-based system
 
 ## v1.1.1 (2024-06-26)
 
