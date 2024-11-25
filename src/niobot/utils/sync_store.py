@@ -5,6 +5,7 @@ import functools
 import json
 import logging
 import os
+import time
 import typing
 import uuid
 
@@ -145,6 +146,7 @@ class SyncStore:
         self.resolve_state = resolve_state
         self._db: typing.Optional[aiosqlite.Connection] = None
         self._change_count = 0
+        self._last_commit = 0
         self.checkpoint_every = checkpoint_every
 
     async def _init_db(self):
@@ -157,14 +159,14 @@ class SyncStore:
         for migration in self.SCRIPTS:
             for script, args in migration:
                 await self._db.execute(script, *args)
-            await self._db.commit()
+            await self.commit()
 
     async def close(self) -> None:
         """
         Closes the database connection, committing any unsaved data.
         """
         if self._db:
-            await self._db.commit()
+            await self.commit()
             await self._db.close()
         self._db = None
 
@@ -490,7 +492,9 @@ class SyncStore:
         if changes >= self.checkpoint_every:
             self.log.debug("%d total changes, autosaving to database.", changes)
             await self.commit()
-            self._change_count = self._db.total_changes
+        elif (time.monotonic() - self._last_commit) >= 300:
+            self.log.debug("No checkpoint in 300 seconds, autosaving to database.")
+            await self.commit()
 
     async def generate_sync(self) -> nio.SyncResponse:
         """
@@ -543,6 +547,8 @@ class SyncStore:
     async def commit(self) -> None:
         """forcefully writes unsaved changes to the database, without closing the connection"""
         await self._db.commit()
+        self._last_commit = time.monotonic()
+        self._change_count = self._db.total_changes
 
     def __bool__(self):
         return True
