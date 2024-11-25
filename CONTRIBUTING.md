@@ -15,7 +15,7 @@ If you're unsure whether a feature is in scope, feel free to open an issue and a
 You should consider the following questions too:
 
 <details>
-<summary>A list of questions to ask yourself before contributing new features.</summary>
+<summary>A list of questions to ask yourself before contributing new features.</summary>.
 
 ### 1. Is this feature useful for more than me?
 
@@ -40,6 +40,50 @@ whether it should be implemented. If you're unsure, feel free to ask.
 
 Remember - technical debt exists. If you add something to nio-bot, it has to be maintained. If you add something
 that is too complicated, it may be difficult to maintain, and may be removed in the future.
+
+## Contributing - issues
+
+Opening great issues is akin to creating pull requests.
+The best things to include in an issue are:
+
+* A clear yet consise title
+* A clear description
+* Steps to reproduce (if applicable)
+* Expected behaviour
+* Actual behaviour
+* Any other relevant information
+* Screenshots (if applicable)
+* Minimal code examples (if applicable)
+* Any (cleaned & expunged) logs (if applicable. Linking to gists is preferred for large logs.)
+
+If you're not sure if you can submit a helpful issue, please contact someone in the Matrix room for help.
+You might find that you don't even need to open an issue!
+
+## Contributing - pull requests
+
+Generally, pull requests are amazing. But they can only be amazing if your code is just as amazing.
+
+When opening a PR, you should make sure that your code is:
+
+* Formatted
+* Documented
+* Tested
+* Relevant
+
+For formatting (below, by the way) - CI will mark your PR as failed if it is not formatted correctly.
+Always format your code before committing.
+
+For documentation, make sure that your code is documented. This includes docstrings, comments, and any other
+documentation that is relevant to your code.
+
+For testing, you need to make sure that your code is tested.
+NioBot was lacking CI before v1.2's release, but we are now making an effort to improve our CI coverage
+to catch bugs before they make it to the remote.
+
+If you're adding new functionality, please add **5 unit tests** for it.
+If you're fixing a bug, update any relevant tests, and preferrably add a new test or two if possible.
+
+For relevancy, see above.
 
 ## Code style
 
@@ -80,6 +124,8 @@ nio-bot also supports python 3.9 and 3.10 at the time of writing.
 This means, when you're contributing, you should make sure you don't use any brand-new language features. Always check
 that a language feature you have is available two versions ago. For example, using `typing.Union` instead of
 the ` | ` union type that was introduced in python 3.10.
+
+> Pro top: Spin up a virtual environment with the lowest supported version, and run pytest in it.
 
 There is no guaranteed support for newer than specified python versions. This includes alpha, beta and
 release candidates.
