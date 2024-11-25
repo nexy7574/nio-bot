@@ -9,8 +9,8 @@ Before you open this PR:
 5. Have you got a demonstration of changes, if applicable?
 
 
-
-
+It is encouraged to use GPG or SSH signing for your commits.
+If your PR has many commits, it will likely be squash-merged.
 
 
 
