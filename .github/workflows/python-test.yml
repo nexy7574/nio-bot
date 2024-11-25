@@ -28,4 +28,4 @@ jobs:
           ruff format --check
       - name: Run tests
         run: |
-          pytest
+          pytest --cov=src/niobot src/tests/
