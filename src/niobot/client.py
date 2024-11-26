@@ -466,8 +466,12 @@ class NioBot(AsyncClient):
                             return pfx
 
             if content.startswith(">"):
-                rep, content = content.split("\n\n", 1)
-                self.log.debug("Parsed message, split into reply and content: %r, %r", rep[:50], content[:50])
+                try:
+                    rep, content = content.split("\n\n", 1)
+                except ValueError:
+                    self.log.warning("Error while splitting message %r.", content)
+                else:
+                    self.log.debug("Parsed message, split into reply and content: %r, %r", rep[:50], content[:50])
             matched_prefix = get_prefix(content)
             if matched_prefix:
                 try:
