@@ -32,6 +32,8 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
 repo_url: https://github.com/nexy7574/niobot
 edit_uri: edit/master/docs/
 plugins:

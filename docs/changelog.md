@@ -1,65 +1,84 @@
 # Changelog
 
-## Unreleased
-
+<!-- 
 ??? example "These changes are not in a stable release."
     You can only get these changes by installing the library from GitHub. This is not recommended in production, as these changes
     are often not properly battle-tested.
 
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
+-->
 
-* Remove `force_write` properly
-* Fix `<instance> has no attribute 'mro'` error when initialising auto-detected arguments
-* Fixed `niocli get-access-token` crashing on windows
-* Fixed `NioBot` throwing a warning about failing key uploads without logging the actual error
+## v1.2.0
+
+There are a lot of changes in v1.2.0, so in this release you'll see a lot of performance improvements and some fancy new features for you to
+take advantage of!
+
+!!! danger "Major update"
+    This release has had a lot of changes in it since v1.1.0, so please make sure you test your bot when updating to make sure that everything still works.
+    If you encounter an error you believe is due to broken backwards compatiblity, please open an issue on GitHub so that we can
+    patch it.
+
+### Added
+
 * Allowed `command_prefix` to be an iterable, converting single-strings into a single-item iterable too.
-* Changed the event type of the `message` event to be any [nio.RoomMessage][nio.events.room_events.RoomMessage], not just `Text`.
-* Merged `xyzamorganblurhash` into [`ImageAttachment`][niobot.ImageAttachment]
-* Removed deprecated `automatic_markdown_parser` option and functionality in NioBot
-* Fixed [`niobot.utils.parsers.EventParser`][] raising an error when used
 * Added beautifulsoup4 as a hard dependency. Backwards compatibility is still kept in case bs4 is not installed.
-* Fixed some typing dotted around the client
-* Removed the deprecated `name` parameter from niobot checks
 * Added support for passing raw [`nio.Event`][nio.events.room_events.Event] types to event listeners
 * Added proper support for [`typing.Optional`][] in automatic argument detection
 * Added support for `*args` in automatic argument detection
-* Fixed niobot attachments (Image/Video/Audio) sending `null` for metadata, which may cause incorrect client behaviours
 * Added [`niobot.utils.Mentions`][] to handle intentional mentions in messages
-* (Typing) send_message can now reply to any [RoomMessage][nio.events.room_events.RoomMessage], not just [RoomMessageText][nio.events.room_events.RoomMessageText].
-* `niobot.util.help_command.help_command_callback` was removed, in line with deprecation.
-* [niobot.NioBot.start][] will now query `/_matrix/client/versions` to fetch server version metadata.
-* Fix RuntimeError due to concurrent typing in send_message
-* Updated the documentation index page and added documentation for Mentions
-* Fixed the versioned docs deployment
-* Updated the help command
-    - Unified all of the functions into a single class, [`niobot.utils.help_command.DefaultHelpCommand`][], to make subclassing easier.
-    - `default_help_command` was replaced with [`DefaultHelpCommand().respond`][niobot.utils.help_command.DefaultHelpCommand.respond].
-    - Help command will no longer display commands in the command list that the current user cannot run
 * Added [`Command.can_run(ctx)`][niobot.Command.can_run], which runs through and makes sure that all of the command checks pass.
 * Added backwards compatibility support for legacy media endpoints (servers that don't support matrix v1.11 yet). Authenticated media will still be used by default.
-* Python 3.13 is now officially supported in time for v1.2.0a2
+* Python 3.13 is now supported
 * niobot attachment types now support os.PathLike, as well as str, BytesIO, and Pathlib, in case you had some freaky custom path type
+* [`niobot.NioBot`][] now allows you to pass a static presence (`online`, `unavailable`, `offline`), `False` to outright disable presence, and `None` (default) to set it automatically based on the startup stage (recommended for slower connections)
+* You can now, if you needed to for some reason, disable full state sync via `sync_full_state=False`.
+* Added the `reason` parameter to [`niobot.NioBot.join`][] and [`niobot.NioBot.room_leave`][] as optional strings
+* NioBot's auto-join feature now includes a reason when automatically joining rooms
+* Added `force_initial_sync` to [`niobot.NioBot`][], which will force the bot to sync all rooms before starting the event loop.
+* Added a real sync store (**huge** optimisation, especially for larger accounts)
+
+### Changes
+
+* Changed the event type of the `message` event to be any [nio.RoomMessage][nio.events.room_events.RoomMessage], not just `Text`.
+* Merged `xyzamorganblurhash` into [`ImageAttachment`][niobot.ImageAttachment]
+* (Typing) send_message can now reply to any [RoomMessage][nio.events.room_events.RoomMessage], not just [RoomMessageText][nio.events.room_events.RoomMessageText].
+* [niobot.NioBot.start][] will now query `/_matrix/client/versions` to fetch server version metadata.
+* Updated the documentation index page and added documentation for Mentions
+* Unified all of the help functions into a single class, [`niobot.utils.help_command.DefaultHelpCommand`][], to make subclassing easier.
+* `default_help_command` was replaced with [`DefaultHelpCommand().respond`][niobot.utils.help_command.DefaultHelpCommand.respond].
+* Help command will no longer display commands in the command list that the current user cannot run
+* [`niobot.NioBot.send_message`][] will now automatically parse mentions if not explicitly provided, to take full advantage of intentional mentions.
+
+### Removed
+
+* Removed `force_write` properly
+* Removed deprecated `automatic_markdown_parser` option and functionality in NioBot
+* Removed the deprecated `name` parameter from niobot checks
+* `niobot.util.help_command.help_command_callback` was removed, in line with deprecation.
+* Removed the password login critical log in favour of simply documenting the dangers of using a password
+* Removed fallback replies in messages (see: [MSC2781](https://github.com/matrix-org/matrix-spec-proposals/pull/2781))
+* Removed the legacy function-based argument parsers in favour of the class-based system
+
+### Bug fixes
+
+* Fix `<instance> has no attribute 'mro'` error when initialising auto-detected arguments
+* Fixed `niocli get-access-token` crashing on windows
+* Fixed `NioBot` throwing a warning about failing key uploads without logging the actual error
+* Fixed [`niobot.utils.parsers.EventParser`][] raising an error when used
+* Fixed some typing dotted around the client
+* Fixed niobot attachments (Image/Video/Audio) sending `null` for metadata, which may cause incorrect client behaviours
+* Fix RuntimeError due to concurrent typing in send_message
+* Fixed the versioned docs deployment
 * Overlapping typing events in anything using room_send (e.g. send_message, edit_message) will no-longer
 throw an error if there is a mid-air collision. Instead, a warning will be logged to the stream, and
 the operation will be a no-op. This may cause some inconsistencies in the typing indicators sent by nio-bot,
 however that is preferrable to errors.
-* You can now have a little bit more control over the sync loop
-    - [`niobot.NioBot`][] now allows you to pass a static presence (`online`, `unavailable`, `offline`), `False` to outright disable presence, and `None` (default) to set it automatically based on the startup stage (recommended for slower connections)
-    - You can now, if you needed to for some reason, disable full state sync via `sync_full_state=False`.
 * Fixed [`niobot.NioBot.join`][] throwing a JSON EOF in some cases
-* Added the `reason` parameter to [`niobot.NioBot.join`][] and [`niobot.NioBot.room_leave`][] as optional strings
-* NioBot's auto-join feature now uses this to include a reason when automatically joining rooms
 * Fixed module event handlers, in debug logs, being named as anonymous functions, rather than their true names. This will make debugging issues with your event handlers easier.
-* Removed the password login critical log in favour of simply documenting the dangers of using a password
-* [`niobot.NioBot.send_message`][] will now automatically parse mentions if not explicitly provided, to take full advantage of intentional mentions.
-* Added `force_initial_sync` to [`niobot.NioBot`][], which will force the bot to sync all rooms before starting the event loop.
 * DM rooms are now removed properly from account data when leaving.
 * Fixed [niobot.NioBot.on_event][] not properly accepting raw [nio.Event][nio.events.room_events.Event] types
 * Fixed some faulty sync responses triggering commands twice
 * Fixed a bug in the default help command that would display hidden commands regardless.
-* Removed fallback replies in messages (see: [MSC2781](https://github.com/matrix-org/matrix-spec-proposals/pull/2781))
-* Added a real sync store (**huge** optimisation, especially for larger accounts)
-* Removed the legacy function-based argument parsers in favour of the class-based system
 
 ## v1.1.1 (2024-06-26)
 
