@@ -924,6 +924,7 @@ class NioBot(AsyncClient):
         self, base: "BaseAttachment", encrypted: bool = False, __previous: typing.Optional[list] = None
     ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, None]]:
         """Recursively uploads attachments."""
+        # Why is this recursive? There should be at most a top level file and a thumbnail?
         previous = (__previous or []).copy()
         if not base.url:
             self.log.info("Uploading attachment %r (encrypted: %r)", base, encrypted)
@@ -1014,6 +1015,7 @@ class NioBot(AsyncClient):
 
     @staticmethod
     def parse_user_mentions(content: str) -> typing.List[str]:
+        # This is super crude
         results = MXID_REGEX.findall(content)
 
         def filter_func(mxid: str):
@@ -1377,6 +1379,9 @@ class NioBot(AsyncClient):
                 except Exception as e:
                     self.log.error("Failed to replay sync: %r. Will not resume.", e, exc_info=e)
 
+            self.log.info("Uploading sync filter...")
+            filter_response = await self.upload_filter(self.user_id, room={"lazy_load_members": True})
+
             self.log.info("Performing first sync...")
 
             def presence_getter(stage: int) -> Optional[str]:
@@ -1386,7 +1391,12 @@ class NioBot(AsyncClient):
                     return ("unavailable", "online")[stage]
                 return self._startup_presence
 
-            result = await self.sync(timeout=0, full_state=self._sync_full_state, set_presence=presence_getter(0))
+            result = await self.sync(
+                timeout=0,
+                full_state=self._sync_full_state,
+                set_presence=presence_getter(0),
+                sync_filter=filter_response.filter_id,
+            )
             if not isinstance(result, nio.SyncResponse):
                 raise NioBotException("Failed to perform first sync.", result)
             self.is_ready.set()
@@ -1397,6 +1407,7 @@ class NioBot(AsyncClient):
                     timeout=30000,
                     full_state=self._sync_full_state,
                     set_presence=presence_getter(1),
+                    sync_filter=filter_response.filter_id,
                 )
             finally:
                 self.log.info("Closing http session.")

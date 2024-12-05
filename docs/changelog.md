@@ -1,12 +1,14 @@
 # Changelog
 
-<!-- 
+## Unreleased
+
 ??? example "These changes are not in a stable release."
     You can only get these changes by installing the library from GitHub. This is not recommended in production, as these changes
     are often not properly battle-tested.
 
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
--->
+
+* Added the sync filter "lazy load members" - should hopefully improve performance in large rooms.
 
 ## v1.2.0
 
