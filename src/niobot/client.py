@@ -99,6 +99,7 @@ class NioBot(AsyncClient):
     :param force_initial_sync: Forcefully perform a full initial sync at startup.
     :param use_fallback_replies: Whether to force the usage of deprecated fallback replies. Not recommended outside
     of compatibility reasons.
+    :param default_command_max_runtime: The default maximum runtime for a command. Defaults to 4294967295.0.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -136,6 +137,7 @@ class NioBot(AsyncClient):
         force_initial_sync: bool = False,
         use_fallback_replies: bool = False,
         onsite_state_resolution: bool = False,
+        default_command_max_runtime: typing.Union[int, float] = 4294967295.0,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -282,6 +284,7 @@ class NioBot(AsyncClient):
         self.sync_store: typing.Union[SyncStore, _DudSyncStore] = _DudSyncStore()
         if self.store_path:
             self.sync_store = SyncStore(self, self.store_path + "/sync.db", resolve_state=onsite_state_resolution)
+        self.default_max_runtime = default_command_max_runtime
 
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
@@ -527,10 +530,11 @@ class NioBot(AsyncClient):
 
                     self.log.debug(f"Running command {command.name} with context {context!r}")
                     try:
-                        task = asyncio.create_task(await command.invoke(context))
+                        max_runtime = command.max_runtime or self.default_max_runtime
+                        task = asyncio.create_task(asyncio.wait_for(await command.invoke(context), max_runtime))
                         context._task = task
                         context._perf_timer = time.perf_counter()
-                    except CommandArgumentsError as e:
+                    except (CommandArgumentsError, asyncio.TimeoutError, asyncio.CancelledError) as e:
                         self.dispatch("command_error", context, e)
                     except Exception as e:
                         self.log.exception("Failed to invoke command %s", command.name, exc_info=e)
@@ -1065,8 +1069,8 @@ class NioBot(AsyncClient):
             nor sanitising or formatting.
 
         :param room: The room or to send this message to
-        :param content: The content to send. Cannot be used with file.
-        :param file: A file to send, if any. Cannot be used with content.
+        :param content: The content to send.
+        :param file: A file to send, if any.
         :param reply_to: A message to reply to.
         :param message_type: The message type to send. If none, defaults to NioBot.global_message_type,
         which itself is `m.notice` by default.
@@ -1123,7 +1127,7 @@ class NioBot(AsyncClient):
                 )
 
             body = file.as_body(content)
-        else:
+        if content is not None:
             body["body"] = content
             if content_type == "markdown":
                 parsed = await run_blocking(marko.parse, content)

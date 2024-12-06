@@ -196,6 +196,7 @@ class Command:
         greedy: bool = False,
         usage: typing.Optional[str] = None,
         arguments: typing.Optional[list[Argument]] = None,
+        max_runtime: float = 4294967295,
         **kwargs,
     ):
         self.__runtime_id = os.urandom(16).hex()
@@ -229,6 +230,7 @@ class Command:
         self.arguments.insert(0, _CTX_ARG)
         self.arguments: list[Argument]
         self.greedy = greedy
+        self.max_runtime = max_runtime
 
     @staticmethod
     def autodetect_args(callback) -> list[Argument]:
@@ -487,6 +489,25 @@ def command(name: typing.Optional[str] = None, **kwargs) -> Callable:
         cmd = cls(name, func, **kwargs)
         func.__nio_command__ = cmd
         return func
+
+    return decorator
+
+
+def max_runtime(seconds: typing.Union[int, float]) -> Callable:
+    """
+    Sets the maximum time a command can run for before it is terminated.
+
+    This decorator must be used *after* the `@command` decorator.
+
+    :param seconds: The maximum time in seconds. If zero, will use the bot's default timeout.
+    :return: The decorated function.
+    """
+
+    def decorator(command_function: Callable):
+        if not hasattr(command_function, "__nio_command__"):
+            raise TypeError("Expected to be given a command callback.")
+        command_function.__nio_command__.max_runtime = seconds
+        return command_function
 
     return decorator
 
