@@ -838,10 +838,10 @@ class ImageAttachment(BaseAttachment):
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
             else:
                 with tempfile.NamedTemporaryFile(mode="wb", suffix=file_name) as fd:
-                    fd.write(file.read())
+                    fd.write(file.getvalue())
                     fd.seek(0)
                     # It's best to work on a real file for imagemagick and ffmpeg.
-                    return await cls.from_file(
+                    self = await cls.from_file(
                         fd.name,
                         file_name,
                         height,
@@ -850,6 +850,11 @@ class ImageAttachment(BaseAttachment):
                         generate_blurhash,
                         xyz_amorgan_blurhash=xyz_amorgan_blurhash,
                     )
+                    fd.seek(0)
+                    new_bytes_io = io.BytesIO(fd.getvalue())
+                    new_bytes_io.seek(0)
+                    self.file = new_bytes_io
+                    # ^ This is necessary to ensure the tempfile isn't lost before uploading
         else:
             if not file_name:
                 file_name = file.name
