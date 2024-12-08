@@ -4,9 +4,8 @@ import tempfile
 import time
 
 import nio
-import pytest
-
 import niobot
+import pytest
 
 # from .. import niobot
 

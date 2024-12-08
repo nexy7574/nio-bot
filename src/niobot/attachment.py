@@ -18,8 +18,8 @@ import tempfile
 import time
 import urllib.parse
 import warnings
-import typing  # TODO: Remove this for explicit imports (tidier)
-from typing import Union as Union, overload, Dict, Literal, TYPE_CHECKING, IO, TypeVar, Any, Optional, Type
+from typing import IO, TYPE_CHECKING, Any, Dict, Literal, Optional, Tuple, Type, TypeVar, Union, overload
+
 try:
     from typing import Self
 except ImportError:
@@ -40,7 +40,6 @@ except ImportError:
 import nio
 
 from .exceptions import (
-    MediaCodecWarning,
     MediaDownloadException,
     MediaUploadException,
     MetadataDetectionException,
@@ -386,7 +385,7 @@ class AttachmentType(enum.Enum):
     :var IMAGE: An image file.
     """
 
-    if typing.TYPE_CHECKING:
+    if TYPE_CHECKING:
         FILE: "AttachmentType"
         AUDIO: "AttachmentType"
         VIDEO: "AttachmentType"
@@ -422,34 +421,34 @@ class BaseAttachment(abc.ABC):
     :ivar keys: The encryption keys for the file. This is set after the file is uploaded.
     """
 
-    if typing.TYPE_CHECKING:
+    if TYPE_CHECKING:
         file: Union[pathlib.Path, io.BytesIO]
         file_name: str
         mime_type: str
         size: int
         type: AttachmentType
 
-        url: typing.Optional[str]
-        keys: typing.Optional[dict[str, str]]
+        url: Optional[str]
+        keys: Optional[dict[str, str]]
 
-    @typing.overload
+    @overload
     def __init__(
         self,
         file: io.BytesIO,
         file_name: str,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
+        mime_type: Optional[str] = None,
+        size_bytes: Optional[int] = None,
         *,
         attachment_type: AttachmentType = AttachmentType.FILE,
     ): ...
 
-    @typing.overload
+    @overload
     def __init__(
         self,
         file: Union[str, os.PathLike, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
+        file_name: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        size_bytes: Optional[int] = None,
         *,
         attachment_type: AttachmentType = AttachmentType.FILE,
     ): ...
@@ -457,9 +456,9 @@ class BaseAttachment(abc.ABC):
     def __init__(
         self,
         file: Union[str, io.BytesIO, os.PathLike, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
+        file_name: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        size_bytes: Optional[int] = None,
         *,
         attachment_type: AttachmentType = AttachmentType.FILE,
     ):
@@ -492,7 +491,7 @@ class BaseAttachment(abc.ABC):
             "mime_type={0.mime_type!r} size={0.size!r} type={0.type!r}>".format(self)
         )
 
-    def as_body(self, body: typing.Optional[str] = None) -> dict:
+    def as_body(self, body: Optional[str] = None) -> dict:
         """
         Generates the body for the attachment for sending. The attachment must've been uploaded first.
 
@@ -517,7 +516,7 @@ class BaseAttachment(abc.ABC):
     async def from_file(
         cls,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
+        file_name: Optional[str] = None,
     ) -> "BaseAttachment":
         """
         Creates an attachment from a file.
@@ -550,6 +549,7 @@ class BaseAttachment(abc.ABC):
         """
         response = await client.download(url)
         if isinstance(response, nio.DownloadResponse):
+            # noinspection PyTypeChecker
             return await cls.from_file(io.BytesIO(response.body), response.filename)
         raise MediaDownloadException("Failed to download attachment.", response)
 
@@ -557,7 +557,7 @@ class BaseAttachment(abc.ABC):
     async def from_http(
         cls,
         url: str,
-        client_session: typing.Optional[aiohttp.ClientSession] = None,
+        client_session: Optional[aiohttp.ClientSession] = None,
     ) -> "BaseAttachment":
         """
         Creates an attachment from an HTTP URL.
@@ -593,6 +593,7 @@ class BaseAttachment(abc.ABC):
                 u = urllib.parse.urlparse(url)
                 file_name = os.path.basename(u.path)
 
+            # noinspection PyTypeChecker
             return await cls.from_file(io.BytesIO(await response.read()), file_name)
 
     @property
@@ -602,7 +603,7 @@ class BaseAttachment(abc.ABC):
 
     def size_as(
         self,
-        unit: typing.Literal[
+        unit: Literal[
             "b",
             "kb",
             "kib",
@@ -650,7 +651,7 @@ class BaseAttachment(abc.ABC):
         }
         return self.size_bytes / multi[unit]
 
-    async def upload(self, client: "NioBot", encrypted: bool = False) -> "BaseAttachment":
+    async def upload(self, client: "NioBot", encrypted: bool = False) -> Self:
         """
         Uploads the file to matrix.
 
@@ -725,9 +726,9 @@ class FileAttachment(BaseAttachment):
     def __init__(
         self,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
+        file_name: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        size_bytes: Optional[int] = None,
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.FILE)
 
@@ -750,13 +751,13 @@ class ImageAttachment(BaseAttachment):
     def __init__(
         self,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
-        height: typing.Optional[int] = None,
-        width: typing.Optional[int] = None,
-        thumbnail: typing.Optional["ImageAttachment"] = None,
-        xyz_amorgan_blurhash: typing.Optional[str] = None,
+        file_name: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        size_bytes: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        thumbnail: Optional["ImageAttachment"] = None,
+        xyz_amorgan_blurhash: Optional[str] = None,
     ):
         super().__init__(
             file,
@@ -776,13 +777,13 @@ class ImageAttachment(BaseAttachment):
     async def from_file(
         cls,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        height: typing.Optional[int] = None,
-        width: typing.Optional[int] = None,
-        thumbnail: typing.Optional["ImageAttachment"] = None,
+        file_name: Optional[str] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        thumbnail: Optional["ImageAttachment"] = None,
         generate_blurhash: bool = True,
         *,
-        xyz_amorgan_blurhash: typing.Optional[str] = None,
+        xyz_amorgan_blurhash: Optional[str] = None,
         unsafe: bool = False,
     ) -> "ImageAttachment":
         """
@@ -828,13 +829,13 @@ class ImageAttachment(BaseAttachment):
             await self.get_blurhash()
         return self
 
-    def as_body(self, body: typing.Optional[str] = None) -> dict:
+    def as_body(self, body: Optional[str] = None) -> dict:
         output_body = super().as_body(body)
         output_body["info"] = {"mimetype": self.mime_type, "size": self.size}
         if self.height is not None:
             output_body["info"]["h"] = self.height
         if self.width is not None:
-            output_body["info"]["w"] - self.width
+            output_body["info"]["w"] = self.width
 
         if self.thumbnail:
             if self.thumbnail.keys:
@@ -856,8 +857,8 @@ class ImageAttachment(BaseAttachment):
     @staticmethod
     def thumbnailify_image(
         image: Union[PIL.Image.Image, io.BytesIO, str, pathlib.Path],
-        size: typing.Tuple[int, int] = (320, 240),
-        resampling: typing.Union["PIL.Image.Resampling"] = PIL.Image.Resampling.BICUBIC,
+        size: Tuple[int, int] = (320, 240),
+        resampling: Union["PIL.Image.Resampling"] = PIL.Image.Resampling.BICUBIC,
     ) -> PIL.Image.Image:
         """
         Helper function to thumbnail an image.
@@ -878,8 +879,8 @@ class ImageAttachment(BaseAttachment):
 
     async def get_blurhash(
         self,
-        quality: typing.Tuple[int, int] = (4, 3),
-        file: typing.Optional[Union[str, pathlib.Path, io.BytesIO, PIL.Image.Image]] = None,
+        quality: Tuple[int, int] = (4, 3),
+        file: Optional[Union[str, pathlib.Path, io.BytesIO, PIL.Image.Image]] = None,
         disable_auto_crop: bool = False,
     ) -> str:
         """
@@ -945,13 +946,13 @@ class VideoAttachment(BaseAttachment):
     def __init__(
         self,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
-        duration: typing.Optional[int] = None,
-        height: typing.Optional[int] = None,
-        width: typing.Optional[int] = None,
-        thumbnail: typing.Optional["ImageAttachment"] = None,
+        file_name: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        size_bytes: Optional[int] = None,
+        duration: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        thumbnail: Optional["ImageAttachment"] = None,
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.VIDEO)
         self.width = width
@@ -974,11 +975,11 @@ class VideoAttachment(BaseAttachment):
     async def from_file(
         cls,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        duration: typing.Optional[int] = None,
-        height: typing.Optional[int] = None,
-        width: typing.Optional[int] = None,
-        thumbnail: typing.Optional[Union[ImageAttachment, typing.Literal[False]]] = None,
+        file_name: Optional[str] = None,
+        duration: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        thumbnail: Optional[Union[ImageAttachment, Literal[False]]] = None,
         generate_blurhash: bool = True,
     ) -> "VideoAttachment":
         """
@@ -1059,7 +1060,7 @@ class VideoAttachment(BaseAttachment):
         x = await run_blocking(first_frame, video, "webp")
         return await ImageAttachment.from_file(io.BytesIO(x), file_name="thumbnail.webp")
 
-    def as_body(self, body: typing.Optional[str] = None) -> dict:
+    def as_body(self, body: Optional[str] = None) -> dict:
         output_body = super().as_body(body)
         info = {"mimetype": self.mime_type, "size": self.size_bytes}
         if self.height:
@@ -1085,10 +1086,10 @@ class AudioAttachment(BaseAttachment):
     def __init__(
         self,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        mime_type: typing.Optional[str] = None,
-        size_bytes: typing.Optional[int] = None,
-        duration: typing.Optional[int] = None,
+        file_name: Optional[str] = None,
+        mime_type: Optional[str] = None,
+        size_bytes: Optional[int] = None,
+        duration: Optional[int] = None,
     ):
         super().__init__(file, file_name, mime_type, size_bytes, attachment_type=AttachmentType.AUDIO)
         self.info = {
@@ -1098,20 +1099,20 @@ class AudioAttachment(BaseAttachment):
         }
 
     @property
-    def duration(self) -> typing.Optional[int]:
+    def duration(self) -> Optional[int]:
         """The duration of this audio in milliseconds"""
         return self.info["duration"]
 
     @duration.setter
-    def duration(self, value: typing.Optional[int]):
+    def duration(self, value: Optional[int]):
         self.info["duration"] = value
 
     @classmethod
     async def from_file(
         cls,
         file: Union[str, io.BytesIO, pathlib.Path],
-        file_name: typing.Optional[str] = None,
-        duration: typing.Optional[int] = None,
+        file_name: Optional[str] = None,
+        duration: Optional[int] = None,
     ) -> "AudioAttachment":
         """
         Generates an audio attachment
@@ -1137,7 +1138,7 @@ class AudioAttachment(BaseAttachment):
         self = cls(file, file_name, mime_type, size, duration)
         return self
 
-    def as_body(self, body: typing.Optional[str] = None) -> dict:
+    def as_body(self, body: Optional[str] = None) -> dict:
         output_body = super().as_body(body)
         info = self.info.copy()
         if info.get("duration") is None:
