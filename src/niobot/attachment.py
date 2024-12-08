@@ -188,6 +188,7 @@ def get_metadata(file: Union[str, pathlib.Path], mime_type: Optional[str] = None
     if mime == "image":
         # First, try using PIL to get the metadata
         try:
+            log.debug("Using PIL to detect metadata for %r", file)
             with PIL.Image.open(file) as img:
                 data = {
                     "streams": [
@@ -206,9 +207,14 @@ def get_metadata(file: Union[str, pathlib.Path], mime_type: Optional[str] = None
                         "size": file.stat().st_size,
                     },
                 }
+                log.debug("PIL metadata for %r: %r", file, data)
                 return data
         except (PIL.UnidentifiedImageError, OSError):
-            log.warning("Failed to detect metadata for %r with PIL. Falling back to imagemagick.", file, exc_info=True)
+            log.warning(
+                "Failed to detect metadata for %r with PIL. Falling back to imagemagick.",
+                file,
+                exc_info=True
+            )
             if not shutil.which("identify"):
                 log.warning(
                     "Imagemagick identify not found, falling back to ffmpeg for image metadata detection. "
@@ -220,8 +226,9 @@ def get_metadata(file: Union[str, pathlib.Path], mime_type: Optional[str] = None
                 try:
                     r = get_metadata_imagemagick(file)
                     log.debug("get_metadata_imagemagick took %f seconds", time.perf_counter() - start)
+                    log.debug("identify detected data for %r: %r", file, r)
                     return r
-                except (IndexError, ValueError, subprocess.SubprocessError, IOError, OSError):
+                except (IndexError, ValueError, subprocess.SubprocessError, OSError):
                     log.warning(
                         "Failed to detect metadata for %r with imagemagick. Falling back to ffmpeg.",
                         file,
@@ -231,8 +238,10 @@ def get_metadata(file: Union[str, pathlib.Path], mime_type: Optional[str] = None
     if mime not in ["audio", "video", "image"]:
         raise MetadataDetectionException("Unsupported mime type. Must be an audio clip, video, or image.")
     start = time.perf_counter()
+    log.debug("Getting metadata for %r with ffprobe", file)
     r = get_metadata_ffmpeg(file)
     log.debug("get_metadata_ffmpeg took %f seconds", time.perf_counter() - start)
+    log.debug("ffprobe detected data for %r: %r", file, r)
     return r
 
 
@@ -821,13 +830,26 @@ class ImageAttachment(BaseAttachment):
         :param thumbnail: A thumbnail for this image
         :param generate_blurhash: Whether to generate a blurhash for this image
         :param xyz_amorgan_blurhash: The blurhash of the image, if known beforehand.
-        :param unsafe: Whether to allow uploading of images with unsupported codecs. May break metadata detection.
         :return: An image attachment
         """
         file = _to_path(file)
         if isinstance(file, io.BytesIO):
             if not file_name:
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
+            else:
+                with tempfile.NamedTemporaryFile(mode="wb", suffix=file_name) as fd:
+                    fd.write(file.read())
+                    fd.seek(0)
+                    # It's best to work on a real file for imagemagick and ffmpeg.
+                    return await cls.from_file(
+                        fd.name,
+                        file_name,
+                        height,
+                        width,
+                        thumbnail,
+                        generate_blurhash,
+                        xyz_amorgan_blurhash=xyz_amorgan_blurhash,
+                    )
         else:
             if not file_name:
                 file_name = file.name
