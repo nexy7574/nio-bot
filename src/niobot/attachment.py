@@ -809,7 +809,7 @@ class ImageAttachment(BaseAttachment):
 
     @classmethod
     async def from_file(
-        cls,
+        cls: Type["ImageAttachment"],
         file: Union[str, io.BytesIO, pathlib.Path],
         file_name: Optional[str] = None,
         height: Optional[int] = None,
@@ -837,17 +837,18 @@ class ImageAttachment(BaseAttachment):
             if not file_name:
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
             else:
+                log.debug("Writing bytesio to tempfile in order to fetch metadata")
                 with tempfile.NamedTemporaryFile(mode="wb", suffix=file_name) as fd:
-                    fd.write(file.getvalue())
+                    bytes_written = fd.write(file.getvalue())
                     fd.seek(0)
                     # It's best to work on a real file for imagemagick and ffmpeg.
                     self = await cls.from_file(
-                        fd.name,
-                        file_name,
-                        height,
-                        width,
-                        thumbnail,
-                        generate_blurhash,
+                        file=fd.name,
+                        file_name=file_name,
+                        height=height,
+                        width=width,
+                        thumbnail=thumbnail,
+                        generate_blurhash=generate_blurhash,
                         xyz_amorgan_blurhash=xyz_amorgan_blurhash,
                     )
                     fd.seek(0)
@@ -872,11 +873,21 @@ class ImageAttachment(BaseAttachment):
                 # ffmpeg doesn't have an image type
                 height = stream["height"]
                 width = stream["width"]
+                log.debug("Detected resolution HxW for %s: %dx%d", file, height, width)
 
         mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
+        if height is None or width is None:
+            log.warning("Width or Height (%r, %r) is None, this may break the display on some clients.", height, width)
         self = cls(
-            file, file_name, mime_type, size, height, width, thumbnail, xyz_amorgan_blurhash=xyz_amorgan_blurhash
+            file=file,
+            file_name=file_name,
+            mime_type=mime_type,
+            size_bytes=size,
+            height=height,
+            width=width,
+            thumbnail=thumbnail,
+            xyz_amorgan_blurhash=xyz_amorgan_blurhash
         )
         if generate_blurhash:
             await self.get_blurhash()
