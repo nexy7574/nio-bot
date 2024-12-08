@@ -921,20 +921,6 @@ class NioBot(AsyncClient):
             )
         )
 
-    async def _recursively_upload_attachments(
-        self, base: "BaseAttachment", encrypted: bool = False, __previous: typing.Optional[list] = None
-    ) -> list[typing.Union[nio.UploadResponse, nio.UploadError, None]]:
-        """Recursively uploads attachments."""
-        # Why is this recursive? There should be at most a top level file and a thumbnail?
-        previous = (__previous or []).copy()
-        if not base.url:
-            self.log.info("Uploading attachment %r (encrypted: %r)", base, encrypted)
-            previous.append(await base.upload(self, encrypted))
-        if hasattr(base, "thumbnail") and base.thumbnail and not base.url:
-            self.log.info("Uploading thumbnail %r (encrypted: %r)", base.thumbnail, encrypted)
-            previous += await self._recursively_upload_attachments(base.thumbnail, encrypted, previous)
-        return previous
-
     @typing.overload
     async def get_dm_rooms(self) -> typing.Dict[str, typing.List[str]]:
         """
