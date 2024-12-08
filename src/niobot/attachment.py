@@ -846,13 +846,14 @@ class ImageAttachment(BaseAttachment):
             output_body["info"]["xyz.amorgan.blurhash"] = self.xyz_amorgan_blurhash
         return output_body
 
-    def set_thumbnail(self, thumbnail: "ImageAttachment") -> None:
+    def set_thumbnail(self, thumbnail: "ImageAttachment") -> Self:
         """
         Sets the thumbnail for this image attachment.
 
         :param thumbnail: The thumbnail to set
         """
         self.thumbnail = thumbnail
+        return self
 
     @staticmethod
     def thumbnailify_image(

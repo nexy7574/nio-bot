@@ -21,6 +21,7 @@ import marko
 import nio
 from nio.crypto import ENCRYPTION_ENABLED
 
+from . import ImageAttachment
 from .attachment import BaseAttachment
 from .commands import Command, Module
 from .exceptions import (
@@ -1114,14 +1115,13 @@ class NioBot(AsyncClient):
         }
 
         if file is not None:
-            self.log.info("Recursively uploading %r.", file)
-            # We need to upload the file first.
-            responses = await self._recursively_upload_attachments(file, encrypted=getattr(file, "encrypted", False))
-            if any((isinstance(response, nio.UploadError) for response in responses)):
-                raise MessageException(
-                    "Failed to upload media.", tuple(filter(lambda x: isinstance(x, nio.UploadError), responses))[0]
-                )
-
+            if hasattr(file, "thumbnail") and isinstance(file.thumbnail, ImageAttachment):
+                self.log.info("Uploading thumbnail %r for %r.", file.thumbnail, file)
+                await file.thumbnail.upload(self)
+                self.log.info("Finished uploading thumbnail %r.", file.thumbnail)
+            self.log.info("Uploading %r.", file)
+            await file.upload(self)
+            self.log.info("Finished uploading %r.", file)
             body = file.as_body(content)
         else:
             body["body"] = content
