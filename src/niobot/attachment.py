@@ -851,7 +851,8 @@ class ImageAttachment(BaseAttachment):
                         xyz_amorgan_blurhash=xyz_amorgan_blurhash,
                     )
                     fd.seek(0)
-                    new_bytes_io = io.BytesIO(fd.read())
+                    with open(fd.name, "rb") as rfd:  # this is stupid
+                        new_bytes_io = io.BytesIO(rfd.read())
                     new_bytes_io.seek(0)
                     self.file = new_bytes_io
                     # ^ This is necessary to ensure the tempfile isn't lost before uploading
