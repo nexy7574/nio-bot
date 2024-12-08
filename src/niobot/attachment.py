@@ -964,13 +964,7 @@ class VideoAttachment(BaseAttachment):
     @property
     @deprecated(BaseAttachment.as_body)
     def info(self):
-        return {
-            "duration": self.duration,
-            "h": self.height,
-            "w": self.width,
-            "mimetype": self.mime_type,
-            "size": self.size_bytes,
-        }
+        return self.as_body()["info"]
 
     @classmethod
     async def from_file(
@@ -1074,7 +1068,7 @@ class VideoAttachment(BaseAttachment):
         if self.thumbnail:
             if self.thumbnail.keys:
                 output_body["info"]["thumbnail_file"] = self.thumbnail.keys
-            output_body["info"]["thumbnail_info"] = self.thumbnail.info
+            output_body["info"]["thumbnail_info"] = self.thumbnail.as_body()["info"]
             output_body["info"]["thumbnail_url"] = self.thumbnail.url
         return output_body
 
