@@ -138,7 +138,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> Dict[str, Any]:
     :return: A slimmed-down dictionary containing the metadata.
     """
     file = file.resolve(True)
-    command = ["identify", str(file)]
+    command = ["identify", "-format", "%m,%w,%h", str(file)]
     start = time.perf_counter()
     try:
         result = subprocess.run(command, capture_output=True, encoding="utf-8", errors="replace", check=True)
@@ -148,7 +148,7 @@ def get_metadata_imagemagick(file: pathlib.Path) -> Dict[str, Any]:
     log.debug("identify took %f seconds", time.perf_counter() - start)
     stdout = result.stdout
     stdout = stdout[len(str(file)) + 1 :]
-    img_format, img_size, *_ = stdout.split()
+    img_format, img_width, img_height = stdout.split(",")
     data = {
         "streams": [
             {
@@ -156,8 +156,8 @@ def get_metadata_imagemagick(file: pathlib.Path) -> Dict[str, Any]:
                 "codec_name": img_format,
                 "codec_long_name": img_format,
                 "codec_type": "video",
-                "height": int(img_size.split("x")[1]),
-                "width": int(img_size.split("x")[0]),
+                "height": int(img_height),
+                "width": int(img_width),
             }
         ],
         "format": {
@@ -186,22 +186,47 @@ def get_metadata(file: Union[str, pathlib.Path], mime_type: Optional[str] = None
     mime = mime_type or detect_mime_type(file)
     mime = mime.split("/")[0]
     if mime == "image":
-        if not shutil.which("identify"):
-            log.warning(
-                "Imagemagick identify not found, falling back to ffmpeg for image metadata detection. "
-                "Check your $PATH."
-            )
-        else:
-            start = time.perf_counter()
-
-            try:
-                r = get_metadata_imagemagick(file)
-                log.debug("get_metadata_imagemagick took %f seconds", time.perf_counter() - start)
-                return r
-            except (IndexError, ValueError, subprocess.SubprocessError, IOError, OSError):
+        # First, try using PIL to get the metadata
+        try:
+            with PIL.Image.open(file) as img:
+                data = {
+                    "streams": [
+                        {
+                            "index": 0,
+                            "codec_name": img.format,
+                            "codec_long_name": img.format,
+                            "codec_type": "video",
+                            "height": img.height,
+                            "width": img.width,
+                        }
+                    ],
+                    "format": {
+                        "filename": str(file),
+                        "format_long_name": img.format,
+                        "size": file.stat().st_size,
+                    },
+                }
+                return data
+        except (PIL.UnidentifiedImageError, OSError):
+            log.warning("Failed to detect metadata for %r with PIL. Falling back to imagemagick.", file, exc_info=True)
+            if not shutil.which("identify"):
                 log.warning(
-                    "Failed to detect metadata for %r with imagemagick. Falling back to ffmpeg.", file, exc_info=True
+                    "Imagemagick identify not found, falling back to ffmpeg for image metadata detection. "
+                    "Check your $PATH."
                 )
+            else:
+                start = time.perf_counter()
+
+                try:
+                    r = get_metadata_imagemagick(file)
+                    log.debug("get_metadata_imagemagick took %f seconds", time.perf_counter() - start)
+                    return r
+                except (IndexError, ValueError, subprocess.SubprocessError, IOError, OSError):
+                    log.warning(
+                        "Failed to detect metadata for %r with imagemagick. Falling back to ffmpeg.",
+                        file,
+                        exc_info=True,
+                    )
 
     if mime not in ["audio", "video", "image"]:
         raise MetadataDetectionException("Unsupported mime type. Must be an audio clip, video, or image.")
