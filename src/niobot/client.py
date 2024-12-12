@@ -694,7 +694,7 @@ class NioBot(AsyncClient):
         self._events.setdefault(event_type, [])
         self._events[event_type].append(func)
 
-        if isinstance(event_type, nio.Event):
+        if not isinstance(event_type, str):
 
             @functools.wraps(func)
             async def event_safety_wrapper(*args):
