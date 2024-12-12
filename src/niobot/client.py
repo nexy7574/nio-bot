@@ -693,6 +693,7 @@ class NioBot(AsyncClient):
     def add_event_listener(self, event_type: typing.Union[str, nio.Event, Type[nio.Event]], func):
         self._events.setdefault(event_type, [])
         if not isinstance(event_type, str):
+
             @functools.wraps(func)
             async def event_safety_wrapper(*args):
                 # This is necessary to stop callbacks crashing the process
