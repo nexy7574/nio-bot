@@ -519,7 +519,7 @@ def check(
     return decorator
 
 
-def event(name: typing.Optional[typing.Union[str, nio.Event]] = None) -> Callable:
+def event(name: typing.Optional[typing.Union[str, typing.Type[nio.Event]]] = None) -> Callable:
     """
     Allows you to register event listeners in modules.
 
