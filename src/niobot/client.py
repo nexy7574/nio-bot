@@ -692,10 +692,7 @@ class NioBot(AsyncClient):
 
     def add_event_listener(self, event_type: typing.Union[str, nio.Event, Type[nio.Event]], func):
         self._events.setdefault(event_type, [])
-        self._events[event_type].append(func)
-
         if not isinstance(event_type, str):
-
             @functools.wraps(func)
             async def event_safety_wrapper(*args):
                 # This is necessary to stop callbacks crashing the process
@@ -705,8 +702,10 @@ class NioBot(AsyncClient):
                     self.log.exception("Error in raw event listener %r", func, exc_info=e)
 
             func = event_safety_wrapper
+            self._events[event_type].append(func)
             self.add_event_callback(func, event_type)
             self.log.debug("Added raw event listener %r for %r", func, event_type)
+        self._events[event_type].append(func)
         self.log.debug("Added event listener %r for %r", func, event_type)
 
     def on_event(self, event_type: typing.Optional[typing.Union[str, Type[nio.Event]]] = None):
