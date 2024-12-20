@@ -132,7 +132,6 @@ class ImageAttachment(BaseAttachment):
                 except (OSError, PIL.UnidentifiedImageError) as err:
                     log.warning("Failed to get metadata for %r: %r", file, err, exc_info=True)
                 else:
-                    print(metadata)
                     for stream in metadata["streams"]:
                         if stream["codec_type"] == "video":
                             log.debug("Selecting stream %r for %r", stream, file)
