@@ -7,8 +7,7 @@ if t.TYPE_CHECKING:
 
 
 async def event_loop_running() -> t.Optional[t.Any]:
-    """
-    An event that is fired once the event loop is running.
+    """An event that is fired once the event loop is running.
 
     !!! tip "You should use this event to perform any startup tasks."
         This event is fired before the bot logs in, and before the first `sync()` is performed.
@@ -33,23 +32,19 @@ async def event_loop_running() -> t.Optional[t.Any]:
                     await self.db.commit
             ```
     """
-    ...
 
 
 async def ready(result: "SyncResponse") -> t.Optional[t.Any]:
-    """
-    An event that is fired when the bot's first `sync()` is completed.
+    """An event that is fired when the bot's first `sync()` is completed.
 
     This indicates that the bot successfully logged in, synchronised with the server, and is ready to receive events.
 
     :param result: The response from the sync.
     """
-    ...
 
 
 async def message(room: "MatrixRoom", event: "RoomMessage") -> t.Optional[t.Any]:
-    """
-    An event that is fired when the bot receives a message in a room that it is in.
+    """An event that is fired when the bot receives a message in a room that it is in.
 
     This event is dispatched *before* commands are processed, and as such the convenient [niobot.Context][] is
     unavailable.
@@ -72,12 +67,10 @@ async def message(room: "MatrixRoom", event: "RoomMessage") -> t.Optional[t.Any]
     :param room: The room that the message was received in.
     :param event: The raw event that triggered the message.
     """
-    ...
 
 
 async def command(ctx: "Context") -> t.Optional[t.Any]:
-    """
-    This event is dispatched once a command is finished being prepared, and is about to be invoked.
+    """This event is dispatched once a command is finished being prepared, and is about to be invoked.
 
     This event is dispatched *after* the `message` event, but *before* `command_complete` and `command_error`.
 
@@ -85,24 +78,20 @@ async def command(ctx: "Context") -> t.Optional[t.Any]:
 
     :param ctx: The context of the command.
     """
-    ...
 
 
 async def command_complete(ctx: "Context", result: t.Any) -> t.Optional[t.Any]:
-    """
-    This event is dispatched after a command has been invoked, and has completed successfully.
+    """This event is dispatched after a command has been invoked, and has completed successfully.
 
     This event features the context, which can be used to access the message, the command, and the arguments.
 
     :param ctx: The context of the command.
     :param result: The result of the command (the returned value of the callback)
     """
-    ...
 
 
 async def command_error(ctx: "Context", error: "CommandError") -> t.Optional[t.Any]:
-    """
-    This event is dispatched after a command has been invoked, and has completed with an error.
+    """This event is dispatched after a command has been invoked, and has completed with an error.
 
     This event features the context, which can be used to access the message, the command, and the arguments.
 
@@ -123,12 +112,10 @@ async def command_error(ctx: "Context", error: "CommandError") -> t.Optional[t.A
     :param ctx: The context of the command.
     :param error: The error that was raised.
     """
-    ...
 
 
 async def raw(room: "MatrixRoom", event: "Event") -> t.Optional[t.Any]:
-    """
-    This is a special event that is handled when you directly pass a `niobot.Event` to `on_event`.
+    """This is a special event that is handled when you directly pass a `niobot.Event` to `on_event`.
 
     You cannot listen to this in the traditional sense of "on_event('name')" as it is not a named event.
     But, this extensibility allows you to listen directly for events not covered by the library.
@@ -147,4 +134,3 @@ async def raw(room: "MatrixRoom", event: "Event") -> t.Optional[t.Any]:
             print(f"{event.sender} redacted {event.redacts} for {event.reason!r} in {room.display_name}")
         ```
     """
-    ...

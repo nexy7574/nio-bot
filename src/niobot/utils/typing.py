@@ -13,8 +13,7 @@ _TYPING_STATES: dict[str, "Typing"] = {}
 
 
 class Typing:
-    """
-    Context manager to manage typing notifications.
+    """Context manager to manage typing notifications.
 
     :param client: The `NioBot` instance
     :param room_id: The room id to send the typing notification to

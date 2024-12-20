@@ -4,8 +4,9 @@ import tempfile
 import time
 
 import nio
-import niobot
 import pytest
+
+import niobot
 
 # from .. import niobot
 
@@ -23,7 +24,10 @@ SYNC_FILES = [
 async def test_sync_store(resolve_state):
     with tempfile.TemporaryDirectory() as store_dir:
         client = niobot.NioBot(
-            "https://matrix.example", "@example:matrix.example", store_path=store_dir, command_prefix="!"
+            "https://matrix.example",
+            "@example:matrix.example",
+            store_path=store_dir,
+            command_prefix="!",
         )
         sync_manager = niobot.SyncStore(client, store_dir + "/sync.db", resolve_state=resolve_state)
         async with sync_manager:

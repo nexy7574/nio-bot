@@ -5,8 +5,7 @@ __all__ = ("Mentions",)
 
 
 class Mentions:
-    """
-    Controls the mentions of a sent event.
+    """Controls the mentions of a sent event.
 
     See: <https://spec.matrix.org/v1.11/client-server-api/#user-and-room-mentions>
 

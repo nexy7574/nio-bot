@@ -30,7 +30,8 @@ class ArgumentView:
         """Adds an argument to the argument list
 
         :param argument: The argument to add
-        :return: none"""
+        :return: none
+        """
         if not argument:
             return
         self.arguments.append(argument)
@@ -47,7 +48,8 @@ class ArgumentView:
     def parse_arguments(self) -> "ArgumentView":
         """Main parsing engine.
 
-        :returns: self"""
+        :returns: self
+        """
         reconstructed = ""
         quote_started = False
         quote_char = None
@@ -65,10 +67,9 @@ class ArgumentView:
                         self.add_arg(reconstructed)
                         reconstructed = ""
                         quote_char = None
-                elif self.index == 0:  # cannot be an escaped string
-                    quote_started = True
-                    quote_char = char
-                elif self.index > 0 and self.source[self.index - 1] != "\\":
+                elif self.index == 0 or (
+                    self.index > 0 and self.source[self.index - 1] != "\\"
+                ):  # cannot be an escaped string
                     quote_started = True
                     quote_char = char
                 else:

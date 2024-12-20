@@ -9,20 +9,24 @@ from collections.abc import Callable
 import nio
 
 from .context import Context
-from .exceptions import CheckFailure, CommandArgumentsError, CommandDisabledError, CommandParserError
+from .exceptions import (
+    CheckFailure,
+    CommandArgumentsError,
+    CommandDisabledError,
+    CommandParserError,
+)
 
 if typing.TYPE_CHECKING:
     from .client import NioBot
 
 
-__all__ = ("Command", "command", "event", "Module", "Argument", "check")
+__all__ = ("Argument", "Command", "Module", "check", "command", "event")
 
 _T = typing.TypeVar("_T")
 
 
 class Argument:
-    """
-    Represents a command argument.
+    """Represents a command argument.
 
     ??? example
         ```py
@@ -115,8 +119,8 @@ class Argument:
                         DeprecationWarning(
                             "custom parsers must be a subclass of niobot.utils.Parser. The old parsing methods have"
                             " been deprecated in favour of uniform ABC-inherited parsers. This will be an error after"
-                            " v1.2.0"
-                        )
+                            " v1.2.0",
+                        ),
                     )
 
         if raw_type == inspect.Parameter.KEYWORD_ONLY and self.type is not str:
@@ -124,8 +128,8 @@ class Argument:
 
     def __repr__(self):
         return (
-            "<Argument name={0.name!r} type={0.type!r} default={0.default!r} required={0.required!r} "
-            "parser={0.parser!r}>".format(self)
+            f"<Argument name={self.name!r} type={self.type!r} default={self.default!r} required={self.required!r} "
+            f"parser={self.parser!r}>"
         )
 
     @staticmethod
@@ -232,8 +236,7 @@ class Command:
 
     @staticmethod
     def autodetect_args(callback) -> list[Argument]:
-        """
-        Attempts to auto-detect the arguments for the command, based on the callback's signature
+        """Attempts to auto-detect the arguments for the command, based on the callback's signature
 
         :param callback: The function to inspect
         :return: A list of arguments. `self`, and `ctx` are skipped.
@@ -262,7 +265,7 @@ class Command:
             # Disallow **kwargs
             if parameter.kind == inspect.Parameter.POSITIONAL_ONLY:
                 raise TypeError("Positional-only arguments are not supported.")
-            elif parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            if parameter.kind == inspect.Parameter.VAR_KEYWORD:
                 raise TypeError("Implicit keyword arguments (**kwargs) are not supported.")
             is_positional = parameter.kind == inspect.Parameter.VAR_POSITIONAL  # *args
             is_kwarg = parameter.kind == inspect.Parameter.KEYWORD_ONLY
@@ -328,11 +331,10 @@ class Command:
         """Checks if another command's runtime ID is the same as this one's"""
         if isinstance(other, Command):
             return self.__runtime_id == other.__runtime_id
-        else:
-            return False
+        return False
 
     def __repr__(self):
-        return "<Command name={0.name!r} aliases={0.aliases} disabled={0.disabled}>".format(self)
+        return f"<Command name={self.name!r} aliases={self.aliases} disabled={self.disabled}>"
 
     def __str__(self):
         return self.name
@@ -353,8 +355,7 @@ class Command:
         return " ".join(usage)
 
     async def can_run(self, ctx: Context) -> bool:
-        """
-        Checks if the current user passes all of the checks on the command.
+        """Checks if the current user passes all of the checks on the command.
 
         If the user fails a check, CheckFailure is raised.
         Otherwise, True is returned.
@@ -377,11 +378,10 @@ class Command:
         return True
 
     async def parse_args(
-        self, ctx: Context
+        self,
+        ctx: Context,
     ) -> typing.Dict[Argument, typing.Union[typing.Any, typing.List[typing.Any]]]:
-        """
-        Parses the arguments for the current command.
-        """
+        """Parses the arguments for the current command."""
         sentinel = os.urandom(128)  # forbid passing arguments with this failsafe
         to_pass = {}
         hit_greedy = False
@@ -426,8 +426,7 @@ class Command:
         return to_pass
 
     async def invoke(self, ctx: Context) -> typing.Coroutine:
-        """
-        Invokes the current command with the given context
+        """Invokes the current command with the given context
 
         :param ctx: The current context
         :raises CommandArgumentsError: Too many/few arguments, or an error parsing an argument.
@@ -451,8 +450,7 @@ class Command:
         meta: str,
         cls: type = Context,
     ) -> Context:
-        """
-        Constructs the context for the current command.
+        """Constructs the context for the current command.
 
         You will rarely need to do this, the library automatically gives you a Context when a command is run.
 
@@ -470,8 +468,7 @@ class Command:
 
 
 def command(name: typing.Optional[str] = None, **kwargs) -> Callable:
-    """
-    Allows you to register commands later on, by loading modules.
+    """Allows you to register commands later on, by loading modules.
 
     This differs from NioBot.command() in that commands are not automatically added, you need to load them with
     bot.mount_module
@@ -494,8 +491,7 @@ def command(name: typing.Optional[str] = None, **kwargs) -> Callable:
 def check(
     function: typing.Callable[[Context], typing.Union[bool, typing.Coroutine[None, None, bool]]],
 ) -> Callable:
-    """
-    Allows you to register checks in modules.
+    """Allows you to register checks in modules.
 
     ```python
     @niobot.command()
@@ -520,8 +516,7 @@ def check(
 
 
 def event(name: typing.Optional[typing.Union[str, nio.Event]] = None) -> Callable:
-    """
-    Allows you to register event listeners in modules.
+    """Allows you to register event listeners in modules.
 
     :param name: the name of the event (no `on_` prefix)
     :return:
@@ -537,8 +532,7 @@ def event(name: typing.Optional[typing.Union[str, nio.Event]] = None) -> Callabl
 
 
 class Module:
-    """
-    Represents a module.
+    """Represents a module.
 
     A module houses a set of commands and events, and can be used to modularise your bot, and organise commands and
     their respective code into multiple files and classes for ease of use, development, and maintenance.
@@ -566,8 +560,7 @@ class Module:
                 yield potential_command.__nio_command__
 
     def list_events(self) -> typing.Generator[dict, None, None]:
-        """
-        Lists all the @event listeners registered in this module.
+        """Lists all the @event listeners registered in this module.
 
         This returns the functions themselves. You can get the event name via `result.__nio_event__["name"]`.
         """
@@ -584,8 +577,7 @@ class Module:
         return wrapper
 
     def __setup__(self):
-        """
-        Setup function called once by NioBot.mount_module(). Mounts every command discovered.
+        """Setup function called once by NioBot.mount_module(). Mounts every command discovered.
 
         .. warning:
             If you override this function, you should ensure that you call super().__setup__() to ensure that
@@ -602,8 +594,7 @@ class Module:
             self.bot.add_event_listener(_event["name"], self._event_handler_callback(_event["function"]))
 
     def __teardown__(self):
-        """
-        Teardown function called once by NioBot.unmount_module(). Removes any command that was mounted.
+        """Teardown function called once by NioBot.unmount_module(). Removes any command that was mounted.
 
         .. warning:
             If you override this function, you should ensure that you call super().__teardown__() to ensure that

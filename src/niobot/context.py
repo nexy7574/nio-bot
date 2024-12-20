@@ -24,14 +24,15 @@ logger = logging.getLogger(__name__)
 class ContextualResponse:
     """Context class for managing replies.
 
-    Usage of this function is not required, however it is a useful utility."""
+    Usage of this function is not required, however it is a useful utility.
+    """
 
-    def __init__(self, ctx: "Context", response: nio.RoomSendResponse):
+    def __init__(self, ctx: Context, response: nio.RoomSendResponse):
         self.ctx = ctx
         self._response = response
 
     def __repr__(self):
-        return "<ContextualResponse ctx={0.ctx!r} response={0.response!r}>".format(self)
+        return f"<ContextualResponse ctx={self.ctx!r} response={self.response!r}>"
 
     @property
     @deprecated("original_event")
@@ -39,8 +40,7 @@ class ContextualResponse:
         result = self.ctx.client.get_cached_message(self._response.event_id)
         if result:
             return result[1]
-        else:
-            logger.warning("Original response for context %r was not found in cache, unable to modify.", self.ctx)
+        logger.warning("Original response for context %r was not found in cache, unable to modify.", self.ctx)
 
     async def original_event(self) -> typing.Optional[nio.RoomMessage]:
         """Fetches the current event for this response"""
@@ -59,9 +59,8 @@ class ContextualResponse:
         *,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
-    ) -> "ContextualResponse":
-        """
-        Replies to the current response.
+    ) -> ContextualResponse:
+        """Replies to the current response.
 
         This does NOT reply to the original invoking message.
 
@@ -87,9 +86,8 @@ class ContextualResponse:
         message_type: typing.Optional[str] = None,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
-    ) -> "ContextualResponse":
-        """
-        Edits the current response.
+    ) -> ContextualResponse:
+        """Edits the current response.
 
         See [niobot.NioBot.edit_message][] for more information.
         """
@@ -104,8 +102,7 @@ class ContextualResponse:
         return self
 
     async def delete(self, reason: typing.Optional[str] = None) -> None:
-        """
-        Redacts the current response.
+        """Redacts the current response.
 
         :param reason: An optional reason for the redaction
         :return: None, as there will be no more response.
@@ -118,10 +115,10 @@ class Context:
 
     def __init__(
         self,
-        _client: "NioBot",
+        _client: NioBot,
         room: nio.MatrixRoom,
         event: nio.RoomMessageText,
-        command: "Command",
+        command: Command,
         *,
         invoking_prefix: typing.Optional[str] = None,
         invoking_string: typing.Optional[str] = None,
@@ -150,7 +147,7 @@ class Context:
         self.arguments = self.args
 
     def __repr__(self):
-        return "<Context room={0.room!r} event={0.event!r} command={0.command!r}>".format(self)
+        return f"<Context room={self.room!r} event={self.event!r} command={self.command!r}>"
 
     def __eq__(self, other):
         if not isinstance(other, Context):
@@ -163,12 +160,12 @@ class Context:
         return self._room
 
     @property
-    def client(self) -> "NioBot":
+    def client(self) -> NioBot:
         """The current instance of the client"""
         return self._client
 
     @property
-    def command(self) -> "Command":
+    def command(self) -> Command:
         """The current command being invoked"""
         return self._command
 
@@ -201,10 +198,9 @@ class Context:
         *,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
-        mentions: typing.Union["Mentions", typing.Literal[False], None] = None,
+        mentions: typing.Union[Mentions, typing.Literal[False], None] = None,
     ) -> ContextualResponse:
-        """
-        Responds to the current event.
+        """Responds to the current event.
 
         See [niobot.NioBot.send_message][] for more information.
         """

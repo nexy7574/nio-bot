@@ -32,9 +32,7 @@ class Membership(enum.Enum):
 
 
 class _DudSyncStore:
-    """
-    Shell class context manager. Doesn't do anything.
-    """
+    """Shell class context manager. Doesn't do anything."""
 
     def __bool__(self):
         return False
@@ -47,8 +45,7 @@ class _DudSyncStore:
 
 
 class SyncStore:
-    """
-    This is the main class for the NioBot Sync Store.
+    """This is the main class for the NioBot Sync Store.
 
     This class handles the resolution, reading, and storing of important sync events.
     You will usually not need to interact with this.
@@ -128,7 +125,7 @@ class SyncStore:
                 """,
                 (),
             ),
-        ]
+        ],
     ]
     log = logging.getLogger(__name__)
 
@@ -162,9 +159,7 @@ class SyncStore:
             await self.commit()
 
     async def close(self) -> None:
-        """
-        Closes the database connection, committing any unsaved data.
-        """
+        """Closes the database connection, committing any unsaved data."""
         if self._db:
             await self.commit()
             await self._db.close()
@@ -217,8 +212,7 @@ class SyncStore:
             await self._db.execute(f'DELETE FROM "{table}" WHERE room_id=?', (room_id,))
 
     async def process_invite(self, room_id: str, info: nio.InviteInfo) -> None:
-        """
-        Processes an invite event.
+        """Processes an invite event.
 
         :param room_id: The room ID of the invite
         :param info: The invite information
@@ -245,8 +239,7 @@ class SyncStore:
         return d
 
     async def process_join(self, room_id: str, info: nio.RoomInfo) -> None:
-        """
-        Processes a room join
+        """Processes a room join
 
         :param room_id: The room ID of the room
         :param info: The room information
@@ -279,9 +272,7 @@ class SyncStore:
         self.log.debug("Processed join in %r.", room_id)
 
     async def process_leave(self, room_id: str, info: nio.RoomInfo) -> None:
-        """
-        Processes a room leave
-        """
+        """Processes a room leave"""
         await self._init_db()
         await self._pop_from(room_id, "invite", "knock", "join")
         self.log.debug("Processing leave room %r.", room_id)
@@ -296,9 +287,7 @@ class SyncStore:
         )
 
     async def get_state_for(self, room_id: str, membership: Membership) -> typing.List[typing.Dict]:
-        """
-        Fetches the stored state for a specific room.
-        """
+        """Fetches the stored state for a specific room."""
         await self._init_db()
         state_table = f"rooms.{membership.value}"
         async with self._db.execute(f'SELECT state FROM "{state_table}" WHERE room_id=?', (room_id,)) as cursor:
@@ -308,10 +297,14 @@ class SyncStore:
             return []
 
     async def insert_state_event(
-        self, room_id: str, membership: Membership, new_event: typing.Union[dict, nio.Event], *, force: bool = False
+        self,
+        room_id: str,
+        membership: Membership,
+        new_event: typing.Union[dict, nio.Event],
+        *,
+        force: bool = False,
     ) -> None:
-        """
-        Inserts a new event into the state store for a specified room
+        """Inserts a new event into the state store for a specified room
 
         :param room_id: The room ID in which this state event belongs
         :param membership: The client's membership state
@@ -367,14 +360,19 @@ class SyncStore:
         existing_state.append(new_event)
         self.log.debug("Room %r now has %d state events.", room_id, len(existing_state))
         await self._db.execute(
-            f'UPDATE "{state_table}" SET state=? WHERE room_id=?', (await self.adumps(existing_state), room_id)
+            f'UPDATE "{state_table}" SET state=? WHERE room_id=?',
+            (await self.adumps(existing_state), room_id),
         )
 
     async def insert_timeline_event(
-        self, room_id: str, membership: Membership, new_event: typing.Union[dict, nio.Event], *, force: bool = False
+        self,
+        room_id: str,
+        membership: Membership,
+        new_event: typing.Union[dict, nio.Event],
+        *,
+        force: bool = False,
     ) -> None:
-        """
-        Inserts a new event into the timeline store for a specified room
+        """Inserts a new event into the timeline store for a specified room
 
         :param room_id: The room ID in which this timeline event belongs
         :param membership: The client's membership state
@@ -414,14 +412,18 @@ class SyncStore:
         existing_timeline.append(new_event)
         self.log.debug("Room %r now has %d timeline events.", room_id, len(existing_timeline))
         await self._db.execute(
-            f'UPDATE "{table}" SET timeline=? WHERE room_id=?', (await self.adumps(existing_timeline), room_id)
+            f'UPDATE "{table}" SET timeline=? WHERE room_id=?',
+            (await self.adumps(existing_timeline), room_id),
         )
 
     async def remove_event(
-        self, room_id: str, membership: Membership, event_id: str, event_type: typing.Literal["timeline", "state"]
+        self,
+        room_id: str,
+        membership: Membership,
+        event_id: str,
+        event_type: typing.Literal["timeline", "state"],
     ) -> None:
-        """
-        Forcibly removes an event from the store.
+        """Forcibly removes an event from the store.
         This usually is not necessary, but included for convenience
         """
         if event_type not in ("timeline", "state"):
@@ -435,7 +437,8 @@ class SyncStore:
                 existing_data.remove(event)
                 break
         await self._db.execute(
-            f'UPDATE "{table}" SET {event_type}=? WHERE room_id=?', (await self.adumps(existing_data), room_id)
+            f'UPDATE "{table}" SET {event_type}=? WHERE room_id=?',
+            (await self.adumps(existing_data), room_id),
         )
 
     async def get_next_batch(self, user_id: str = None) -> str:
@@ -466,9 +469,7 @@ class SyncStore:
         )
 
     async def handle_sync(self, response: nio.SyncResponse) -> None:
-        """
-        Handles a sync response from the server
-        """
+        """Handles a sync response from the server"""
         await self._init_db()
         self.log.debug("Handling sync: %r", response.uuid or uuid.uuid4())
         for room_id, room in response.rooms.invite.items():
@@ -497,9 +498,7 @@ class SyncStore:
             await self.commit()
 
     async def generate_sync(self) -> nio.SyncResponse:
-        """
-        Generates a sync response, ready for replaying.
-        """
+        """Generates a sync response, ready for replaying."""
         # I wonder if an incremental sync would make sense here
         # Large accounts in lots of rooms or with complex states will struggle with this replay
         # because the construction of the SyncResponse dataclass does a lot of validation and is
@@ -545,7 +544,7 @@ class SyncStore:
         return nio.SyncResponse.from_dict(payload)
 
     async def commit(self) -> None:
-        """forcefully writes unsaved changes to the database, without closing the connection"""
+        """Forcefully writes unsaved changes to the database, without closing the connection"""
         await self._db.commit()
         self._last_commit = time.monotonic()
         self._change_count = self._db.total_changes
