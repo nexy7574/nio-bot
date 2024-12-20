@@ -221,4 +221,8 @@ class VideoAttachment(BaseAttachment):
                     io.BytesIO(thumbnail_bytes),
                     file_name="thumbnail.webp",
                 )
+                assert self.thumbnail.as_body()["info"]["w"] is not None, "null width abort"
+                assert self.thumbnail.as_body()["info"]["h"] is not None, "null height abort"
+            else:
+                raise TypeError("Unsure how to blurhash type %r" % type(self.thumbnail))
         return self

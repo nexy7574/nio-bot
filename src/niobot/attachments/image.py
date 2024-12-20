@@ -219,6 +219,7 @@ class ImageAttachment(BaseAttachment):
         file = file or self.file
         if not isinstance(file, PIL.Image.Image):
             file = _to_path(file)
+            log.debug("Opening %r as a PIL image", file)
             file = PIL.Image.open(file)
 
         if disable_auto_crop is False and (file.width > 800 or file.height > 600):
