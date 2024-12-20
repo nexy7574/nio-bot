@@ -1,16 +1,11 @@
 # This file is deprecated, and instead you should use the types in `niobot.attachments`.
 
+# This legacy file will be removed in v1.5.0
+
 from __future__ import annotations
 
-import io
-import json
-import logging
 import pathlib
-import shutil
-import subprocess
-import tempfile
-import time
-from typing import IO, Any, Dict, Optional, Type, TypeVar, Union
+from typing import IO, TypeVar
 
 import PIL.Image
 
