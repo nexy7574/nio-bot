@@ -155,7 +155,10 @@ class ImageAttachment(BaseAttachment):
             xyz_amorgan_blurhash=xyz_amorgan_blurhash,
         )
         if generate_blurhash:
-            await self.get_blurhash()
+            try:
+                await self.get_blurhash()
+            except Exception as err:
+                log.warning("Failed to generate blurhash for %r: %r", file, err, exc_info=True)
         return self
 
     @staticmethod
