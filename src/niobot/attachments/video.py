@@ -195,6 +195,7 @@ class VideoAttachment(BaseAttachment):
                 file_name = file.name
 
             if height is None or width is None or duration is None:
+                log.debug("Width/height/duration is None, fetching data with ffprobe.")
                 metadata = await VideoAttachment.get_metadata(file)
                 for stream in metadata["streams"]:
                     if stream["codec_type"] == "video":
@@ -204,6 +205,7 @@ class VideoAttachment(BaseAttachment):
                         break
                 else:
                     raise ValueError("Could not find a video stream in this file.")
+                log.debug("Resolved width/height/duration to %dx%d for %r.", width, height, file)
 
         mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
@@ -221,8 +223,8 @@ class VideoAttachment(BaseAttachment):
                     io.BytesIO(thumbnail_bytes),
                     file_name="thumbnail.webp",
                 )
-                assert self.thumbnail.as_body()["info"]["w"] is not None, "null width abort"
-                assert self.thumbnail.as_body()["info"]["h"] is not None, "null height abort"
+                assert self.thumbnail.as_body()["info"].get("w", ...) is not None, "null width abort"
+                assert self.thumbnail.as_body()["info"].get("h", ...) is not None, "null height abort"
             else:
                 raise TypeError("Unsure how to blurhash type %r" % type(self.thumbnail))
         return self
