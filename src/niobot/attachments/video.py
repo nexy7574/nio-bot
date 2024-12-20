@@ -222,6 +222,7 @@ class VideoAttachment(BaseAttachment):
                 self.thumbnail = await ImageAttachment.from_file(
                     io.BytesIO(thumbnail_bytes),
                     file_name="thumbnail.webp",
+                    thumbnail=False
                 )
                 assert self.thumbnail.as_body()["info"].get("w", ...) is not None, "null width abort"
                 assert self.thumbnail.as_body()["info"].get("h", ...) is not None, "null height abort"

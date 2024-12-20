@@ -3,7 +3,7 @@ import logging
 import pathlib
 import tempfile
 import time
-from typing import Any, Dict, Optional, Tuple, Type, Union
+from typing import Any, Dict, Optional, Tuple, Type, Union, Literal
 
 import PIL.Image
 import blurhash
@@ -81,7 +81,7 @@ class ImageAttachment(BaseAttachment):
         file_name: Optional[str] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
-        thumbnail: Optional["ImageAttachment"] = None,
+        thumbnail: Union["ImageAttachment", Literal[False]] = None,
         generate_blurhash: bool = True,
         *,
         xyz_amorgan_blurhash: Optional[str] = None,
@@ -101,49 +101,34 @@ class ImageAttachment(BaseAttachment):
         if isinstance(file, io.BytesIO):
             if not file_name:
                 raise ValueError("file_name must be specified when uploading a BytesIO object.")
-            log.debug("Writing bytesio to tempfile in order to fetch metadata")
-            with tempfile.NamedTemporaryFile(mode="wb", suffix=file_name) as fd:
-                fd.write(file.getvalue())
-                fd.seek(0)
-                # It's best to work on a real file for imagemagick and ffmpeg.
-                self = await cls.from_file(
-                    file=fd.name,
-                    file_name=file_name,
-                    height=height,
-                    width=width,
-                    thumbnail=thumbnail,
-                    generate_blurhash=generate_blurhash,
-                    xyz_amorgan_blurhash=xyz_amorgan_blurhash,
-                )
-                fd.seek(0)
-                with open(fd.name, "rb") as rfd:  # this is stupid
-                    new_bytes_io = io.BytesIO()
-                    new_bytes_io.write(rfd.read())
-                    new_bytes_io.seek(0)
-                    self.file = new_bytes_io
-                    # ^ This is necessary to ensure the tempfile isn't lost before uploading
         else:
             if not file_name:
                 file_name = file.name
 
-            if height is None or width is None:
-                try:
-                    metadata = await cls.get_metadata(file)
-                except (OSError, PIL.UnidentifiedImageError) as err:
-                    log.warning("Failed to get metadata for %r: %r", file, err, exc_info=True)
-                else:
-                    for stream in metadata["streams"]:
-                        if stream["codec_type"] == "video":
-                            log.debug("Selecting stream %r for %r", stream, file)
-                            height = stream["height"]
-                            width = stream["width"]
-                            break
-                    log.debug("Detected resolution HxW for %s: %dx%d", file, height, width)
+        if height is None or width is None:
+            try:
+                metadata = await cls.get_metadata(file)
+            except (OSError, PIL.UnidentifiedImageError) as err:
+                log.warning("Failed to get metadata for %r: %r", file, err, exc_info=True)
+            else:
+                for stream in metadata["streams"]:
+                    if stream["codec_type"] == "video":
+                        log.debug("Selecting stream %r for %r", stream, file)
+                        height = stream["height"]
+                        width = stream["width"]
+                        break
+                log.debug("Detected resolution HxW for %s: %dx%d", file, width, height)
 
         mime_type = await run_blocking(detect_mime_type, file)
         size = _size(file)
         if height is None or width is None:
             log.warning("Width or Height (%r, %r) is None, this may break the display on some clients.", height, width)
+        if thumbnail is False:
+            thumbnail = None
+            gen_thumbnail = True
+        else:
+            thumbnail: ImageAttachment | None
+            gen_thumbnail = thumbnail is None
         self = cls(
             file=file,
             file_name=file_name,
@@ -159,6 +144,25 @@ class ImageAttachment(BaseAttachment):
                 await self.get_blurhash()
             except Exception as err:
                 log.warning("Failed to generate blurhash for %r: %r", file, err, exc_info=True)
+        if gen_thumbnail:
+            log.debug("Automatically generating thumbnail for %r", file)
+
+            thumbnail_img = await run_blocking(
+                cls.generate_thumbnail,
+                file,
+                (320, 240),
+            )
+            tio = io.BytesIO()
+            thumbnail_img.save(tio, format="webp")
+            tio.seek(0)
+            self.thumbnail = cls(
+                tio,
+                file_name=f"{file_name}.thumbnail.webp",
+                mime_type="image/webp",
+                size_bytes=_size(tio),
+                height=thumbnail_img.height,
+                width=thumbnail_img.width
+            )
         return self
 
     @staticmethod
@@ -259,13 +263,19 @@ class ImageAttachment(BaseAttachment):
         file = _to_path(file)
         if isinstance(file, io.BytesIO):
             with tempfile.NamedTemporaryFile() as f:
-                f.write(file.getvalue())
+                wb = f.write(file.getvalue())
                 f.seek(0)
+                f.flush()
+                log.debug(
+                    "get_metadata was given a BytesIO, wrote %d bytes to tempfile %r and re-invoking.",
+                    wb,
+                    f.name,
+                )
                 return await cls.get_metadata(f.name)
 
         def runner(fd: pathlib.Path) -> Dict[str, Any]:
             with PIL.Image.open(fd) as img:
-                return {
+                data = {
                     "streams": [
                         {
                             "index": 0,
@@ -282,6 +292,8 @@ class ImageAttachment(BaseAttachment):
                         "size": file.stat().st_size,
                     },
                 }
+                log.debug("PIL detected metadata for %r: %r", file, data)
+                return data
 
         assert isinstance(file, pathlib.Path), "file must be a pathlib.Path object, got %r" % type(file)
         # ^ This shouldn't happen as per _to_path, but we'll check just to be safe.
