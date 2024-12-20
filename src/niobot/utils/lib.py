@@ -9,7 +9,7 @@ from typing import Optional as O, Union as U
 __all__ = ("MXID_REGEX", "deprecated", "silence_noisy_loggers")
 
 MXID_REGEX = re.compile(r"@[a-z0-9._=\-/+]+:[\w\-.]+")
-# WARNING: this regex doe snot fully conform to the spec, nor do any validation.
+# WARNING: this regex does not fully conform to the spec, nor do any validation.
 # However, it will cover the majority of cases.
 # Use `NioBot.parse_user_mentions` for more validation
 

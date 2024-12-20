@@ -12,7 +12,7 @@ async def resolve_homeserver(domain: str) -> str:
     :param domain: The domain to crawl
     :return: The resolved homeserver
     """
-    from niobot import __user_agent__
+    from .. import __user_agent__
 
     if not domain.startswith("https://"):
         domain = f"https://{domain}"

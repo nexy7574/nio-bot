@@ -2,7 +2,7 @@ import re
 import textwrap
 import typing
 
-from niobot.exceptions import CheckFailure
+from ..exceptions import CheckFailure
 
 if typing.TYPE_CHECKING:
     from ..commands import Command
