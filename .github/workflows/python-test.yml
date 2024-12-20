@@ -25,10 +25,10 @@ jobs:
           pip install --upgrade .[e2ee,dev,cli]
       - name: Check formatting with Ruff
         run: |
-          ruff format --check
+          ruff format --diff
       - name: Check linting with Ruff
         run: |
-          ruff lint
+          ruff check --show-fixes
       - name: Run tests
         run: |
           pytest
