@@ -31,4 +31,4 @@ jobs:
           ruff check --show-fixes
       - name: Run tests
         run: |
-          pytest
+          NIOBOT_DEPRECATION_ERROR=1 pytest
