@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.48">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
     
     
       
@@ -585,6 +585,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment" class="md-nav__link">
+    <span class="md-ellipsis">
+      AudioAttachment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AudioAttachment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment.duration" class="md-nav__link">
+    <span class="md-ellipsis">
+      duration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment.from_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_file
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#niobot.attachment.AttachmentType" class="md-nav__link">
     <span class="md-ellipsis">
       AttachmentType
@@ -666,6 +708,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.BaseAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -677,6 +728,21 @@
       FileAttachment
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="FileAttachment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.FileAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -691,15 +757,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.ImageAttachment.info" class="md-nav__link">
-    <span class="md-ellipsis">
-      info
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#niobot.attachment.ImageAttachment.from_file" class="md-nav__link">
     <span class="md-ellipsis">
       from_file
@@ -709,9 +766,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.ImageAttachment.thumbnailify_image" class="md-nav__link">
+  <a href="#niobot.attachment.ImageAttachment.generate_blur_hash" class="md-nav__link">
     <span class="md-ellipsis">
-      thumbnailify_image
+      generate_blur_hash
     </span>
   </a>
   
@@ -721,6 +778,33 @@
   <a href="#niobot.attachment.ImageAttachment.get_blurhash" class="md-nav__link">
     <span class="md-ellipsis">
       get_blurhash
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.ImageAttachment.generate_thumbnail" class="md-nav__link">
+    <span class="md-ellipsis">
+      generate_thumbnail
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.ImageAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.ImageAttachment.set_thumbnail" class="md-nav__link">
+    <span class="md-ellipsis">
+      set_thumbnail
     </span>
   </a>
   
@@ -742,15 +826,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.VideoAttachment.from_file" class="md-nav__link">
-    <span class="md-ellipsis">
-      from_file
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#niobot.attachment.VideoAttachment.generate_thumbnail" class="md-nav__link">
     <span class="md-ellipsis">
       generate_thumbnail
@@ -759,32 +834,26 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.AudioAttachment" class="md-nav__link">
-    <span class="md-ellipsis">
-      AudioAttachment
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="AudioAttachment">
-      <ul class="md-nav__list">
-        
           <li class="md-nav__item">
-  <a href="#niobot.attachment.AudioAttachment.duration" class="md-nav__link">
+  <a href="#niobot.attachment.VideoAttachment.get_metadata" class="md-nav__link">
     <span class="md-ellipsis">
-      duration
+      get_metadata
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.AudioAttachment.from_file" class="md-nav__link">
+  <a href="#niobot.attachment.VideoAttachment.extract_first_frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      extract_first_frame
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.VideoAttachment.from_file" class="md-nav__link">
     <span class="md-ellipsis">
       from_file
     </span>
@@ -807,45 +876,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#niobot.attachment.get_metadata_ffmpeg" class="md-nav__link">
+  <a href="#niobot.attachment.run_blocking" class="md-nav__link">
     <span class="md-ellipsis">
-      get_metadata_ffmpeg
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.get_metadata_imagemagick" class="md-nav__link">
-    <span class="md-ellipsis">
-      get_metadata_imagemagick
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.get_metadata" class="md-nav__link">
-    <span class="md-ellipsis">
-      get_metadata
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.first_frame" class="md-nav__link">
-    <span class="md-ellipsis">
-      first_frame
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.generate_blur_hash" class="md-nav__link">
-    <span class="md-ellipsis">
-      generate_blur_hash
+      run_blocking
     </span>
   </a>
   
@@ -1228,6 +1261,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment" class="md-nav__link">
+    <span class="md-ellipsis">
+      AudioAttachment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AudioAttachment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment.duration" class="md-nav__link">
+    <span class="md-ellipsis">
+      duration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment.from_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_file
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.AudioAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#niobot.attachment.AttachmentType" class="md-nav__link">
     <span class="md-ellipsis">
       AttachmentType
@@ -1309,6 +1384,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.BaseAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1320,6 +1404,21 @@
       FileAttachment
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="FileAttachment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.FileAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1334,15 +1433,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.ImageAttachment.info" class="md-nav__link">
-    <span class="md-ellipsis">
-      info
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#niobot.attachment.ImageAttachment.from_file" class="md-nav__link">
     <span class="md-ellipsis">
       from_file
@@ -1352,9 +1442,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.ImageAttachment.thumbnailify_image" class="md-nav__link">
+  <a href="#niobot.attachment.ImageAttachment.generate_blur_hash" class="md-nav__link">
     <span class="md-ellipsis">
-      thumbnailify_image
+      generate_blur_hash
     </span>
   </a>
   
@@ -1364,6 +1454,33 @@
   <a href="#niobot.attachment.ImageAttachment.get_blurhash" class="md-nav__link">
     <span class="md-ellipsis">
       get_blurhash
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.ImageAttachment.generate_thumbnail" class="md-nav__link">
+    <span class="md-ellipsis">
+      generate_thumbnail
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.ImageAttachment.get_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_metadata
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.ImageAttachment.set_thumbnail" class="md-nav__link">
+    <span class="md-ellipsis">
+      set_thumbnail
     </span>
   </a>
   
@@ -1385,15 +1502,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.VideoAttachment.from_file" class="md-nav__link">
-    <span class="md-ellipsis">
-      from_file
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#niobot.attachment.VideoAttachment.generate_thumbnail" class="md-nav__link">
     <span class="md-ellipsis">
       generate_thumbnail
@@ -1402,32 +1510,26 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.AudioAttachment" class="md-nav__link">
-    <span class="md-ellipsis">
-      AudioAttachment
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="AudioAttachment">
-      <ul class="md-nav__list">
-        
           <li class="md-nav__item">
-  <a href="#niobot.attachment.AudioAttachment.duration" class="md-nav__link">
+  <a href="#niobot.attachment.VideoAttachment.get_metadata" class="md-nav__link">
     <span class="md-ellipsis">
-      duration
+      get_metadata
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#niobot.attachment.AudioAttachment.from_file" class="md-nav__link">
+  <a href="#niobot.attachment.VideoAttachment.extract_first_frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      extract_first_frame
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#niobot.attachment.VideoAttachment.from_file" class="md-nav__link">
     <span class="md-ellipsis">
       from_file
     </span>
@@ -1450,45 +1552,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#niobot.attachment.get_metadata_ffmpeg" class="md-nav__link">
+  <a href="#niobot.attachment.run_blocking" class="md-nav__link">
     <span class="md-ellipsis">
-      get_metadata_ffmpeg
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.get_metadata_imagemagick" class="md-nav__link">
-    <span class="md-ellipsis">
-      get_metadata_imagemagick
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.get_metadata" class="md-nav__link">
-    <span class="md-ellipsis">
-      get_metadata
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.first_frame" class="md-nav__link">
-    <span class="md-ellipsis">
-      first_frame
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#niobot.attachment.generate_blur_hash" class="md-nav__link">
-    <span class="md-ellipsis">
-      generate_blur_hash
+      run_blocking
     </span>
   </a>
   
@@ -1536,7 +1602,40 @@
 <a id="niobot.attachment"></a>
     <div class="doc doc-contents first">
 
-        <p>Matrix file attachments. Full e2ee support is implemented.</p>
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="niobot.attachment.AudioAttachment" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">AudioAttachment</span>
+
+
+<a href="#niobot.attachment.AudioAttachment" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
+
+
+        <p>Represents an audio attachment.</p>
+
 
 
 
@@ -1553,6 +1652,231 @@
 
 
 
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="niobot.attachment.AudioAttachment.duration" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">duration</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-writable"><code>writable</code></small>
+  </span>
+
+<a href="#niobot.attachment.AudioAttachment.duration" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">duration</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The duration of this audio in milliseconds</p>
+    </div>
+
+</div>
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.AudioAttachment.from_file" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">from_file</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.AudioAttachment.from_file" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_file</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">file_name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">duration</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.audio.AudioAttachment" href="#niobot.attachment.AudioAttachment">AudioAttachment</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Generates an audio attachment</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>file</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The file to upload</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>file_name</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The name of the file (only used if file is a <code>BytesIO</code>)</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>duration</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The duration of the audio, in seconds</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.audio.AudioAttachment" href="#niobot.attachment.AudioAttachment">AudioAttachment</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>An audio attachment</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.AudioAttachment.get_metadata" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_metadata</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.AudioAttachment.get_metadata" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Get metadata about an audio file.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>file</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The audio file to get metadata for</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The metadata</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-class">
 
@@ -1586,7 +1910,7 @@
           <tr class="doc-section-item">
             <td><code><span title="niobot.attachment.AttachmentType.FILE">FILE</span></code></td>
             <td>
-                  <code>&#39;AttachmentType&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1597,7 +1921,7 @@
           <tr class="doc-section-item">
             <td><code><span title="niobot.attachment.AttachmentType.AUDIO">AUDIO</span></code></td>
             <td>
-                  <code>&#39;AttachmentType&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1608,7 +1932,7 @@
           <tr class="doc-section-item">
             <td><code><span title="niobot.attachment.AttachmentType.VIDEO">VIDEO</span></code></td>
             <td>
-                  <code>&#39;AttachmentType&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1619,7 +1943,7 @@
           <tr class="doc-section-item">
             <td><code><span title="niobot.attachment.AttachmentType.IMAGE">IMAGE</span></code></td>
             <td>
-                  <code>&#39;AttachmentType&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1676,7 +2000,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you pass a custom <code>file_name</code>, this is only actually used if you pass a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/io.html#io.BytesIO">io.BytesIO</a> to <code>file</code>.
-If you pass a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">pathlib.Path</a> or a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">string</a>, the file name will be resolved from the path, overriding
+If you pass a [Path][] or a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">string</a>, the file name will be resolved from the path, overriding
 the <code>file_name</code> parameter.</p>
 </div>
 
@@ -1761,7 +2085,7 @@ the <code>file_name</code> parameter.</p>
                 <code>attachment_type</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="niobot.attachment.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1769,7 +2093,7 @@ the <code>file_name</code> parameter.</p>
               </div>
             </td>
             <td>
-                  <code><span title="niobot.attachment.AttachmentType.FILE">FILE</span></code>
+                  <code><span title="niobot.attachments.base.AttachmentType.FILE">FILE</span></code>
             </td>
           </tr>
       </tbody>
@@ -1793,7 +2117,7 @@ the <code>file_name</code> parameter.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The file path or BytesIO object to upload. Resolved to a <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">pathlib.Path</a> object if a string is passed to <code>__init__</code>.</p>
+                <p>The file path or BytesIO object to upload. Resolved to a [Path][] object if a string is passed to <code>__init__</code>.</p>
               </div>
             </td>
           </tr>
@@ -1833,7 +2157,7 @@ the <code>file_name</code> parameter.</p>
           <tr class="doc-section-item">
             <td><code><span title="niobot.attachment.BaseAttachment.type">type</span></code></td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="niobot.attachment.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.AttachmentType" href="#niobot.attachment.AttachmentType">AttachmentType</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1996,7 +2320,7 @@ the <code>file_name</code> parameter.</p>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_file</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">file_name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BaseAttachment&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2063,7 +2387,7 @@ the <code>file_name</code> parameter.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code>&#39;BaseAttachment&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2091,7 +2415,7 @@ the <code>file_name</code> parameter.</p>
   </span>
 
 <a href="#niobot.attachment.BaseAttachment.from_mxc" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_mxc</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="s1">&#39;NioBot&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BaseAttachment&#39;</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_mxc</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2115,7 +2439,6 @@ the <code>file_name</code> parameter.</p>
                 <code>client</code>
             </td>
             <td>
-                  <code>&#39;NioBot&#39;</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2157,7 +2480,7 @@ the <code>file_name</code> parameter.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code>&#39;BaseAttachment&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2187,7 +2510,7 @@ the <code>file_name</code> parameter.</p>
 <a href="#niobot.attachment.BaseAttachment.from_http" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_http</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">url</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n">client_session</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="aiohttp.ClientSession" href="https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.ClientSession">ClientSession</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BaseAttachment&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2254,7 +2577,7 @@ the <code>file_name</code> parameter.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code>&#39;BaseAttachment&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2330,26 +2653,11 @@ the <code>file_name</code> parameter.</p>
     <div class="doc doc-contents ">
 
         <p>Helper function to convert the size of this attachment into a different unit.</p>
-<p>Remember:
-- 1 kilobyte (KB) is 1000 bytes
-- 1 kibibyte (KiB) is 1024 bytes</p>
-<details class="example">
-<summary>Example</summary>
-<p><div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">niobot</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">attachment</span> <span class="o">=</span> <span class="n">niobot</span><span class="o">.</span><span class="n">FileAttachment</span><span class="p">(</span><span class="s2">&quot;background.png&quot;</span><span class="p">,</span> <span class="s2">&quot;image/png&quot;</span><span class="p">)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">attachment</span><span class="o">.</span><span class="n">size_bytes</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="mi">329945</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">attachment</span><span class="o">.</span><span class="n">size_as</span><span class="p">(</span><span class="s2">&quot;kb&quot;</span><span class="p">)</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="mf">329.945</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">attachment</span><span class="o">.</span><span class="n">size_as</span><span class="p">(</span><span class="s2">&quot;kib&quot;</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="mf">322.2119140625</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">attachment</span><span class="o">.</span><span class="n">size_as</span><span class="p">(</span><span class="s2">&quot;mb&quot;</span><span class="p">)</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="mf">0.329945</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="o">&gt;&gt;&gt;</span> <span class="n">attachment</span><span class="o">.</span><span class="n">size_as</span><span class="p">(</span><span class="s2">&quot;mib&quot;</span><span class="p">)</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="mf">0.31466007232666016</span>
-</span></code></pre></div>
-<em>Note that due to the nature of floats, precision may be lost, especially the larger in units you go.</em></p>
-</details>
+<p>Remember:</p>
+<ul>
+<li>1 kilobyte (KB) is 1000 bytes</li>
+<li>1 kibibyte (KiB) is 1024 bytes</li>
+</ul>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2421,9 +2729,7 @@ the <code>file_name</code> parameter.</p>
   </span>
 
 <a href="#niobot.attachment.BaseAttachment.upload" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">upload</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">client</span><span class="p">:</span> <span class="s2">&quot;NioBot&quot;</span><span class="p">,</span> <span class="n">encrypted</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BaseAttachment&quot;</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">upload</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">encrypted</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing_extensions.Self">Self</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2447,7 +2753,6 @@ the <code>file_name</code> parameter.</p>
                 <code>client</code>
             </td>
             <td>
-                  <code>&#39;NioBot&#39;</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2489,7 +2794,7 @@ the <code>file_name</code> parameter.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code>&#39;BaseAttachment&#39;</code>
+                  <code><span title="typing_extensions.Self">Self</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2499,6 +2804,33 @@ the <code>file_name</code> parameter.</p>
           </tr>
       </tbody>
     </table>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.BaseAttachment.get_metadata" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_metadata</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.BaseAttachment.get_metadata" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Gets metadata for a file.</p>
 
     </div>
 
@@ -2525,7 +2857,7 @@ the <code>file_name</code> parameter.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachment.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
 
 
         <p>Represents a generic file attachment.</p>
@@ -2631,6 +2963,32 @@ This is for everything else.</p>
 
 
 
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.FileAttachment.get_metadata" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_metadata</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.FileAttachment.get_metadata" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Dud method, there's no metadata to fetch for a generic file.</p>
+
+    </div>
+
+</div>
+
 
 
   </div>
@@ -2652,7 +3010,7 @@ This is for everything else.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachment.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
 
 
         <p>Represents an image attachment.</p>
@@ -2770,7 +3128,7 @@ This is for everything else.</p>
                 <code>thumbnail</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[&#39;ImageAttachment&#39;]</code>
+                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2812,17 +3170,6 @@ This is for everything else.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><a class="autorefs autorefs-internal" title="niobot.attachment.ImageAttachment.info" href="#niobot.attachment.ImageAttachment.info">info</a></code></td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A dict of info about the image. Contains <code>h</code>, <code>w</code>, <code>mimetype</code>, and <code>size</code> keys.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
             <td><code><span title="niobot.attachment.ImageAttachment.thumbnail">thumbnail</span></code></td>
             <td>
             </td>
@@ -2851,30 +3198,6 @@ This is for everything else.</p>
 
 
 
-<div class="doc doc-object doc-attribute">
-
-
-
-<h4 id="niobot.attachment.ImageAttachment.info" class="doc doc-heading">
-            <span class="doc doc-object-name doc-attribute-name">info</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-  </span>
-
-<a href="#niobot.attachment.ImageAttachment.info" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">info</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p><legacy> returns the info dictionary for this image.</p>
-<p>Use <code>ImageAttachment.as_body()["info"]</code> instead.</p>
-    </div>
-
-</div>
-
 
 
 <div class="doc doc-object doc-function">
@@ -2895,12 +3218,13 @@ This is for everything else.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">file_name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">height</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">width</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">thumbnail</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="s2">&quot;ImageAttachment&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">generate_blurhash</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">xyz_amorgan_blurhash</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">unsafe</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ImageAttachment&quot;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">thumbnail</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="kc">False</span><span class="p">]</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">generate_blurhash</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">xyz_amorgan_blurhash</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2988,7 +3312,7 @@ This is for everything else.</p>
                 <code>thumbnail</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[&#39;ImageAttachment&#39;]</code>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a>, <a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a>[False]]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3031,22 +3355,6 @@ This is for everything else.</p>
                   <code>None</code>
             </td>
           </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>unsafe</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether to allow uploading of images with unsupported codecs. May break metadata detection.</p>
-              </div>
-            </td>
-            <td>
-                  <code>False</code>
-            </td>
-          </tr>
       </tbody>
     </table>
 
@@ -3062,7 +3370,7 @@ This is for everything else.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code>&#39;ImageAttachment&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3080,112 +3388,31 @@ This is for everything else.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="niobot.attachment.ImageAttachment.thumbnailify_image" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">thumbnailify_image</span>
+<h4 id="niobot.attachment.ImageAttachment.generate_blur_hash" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">generate_blur_hash</span>
 
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
   </span>
 
-<a href="#niobot.attachment.ImageAttachment.thumbnailify_image" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">thumbnailify_image</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">image</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">240</span><span class="p">),</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">resampling</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="s2">&quot;PIL.Image.Resampling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Resampling.BICUBIC" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Resampling.BICUBIC">BICUBIC</a></span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></span>
+<a href="#niobot.attachment.ImageAttachment.generate_blur_hash" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">generate_blur_hash</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></span><span class="p">],</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">parts</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Helper function to thumbnail an image.</p>
-<p>This function is blocking - you should use <a class="autorefs autorefs-internal" href="../utils/unblock/#niobot.utils.unblocking.run_blocking">niobot.utils.run_blocking</a> to run it.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>image</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a>, <a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The image to thumbnail</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>size</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The size to thumbnail to. Defaults to 320x240, a standard thumbnail size.</p>
-              </div>
-            </td>
-            <td>
-                  <code>(320, 240)</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>resampling</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[&#39;PIL.Image.Resampling&#39;]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The resampling filter to use. Defaults to <code>PIL.Image.BICUBIC</code>, a high-quality but fast resampling method. For the highest quality, use <code>PIL.Image.LANCZOS</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="PIL.Image.Resampling.BICUBIC" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Resampling.BICUBIC">BICUBIC</a></code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The thumbnail</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>Creates a blurhash</p>
+<div class="admonition warning">
+<p class="admonition-title">This function may be resource intensive</p>
+<p>This function may be resource intensive, especially for large images. You should run this in a thread or
+process pool.</p>
+<p>You should also scale any images down in order to increase performance.</p>
+<p>See: <a href="https://github.com/woltapp/blurhash">woltapp/blurhash</a></p>
+</div>
 
     </div>
 
@@ -3213,24 +3440,6 @@ This is for everything else.</p>
     <div class="doc doc-contents ">
 
         <p>Gets the blurhash of the attachment. See: <a href="https://github.com/woltapp/blurhash">woltapp/blurhash</a></p>
-<div class="admonition tip">
-<p class="admonition-title">You should crop-down your blurhash images.</p>
-<p>Generating blurhashes can take a long time, <em>especially</em> on large images.
-You should crop-down your images to a reasonable size before generating the blurhash.</p>
-<p>Remember, most image quality is lost - there's very little point in generating a blurhash for a 4K image.
-Anything over 800x600 is definitely overkill.</p>
-<p>You can easily resize images with
-<a class="autorefs autorefs-internal" href="#niobot.attachment.ImageAttachment.thumbnailify_image">niobot.ImageAttachment.thumbnailify_image</a>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">attachment</span> <span class="o">=</span> <span class="k">await</span> <span class="n">niobot</span><span class="o">.</span><span class="n">ImageAttachment</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">my_image</span><span class="p">,</span> <span class="n">generate_blurhash</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">await</span> <span class="n">attachment</span><span class="o">.</span><span class="n">get_blurhash</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">attachment</span><span class="o">.</span><span class="n">thumbnailify_image</span><span class="p">(</span><span class="n">attachment</span><span class="o">.</span><span class="n">file</span><span class="p">))</span>
-</span></code></pre></div>
-<p>This will generate a roughly 320x240 thumbnail image, and generate the blurhash from that.</p>
-<div class="admonition tip">
-<p class="admonition-title">New!</p>
-<p>Unless you pass <code>disable_auto_crop=True</code>, this function will automatically crop the image down to
-a reasonable size, before generating a blurhash.</p>
-</div>
-</div>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3322,6 +3531,200 @@ a reasonable size, before generating a blurhash.</p>
 
 </div>
 
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.ImageAttachment.generate_thumbnail" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">generate_thumbnail</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.ImageAttachment.generate_thumbnail" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">generate_thumbnail</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">image</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">240</span><span class="p">),</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">resampling</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Resampling" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Resampling">Resampling</a></span><span class="p">]</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Resampling.BICUBIC" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Resampling.BICUBIC">BICUBIC</a></span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Generates a small thumbnail of a large image.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>image</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a>, <a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The image to generate a thumbnail of. Can be a PIL Image, BytesIO, or a path.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>size</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The size of the thumbnail to generate in width x height. Defaults to (320, 240).</p>
+              </div>
+            </td>
+            <td>
+                  <code>(320, 240)</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>resampling</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" title="PIL.Image.Resampling" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Resampling">Resampling</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The resampling algorithm to use. Defaults to <code>PIL.Image.Resampling.BICUBIC</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="PIL.Image.Resampling.BICUBIC" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Resampling.BICUBIC">BICUBIC</a></code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The generated PIL image object</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.ImageAttachment.get_metadata" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_metadata</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.ImageAttachment.get_metadata" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Gets metadata for an image.</p>
+<div class="admonition danger">
+<p class="admonition-title">New in v1.3.0</p>
+<p>This function is new in v1.3.0. Additionally, unlike the previous way of fetching metadata, this function
+does NOT fall back to using imagemagick/ffmpeg. If you use a format too new, it may error.</p>
+</div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.ImageAttachment.set_thumbnail" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">set_thumbnail</span>
+
+
+<a href="#niobot.attachment.ImageAttachment.set_thumbnail" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">set_thumbnail</span><span class="p">(</span><span class="n">thumbnail</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing_extensions.Self">Self</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Sets the thumbnail for this image attachment.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>thumbnail</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The thumbnail to set</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
 
 
   </div>
@@ -3343,7 +3746,7 @@ a reasonable size, before generating a blurhash.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachment.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachments.base.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
 
 
         <p>Represents a video attachment.</p>
@@ -3477,7 +3880,7 @@ a reasonable size, before generating a blurhash.</p>
                 <code>thumbnail</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[&#39;ImageAttachment&#39;]</code>
+                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3512,6 +3915,260 @@ a reasonable size, before generating a blurhash.</p>
 <div class="doc doc-object doc-function">
 
 
+<h4 id="niobot.attachment.VideoAttachment.generate_thumbnail" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">generate_thumbnail</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.VideoAttachment.generate_thumbnail" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">generate_thumbnail</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">video</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.video.VideoAttachment" href="#niobot.attachment.VideoAttachment">VideoAttachment</a></span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Generates a thumbnail for a video.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>video</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>, <a class="autorefs autorefs-internal" title="niobot.attachments.video.VideoAttachment" href="#niobot.attachment.VideoAttachment">VideoAttachment</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The video to generate a thumbnail for</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The path to the generated thumbnail</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.VideoAttachment.get_metadata" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_metadata</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.VideoAttachment.get_metadata" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Get metadata about a video file.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>file</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The video file to get metadata for</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The metadata</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="niobot.attachment.VideoAttachment.extract_first_frame" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">extract_first_frame</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+<a href="#niobot.attachment.VideoAttachment.extract_first_frame" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_first_frame</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span> <span class="n">file_format</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;webp&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#bytes">bytes</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Gets the first frame of a video.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>file</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The video file to get the first frame of</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>file_format</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The format to save the first frame in. Defaults to WebP, which is a good choice.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;webp&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#bytes">bytes</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The first frame</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h4 id="niobot.attachment.VideoAttachment.from_file" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">from_file</span>
 
@@ -3529,10 +4186,10 @@ a reasonable size, before generating a blurhash.</p>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">height</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">width</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">thumbnail</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.attachment.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="kc">False</span><span class="p">]]</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">generate_blurhash</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;VideoAttachment&quot;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.video.VideoAttachment" href="#niobot.attachment.VideoAttachment">VideoAttachment</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3647,7 +4304,7 @@ megabytes.</p>
                 <code>thumbnail</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-internal" title="niobot.attachment.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a>, <a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a>[False]]]</code>
+                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-internal" title="niobot.attachments.image.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a>, <a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a>[False]]]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3689,273 +4346,11 @@ megabytes.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code>&#39;VideoAttachment&#39;</code>
+                  <code><a class="autorefs autorefs-internal" title="niobot.attachments.video.VideoAttachment" href="#niobot.attachment.VideoAttachment">VideoAttachment</a></code>
             </td>
             <td>
               <div class="doc-md-description">
                 <p>An image attachment</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="niobot.attachment.VideoAttachment.generate_thumbnail" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">generate_thumbnail</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
-      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
-  </span>
-
-<a href="#niobot.attachment.VideoAttachment.generate_thumbnail" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">generate_thumbnail</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">video</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="s2">&quot;VideoAttachment&quot;</span><span class="p">]</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.attachment.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Generates a thumbnail for a video.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>video</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>, &#39;VideoAttachment&#39;]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The video to generate a thumbnail for</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="niobot.attachment.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The path to the generated thumbnail</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h3 id="niobot.attachment.AudioAttachment" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">AudioAttachment</span>
-
-
-<a href="#niobot.attachment.AudioAttachment" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-            <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.attachment.BaseAttachment" href="#niobot.attachment.BaseAttachment">BaseAttachment</a></code></p>
-
-
-        <p>Represents an audio attachment.</p>
-
-
-
-
-
-
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-<div class="doc doc-object doc-attribute">
-
-
-
-<h4 id="niobot.attachment.AudioAttachment.duration" class="doc doc-heading">
-            <span class="doc doc-object-name doc-attribute-name">duration</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-property"><code>property</code></small>
-      <small class="doc doc-label doc-label-writable"><code>writable</code></small>
-  </span>
-
-<a href="#niobot.attachment.AudioAttachment.duration" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">duration</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>The duration of this audio in milliseconds</p>
-    </div>
-
-</div>
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="niobot.attachment.AudioAttachment.from_file" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">from_file</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-async"><code>async</code></small>
-      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
-  </span>
-
-<a href="#niobot.attachment.AudioAttachment.from_file" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_file</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">file_name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">duration</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;AudioAttachment&quot;</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Generates an audio attachment</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>file</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The file to upload</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>file_name</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The name of the file (only used if file is a <code>BytesIO</code>)</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>duration</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The duration of the audio, in seconds</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code>&#39;AudioAttachment&#39;</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>An audio attachment</p>
               </div>
             </td>
           </tr>
@@ -4084,20 +4479,38 @@ megabytes.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="niobot.attachment.get_metadata_ffmpeg" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">get_metadata_ffmpeg</span>
+<h3 id="niobot.attachment.run_blocking" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_blocking</span>
 
 
-<a href="#niobot.attachment.get_metadata_ffmpeg" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata_ffmpeg</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">]</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#niobot.attachment.run_blocking" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_blocking</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">function</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="collections.abc.Callable" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable">Callable</a></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="niobot.utils.unblocking.T">T</span></span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="niobot.utils.unblocking.T">T</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Gets metadata for a file via ffprobe.</p>
-<p><a href="https://github.com/nexy7574/nio-bot/blob/0e61ea1/docs/assets/guides/text/example_ffprobe.json">example output (JSON)</a></p>
+        <p>Takes a blocking function and runs it in a thread, returning the result.</p>
+<p>You should use this for any long-running functions that may take a long time to respond that are not coroutines
+that you can await. For example, running a subprocess.</p>
+<details class="example">
+<summary>Example</summary>
+<div class="language-py highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">asyncio</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span> <span class="nn">subprocess</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span> <span class="nn">niobot.utils</span> <span class="kn">import</span> <span class="n">run_blocking</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">run_blocking</span><span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;find&quot;</span><span class="p">,</span> <span class="s2">&quot;*.py&quot;</span><span class="p">,</span> <span class="s2">&quot;-type&quot;</span><span class="p">,</span> <span class="s2">&quot;f&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span></code></pre></div>
+</details>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4113,18 +4526,50 @@ megabytes.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>file</code>
+                <code>function</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
+                  <code><a class="autorefs autorefs-external" title="collections.abc.Callable" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable">Callable</a>[..., <span title="niobot.utils.unblocking.T">T</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The file to get metadata for. <strong>Must be a path-like object</strong></p>
+                <p>The function to call. Make sure you do not call it, just pass it.</p>
               </div>
             </td>
             <td>
                 <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>args</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The arguments to pass to the function.</p>
+              </div>
+            </td>
+            <td>
+                  <code>()</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>kwargs</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The keyword arguments to pass to the function.</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
             </td>
           </tr>
       </tbody>
@@ -4142,312 +4587,16 @@ megabytes.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]</code>
+                  <code><span title="niobot.utils.unblocking.T">T</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A dictionary containing the metadata.</p>
+                <p>The result of the function.</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="niobot.attachment.get_metadata_imagemagick" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">get_metadata_imagemagick</span>
-
-
-<a href="#niobot.attachment.get_metadata_imagemagick" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata_imagemagick</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>The same as <code>get_metadata_ffmpeg</code> but for ImageMagick.</p>
-<p>Only returns a limited subset of the data, such as one stream, which contains the format, and size,
-and the format, which contains the filename, format, and size.</p>
-<p><a href="https://raw.githubusercontent.com/nexy7574/nio-bot/80b33a/docs/assets/guides/text/example_identify.json">example output (JSON)</a></p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>file</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The file to get metadata for. <strong>Must be a path object</strong></p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A slimmed-down dictionary containing the metadata.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="niobot.attachment.get_metadata" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">get_metadata</span>
-
-
-<a href="#niobot.attachment.get_metadata" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_metadata</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span> <span class="n">mime_type</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Gets metadata for a file.</p>
-<p>This will use imagemagick (<code>identify</code>) for images where available, falling back to ffmpeg (<code>ffprobe</code>)
-for everything else.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>file</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The file to get metadata for.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>mime_type</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The mime type of the file. If not provided, it will be detected.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The metadata for the file. See <a class="autorefs autorefs-internal" href="#niobot.attachment.get_metadata_ffmpeg">niobot.get_metadata_ffmpeg</a> and <a class="autorefs autorefs-internal" href="#niobot.attachment.get_metadata_imagemagick">niobot.get_metadata_imagemagick</a> for more information.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="niobot.attachment.first_frame" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">first_frame</span>
-
-
-<a href="#niobot.attachment.first_frame" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">first_frame</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">],</span> <span class="n">file_format</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;webp&quot;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#bytes">bytes</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Gets the first frame of a video file.</p>
-<div class="admonition danger">
-<p class="admonition-title">This function creates a file on disk</p>
-<p>In order to extract the frame, this function creates a temporary file on disk (or memdisk depending on where
-your tempdir is). While this file is deleted after the function is done, it is still something to be aware of.
-For example, if you're (worryingly) low on space, this function may fail to extract the frame due to a lack of
-space. Or, someone could temporarily access and read the file before it is deleted.</p>
-<p>This also means that this function may be slow.</p>
-</div>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>file</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The file to get the first frame of. <strong>Must be a path-like object</strong></p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>file_format</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The format to save the frame as. Defaults to webp.</p>
-              </div>
-            </td>
-            <td>
-                  <code>&#39;webp&#39;</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#bytes">bytes</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The first frame of the video in bytes.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="niobot.attachment.generate_blur_hash" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">generate_blur_hash</span>
-
-
-<a href="#niobot.attachment.generate_blur_hash" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">generate_blur_hash</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="PIL.Image.Image" href="https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image">Image</a></span><span class="p">],</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Creates a blurhash</p>
-<div class="admonition warning">
-<p class="admonition-title">This function may be resource intensive</p>
-<p>This function may be resource intensive, especially for large images. You should run this in a thread or
-process pool.</p>
-<p>You should also scale any images down in order to increase performance.</p>
-<p>See: <a href="https://github.com/woltapp/blurhash">woltapp/blurhash</a></p>
-</div>
 
     </div>
 
@@ -4462,13 +4611,13 @@ process pool.</p>
 
 <a href="#niobot.attachment.which" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">which</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">],</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">mime_type</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a></span><span class="p">[</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a></span><span class="p">[</span><span class="s2">&quot;FileAttachment&quot;</span><span class="p">],</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n"><a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a></span><span class="p">[</span><span class="s2">&quot;ImageAttachment&quot;</span><span class="p">],</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n"><a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a></span><span class="p">[</span><span class="s2">&quot;AudioAttachment&quot;</span><span class="p">],</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n"><a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a></span><span class="p">[</span><span class="s2">&quot;VideoAttachment&quot;</span><span class="p">],</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">file_</span><span class="p">:</span> <span class="n"><span title="niobot.attachments.Union">Union</span></span><span class="p">[</span><span class="n"><span title="niobot.attachments.io.BytesIO">BytesIO</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">],</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">mime_type</span><span class="p">:</span> <span class="n"><span title="niobot.attachments.Optional">Optional</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="niobot.attachments.Union">Union</span></span><span class="p">[</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><span title="niobot.attachments.Type">Type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.FileAttachment" href="#niobot.attachment.FileAttachment">FileAttachment</a></span><span class="p">],</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n"><span title="niobot.attachments.Type">Type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a></span><span class="p">],</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n"><span title="niobot.attachments.Type">Type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.AudioAttachment" href="#niobot.attachment.AudioAttachment">AudioAttachment</a></span><span class="p">],</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n"><span title="niobot.attachments.Type">Type</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.attachments.VideoAttachment" href="#niobot.attachment.VideoAttachment">VideoAttachment</a></span><span class="p">],</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">]</span>
 </span></code></pre></div>
 
@@ -4508,10 +4657,10 @@ return <a class="autorefs autorefs-internal" href="#niobot.attachment.VideoAttac
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>file</code>
+                <code>file_</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" title="io.BytesIO" href="https://docs.python.org/3/library/io.html#io.BytesIO">BytesIO</a>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
+                  <code><span title="niobot.attachments.Union">Union</span>[<span title="niobot.attachments.io.BytesIO">BytesIO</span>, <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4527,7 +4676,7 @@ return <a class="autorefs autorefs-internal" href="#niobot.attachment.VideoAttac
                 <code>mime_type</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
+                  <code><span title="niobot.attachments.Optional">Optional</span>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4553,7 +4702,7 @@ return <a class="autorefs autorefs-internal" href="#niobot.attachment.VideoAttac
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-external" title="typing.Union" href="https://docs.python.org/3/library/typing.html#typing.Union">Union</a>[<a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a>[&#39;FileAttachment&#39;], <a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a>[&#39;ImageAttachment&#39;], <a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a>[&#39;AudioAttachment&#39;], <a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a>[&#39;VideoAttachment&#39;]]</code>
+                  <code><span title="niobot.attachments.Union">Union</span>[<span title="niobot.attachments.Type">Type</span>[<a class="autorefs autorefs-internal" title="niobot.attachments.FileAttachment" href="#niobot.attachment.FileAttachment">FileAttachment</a>], <span title="niobot.attachments.Type">Type</span>[<a class="autorefs autorefs-internal" title="niobot.attachments.ImageAttachment" href="#niobot.attachment.ImageAttachment">ImageAttachment</a>], <span title="niobot.attachments.Type">Type</span>[<a class="autorefs autorefs-internal" title="niobot.attachments.AudioAttachment" href="#niobot.attachment.AudioAttachment">AudioAttachment</a>], <span title="niobot.attachments.Type">Type</span>[<a class="autorefs autorefs-internal" title="niobot.attachments.VideoAttachment" href="#niobot.attachment.VideoAttachment">VideoAttachment</a>]]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4713,7 +4862,7 @@ return <a class="autorefs autorefs-internal" href="#niobot.attachment.VideoAttac
     <script id="__config" type="application/json">{"base": "../..", "features": ["content.tabs.link", "content.action.edit", "navigation.footer", "header.autohide", "search.share", "navigation.instant", "navigation.tracking"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../assets/javascripts/bundle.88dd0f4e.min.js"></script>
       
     
   <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
