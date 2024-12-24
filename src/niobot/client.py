@@ -11,6 +11,7 @@ import pathlib
 import re
 import sys
 import time
+import types
 import typing
 import warnings
 from collections import deque
@@ -241,7 +242,11 @@ class NioBot(AsyncClient):
                 raise TypeError("help_command must be a Command instance or a coroutine/function.")
         self._commands = {}
         self._modules = {}
-        self._events = {}
+        self._events: typing.Dict[str, typing.List[typing.Union[types.FunctionType, typing.Callable]]] = {}
+        self._raw_events = {}
+        self._raw_events: typing.Dict[
+            typing.Type[nio.Event], typing.List[typing.Union[types.FunctionType, typing.Callable]]
+        ]
         self._event_tasks = []
 
         self.global_message_type = global_message_type
@@ -717,9 +722,14 @@ class NioBot(AsyncClient):
                     self.log.exception("Error in raw event listener %r", func, exc_info=e)
 
             func = event_safety_wrapper
+            self._raw_events.setdefault(event_type, [])
+            self._raw_events[event_type].append(func)
             self.log.debug("Added raw event listener %r for %r", func, event_type)
-        self._events[event_type].append(func)
-        self.log.debug("Added event listener %r for %r", func, event_type)
+            return func
+        else:
+            self._events[event_type].append(func)
+            self.log.debug("Added event listener %r for %r", func, event_type)
+            return func
 
     def on_event(self, event_type: typing.Optional[typing.Union[str, Type[nio.Event]]] = None):
         """Wrapper that allows you to register an event handler.
@@ -750,6 +760,11 @@ class NioBot(AsyncClient):
             if function in functions:
                 self._events[event_type].remove(function)
                 self.log.debug("Removed %r from event %r", function, event_type)
+                removed += 1
+        for event_type, functions in self._raw_events.items():
+            if function in functions:
+                self._raw_events[event_type].remove(function)
+                self.log.debug("Removed %r from raw event %r", function, event_type)
                 removed += 1
 
         if removed == 0:
@@ -884,7 +899,7 @@ class NioBot(AsyncClient):
             nonlocal value
             value = _room, _event
 
-        self.on_event(event_type)(event_handler)
+        real_callback = self.add_event_listener(event_type, event_handler)
         try:
             self.log.debug("Waiting for event %r", event_type, stack_info=True)
             # Stack is logged since it's easier to trace back to *why* an event is being traced
@@ -894,7 +909,7 @@ class NioBot(AsyncClient):
             self.log.debug("Timed out waiting for event %r", event_type)
             raise
         finally:
-            self.remove_event_listener(event_handler)
+            self.remove_event_listener(real_callback)
         return value
 
     @staticmethod
