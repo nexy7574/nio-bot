@@ -744,10 +744,16 @@ class NioBot(AsyncClient):
         return wrapper
 
     def remove_event_listener(self, function):
+        """Removes an event listener from the bot. Must be the exact function passed to add_event_listener."""
+        removed = 0
         for event_type, functions in self._events.items():
             if function in functions:
                 self._events[event_type].remove(function)
                 self.log.debug("Removed %r from event %r", function, event_type)
+                removed += 1
+
+        if removed == 0:
+            self.log.warning("Function %r was not found in any event listeners.", function)
 
     async def set_room_nickname(
         self,
@@ -828,28 +834,42 @@ class NioBot(AsyncClient):
         timeout: typing.Optional[float] = None,
         msg_type: typing.Type[nio.RoomMessage] = nio.RoomMessageText,
     ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessage]]:
-        """Waits for a message, optionally with a filter.
+        """Alias for [niobot.NioBot.wait_for_event][] with a message type filter."""
+
+        def _check(event: nio.MatrixRoom, msg: nio.RoomMessageText):
+            return isinstance(msg, msg_type) and (not check or check(event, msg))
+
+        return await self.wait_for_event("message", room_id, sender, _check, timeout=timeout)
+
+    async def wait_for_event(
+        self,
+        event_type: typing.Union[str, typing.Type[nio.Event]],
+        room_id: typing.Optional[str] = None,
+        sender: typing.Optional[str] = None,
+        check: typing.Optional[typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any]] = None,
+        *,
+        timeout: typing.Optional[float] = None,
+    ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessage]]:
+        """Waits for an event, optionally with a filter.
 
         If this function times out, asyncio.TimeoutError is raised.
 
+        :param event_type: The type of event to wait for.
         :param room_id: The room ID to wait for a message in. If None, waits for any room.
         :param sender: The user ID to wait for a message from. If None, waits for any sender.
         :param check: A function to check the message with. If the function returns False, the message is ignored.
         :param timeout: The maximum time to wait for a message. If None, waits indefinitely.
-        :param msg_type: The type of message to wait for. Defaults to nio.RoomMessageText.
         :return: The room and message that was received.
         """
         event = asyncio.Event()
         value = None
 
         async def event_handler(_room, _event):
-            if not isinstance(_event, msg_type):
-                self.log.debug("Ignoring non-text message %r", _event)
             if room_id and _room.room_id != room_id:
-                self.log.debug("Ignoring bubbling message from %r (vs %r)", _room.room_id, room_id)
+                self.log.debug("Ignoring bubbling event from %r (vs %r)", _room.room_id, room_id)
                 return False
             if sender and _event.sender != sender:
-                self.log.debug("Ignoring bubbling message from %r (vs %r)", _event.sender, sender)
+                self.log.debug("Ignoring bubbling event from %r (vs %r)", _event.sender, sender)
                 return False
             if check:
                 try:
@@ -858,15 +878,21 @@ class NioBot(AsyncClient):
                     self.log.error("Error in check function: %r", e, exc_info=e)
                     return False
                 if not result:
-                    self.log.debug("Ignoring bubbling message, check was false")
+                    self.log.debug("Ignoring bubbling event, check was false")
                     return False
             event.set()
             nonlocal value
             value = _room, _event
 
-        self.on_event("message")(event_handler)
+        self.on_event(event_type)(event_handler)
         try:
+            self.log.debug("Waiting for event %r", event_type, stack_info=True)
+            # Stack is logged since it's easier to trace back to *why* an event is being traced
             await asyncio.wait_for(event.wait(), timeout=timeout)
+            self.log.debug("Received event %r", event_type)
+        except asyncio.TimeoutError:
+            self.log.debug("Timed out waiting for event %r", event_type)
+            raise
         finally:
             self.remove_event_listener(event_handler)
         return value
