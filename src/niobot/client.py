@@ -722,12 +722,12 @@ class NioBot(AsyncClient):
                 except Exception as e:
                     self.log.exception("Error in raw event listener %r", func, exc_info=e)
 
-            func = event_safety_wrapper
+            wrapped_func = event_safety_wrapper
             self._raw_events.setdefault(event_type, [])
-            self._raw_events[event_type].append(func)
-            self.add_event_callback(func, event_type)
-            self.log.debug("Added raw event listener %r for %r", func, event_type)
-            return func
+            self._raw_events[event_type].append(wrapped_func)
+            self.add_event_callback(wrapped_func, event_type)
+            self.log.debug("Added raw event listener %r for %r", wrapped_func, event_type)
+            return wrapped_func
         else:
             self._events[event_type].append(func)
             self.log.debug("Added event listener %r for %r", func, event_type)
