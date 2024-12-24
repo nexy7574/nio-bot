@@ -76,7 +76,7 @@ def get_metadata_imagemagick(file_: pathlib.Path) -> Dict[str, Any]:
     log.debug("identify output (%d): %s", result.returncode, result.stdout)
     log.debug("identify took %f seconds", time.perf_counter() - start)
     stdout = result.stdout
-    stdout = stdout[len(str(file_)) + 1:]
+    stdout = stdout[len(str(file_)) + 1 :]
     img_format, img_width, img_height = stdout.split(",")
     data = {
         "streams": [

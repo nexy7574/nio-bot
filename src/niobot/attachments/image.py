@@ -161,7 +161,7 @@ class ImageAttachment(BaseAttachment):
                 mime_type="image/webp",
                 size_bytes=_size(tio),
                 height=thumbnail_img.height,
-                width=thumbnail_img.width
+                width=thumbnail_img.width,
             )
         return self
 
