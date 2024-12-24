@@ -716,6 +716,7 @@ class NioBot(AsyncClient):
             @functools.wraps(func)
             async def event_safety_wrapper(*args):
                 # This is necessary to stop callbacks crashing the process
+                self.log.debug("Raw event received: %r", args)
                 try:
                     return await func(*args)
                 except Exception as e:
@@ -724,6 +725,7 @@ class NioBot(AsyncClient):
             func = event_safety_wrapper
             self._raw_events.setdefault(event_type, [])
             self._raw_events[event_type].append(func)
+            self.add_event_callback(func, event_type)
             self.log.debug("Added raw event listener %r for %r", func, event_type)
             return func
         else:
