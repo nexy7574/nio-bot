@@ -44,7 +44,12 @@ def cli_root(ctx, log_level: str):
     help="The device ID to use (will be prompted if not given)",
 )
 @click.option(
-    "--output", "-o", "-O", default="-", help="The file to output the results to.", type=click.Path(allow_dash=True)
+    "--output",
+    "-o",
+    "-O",
+    default="-",
+    help="The file to output the results to.",
+    type=click.Path(allow_dash=True),
 )
 def get_access_token(output: str, username: str, password: str, homeserver: str, device_id: str):
     """Fetches your access token from your homeserver."""
@@ -67,7 +72,8 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
     if not device_id:
         node = platform.node()
         device_id = click.prompt(
-            "Device ID (a memorable display name for this login, such as 'bot-production')", default=node
+            "Device ID (a memorable display name for this login, such as 'bot-production')",
+            default=node,
         )
 
     click.secho("Resolving homeserver... ", fg="cyan", nl=False)

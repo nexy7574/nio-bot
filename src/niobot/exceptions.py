@@ -4,30 +4,29 @@ import warnings
 import nio
 
 __all__ = (
-    "NioBotException",
-    "MessageException",
-    "LoginException",
-    "MediaException",
-    "MediaUploadException",
-    "MediaDownloadException",
-    "MediaCodecWarning",
-    "MetadataDetectionException",
+    "CheckFailure",
+    "CommandArgumentsError",
+    "CommandDisabledError",
     "CommandError",
+    "CommandNotFoundError",
     "CommandParserError",
     "CommandPreparationError",
-    "CommandDisabledError",
-    "CommandNotFoundError",
-    "CommandArgumentsError",
-    "CheckFailure",
-    "NotOwner",
-    "InsufficientPower",
     "GenericMatrixError",
+    "InsufficientPower",
+    "LoginException",
+    "MediaCodecWarning",
+    "MediaDownloadException",
+    "MediaException",
+    "MediaUploadException",
+    "MessageException",
+    "MetadataDetectionException",
+    "NioBotException",
+    "NotOwner",
 )
 
 
 class NioBotException(Exception):
-    """
-    Base exception for NioBot.
+    """Base exception for NioBot.
 
     !!! warning
         In some rare cases, all of `exception`, `response` and `original` may be None.
@@ -65,14 +64,16 @@ class NioBotException(Exception):
             raise ValueError("If there is no error history, at least a human readable message should be provided.")
 
     def bottom_of_chain(
-        self, other: typing.Optional[typing.Union[Exception, nio.ErrorResponse]] = None
+        self,
+        other: typing.Optional[typing.Union[Exception, nio.ErrorResponse]] = None,
     ) -> typing.Union[BaseException, nio.ErrorResponse]:
         """Recursively checks the `original` attribute of the exception until it reaches the bottom of the chain.
 
         This function finds you the absolute first exception that was raised.
 
         :param other: The other exception to recurse down. If None, defaults to the exception this method is called on.
-        :returns: The bottom of the chain exception."""
+        :returns: The bottom of the chain exception.
+        """
         other = other or self
         if hasattr(other, "original") and other.original is not None:
             try:
@@ -91,47 +92,34 @@ class NioBotException(Exception):
 
 
 class GenericMatrixError(NioBotException):
-    """
-    Exception for generic matrix errors where a valid response was expected, but got an ErrorResponse instead.
-    """
+    """Exception for generic matrix errors where a valid response was expected, but got an ErrorResponse instead."""
 
     def __init__(self, message: typing.Optional[str] = None, *, response: nio.ErrorResponse):
         super().__init__(message=message, response=response)
 
 
 class MessageException(NioBotException):
-    """
-    Exception for message-related errors.
-    """
+    """Exception for message-related errors."""
 
 
 class LoginException(NioBotException):
-    """
-    Exception for login-related errors.
-    """
+    """Exception for login-related errors."""
 
 
 class MediaException(MessageException):
-    """
-    Exception for media-related errors.
-    """
+    """Exception for media-related errors."""
 
 
 class MediaUploadException(MediaException):
-    """
-    Exception for media-uploading related errors
-    """
+    """Exception for media-uploading related errors"""
 
 
 class MediaDownloadException(MediaException):
-    """
-    Exception for media-downloading related errors
-    """
+    """Exception for media-downloading related errors"""
 
 
 class MediaCodecWarning(ResourceWarning):
-    """
-    Warning that is dispatched when a media file is not in a supported codec.
+    """Warning that is dispatched when a media file is not in a supported codec.
 
     You can filter this warning by using `warnings.filterwarnings("ignore", category=niobot.MediaCodecWarning)`
 
@@ -146,26 +134,20 @@ class MediaCodecWarning(ResourceWarning):
     def __init__(self, codec: str, *supported: str):
         super().__init__(
             f"Codec {codec} is not supported by most clients. Use with caution.\n"
-            f"Suggested codecs: {', '.join(supported)}"
+            f"Suggested codecs: {', '.join(supported)}",
         )
 
 
 class MetadataDetectionException(MediaException):
-    """
-    Exception raised when metadata detection fails. Most of the time, this is an ffmpeg-related error
-    """
+    """Exception raised when metadata detection fails. Most of the time, this is an ffmpeg-related error"""
 
 
 class CommandError(NioBotException):
-    """
-    Exception subclass for all command invocation related errors.
-    """
+    """Exception subclass for all command invocation related errors."""
 
 
 class CommandNotFoundError(CommandError):
-    """
-    Exception raised when a command is not found.
-    """
+    """Exception raised when a command is not found."""
 
     def __init__(self, command_name: str):
         super().__init__(f"Command {command_name} not found")
@@ -173,35 +155,26 @@ class CommandNotFoundError(CommandError):
 
 
 class CommandPreparationError(CommandError):
-    """
-    Exception subclass for errors raised while preparing a command for execution.
-    """
+    """Exception subclass for errors raised while preparing a command for execution."""
 
 
 class CommandDisabledError(CommandPreparationError):
-    """
-    Exception raised when a command is disabled.
-    """
+    """Exception raised when a command is disabled."""
 
     def __init__(self, command):
         super().__init__(f"Command {command} is disabled")
 
 
 class CommandArgumentsError(CommandPreparationError):
-    """
-    Exception subclass for command argument related errors.
-    """
+    """Exception subclass for command argument related errors."""
 
 
 class CommandParserError(CommandArgumentsError):
-    """
-    Exception raised when there is an error parsing arguments.
-    """
+    """Exception raised when there is an error parsing arguments."""
 
 
 class CheckFailure(CommandPreparationError):
-    """
-    Exception raised when a generic check call fails.
+    """Exception raised when a generic check call fails.
 
     You should prefer one of the subclass errors over this generic one, or a custom subclass.
 
@@ -230,9 +203,7 @@ class CheckFailure(CommandPreparationError):
 
 
 class NotOwner(CheckFailure):
-    """
-    Exception raised when the command invoker is not the owner of the bot.
-    """
+    """Exception raised when the command invoker is not the owner of the bot."""
 
     def __init__(
         self,
@@ -246,9 +217,7 @@ class NotOwner(CheckFailure):
 
 
 class InsufficientPower(CheckFailure):
-    """
-    Exception raised when the command invoker does not have enough power to run the command.
-    """
+    """Exception raised when the command invoker does not have enough power to run the command."""
 
     def __init__(
         self,
@@ -265,9 +234,7 @@ class InsufficientPower(CheckFailure):
 
 
 class NotADirectRoom(CheckFailure):
-    """
-    Exception raised when the current room is not `m.direct` (a DM room)
-    """
+    """Exception raised when the current room is not `m.direct` (a DM room)"""
 
     def __init__(
         self,

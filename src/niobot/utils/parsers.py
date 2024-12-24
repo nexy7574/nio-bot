@@ -1,6 +1,4 @@
-"""
-This utility modules contains a handful of simple off-the-shelf parser for some basic python types.
-"""
+"""This utility modules contains a handful of simple off-the-shelf parser for some basic python types."""
 
 import abc
 import re
@@ -25,20 +23,20 @@ except ImportError:
 
 
 __all__ = (
-    "Parser",
-    "StatelessParser",
+    "BUILTIN_MAPPING",
+    "MATRIX_TO_REGEX",
     "BooleanParser",
+    "EventParser",
     "FloatParser",
     "IntegerParser",
     "JSONParser",
-    "EventParser",
-    "RoomParser",
-    "BUILTIN_MAPPING",
-    "MATRIX_TO_REGEX",
-    "MatrixToLink",
-    "MatrixMXCUrl",
-    "MatrixToParser",
     "MXCParser",
+    "MatrixMXCUrl",
+    "MatrixToLink",
+    "MatrixToParser",
+    "Parser",
+    "RoomParser",
+    "StatelessParser",
 )
 MATRIX_TO_REGEX = re.compile(
     r"(http(s)?://)?matrix\.to/#/(?P<room_id>[^/]+)(/(?P<event_id>[^/?&#]+))?(?P<qs>([&?](via=[^&]+))*)?",
@@ -48,8 +46,7 @@ MatrixMXCUrl = namedtuple("MatrixMXCUrl", ("server", "media_id"), defaults=(None
 
 
 class Parser(abc.ABC):
-    """
-    A base model class for parsers.
+    """A base model class for parsers.
 
     This ABC defines one uniform method, which is `__call__`, which takes a [Context][niobot.context.Context] instance,
     [Argument][niobot.commands] instance, and the user-provided string value.
@@ -64,8 +61,7 @@ class Parser(abc.ABC):
 
 
 class StatelessParser(Parser, abc.ABC):
-    r"""
-    A parser base that will not be instantiated, but rather called directly.
+    r"""A parser base that will not be instantiated, but rather called directly.
 
     This is useful for parsers that do not take any configuration
     (such as the simple [BooleanParser][niobot.utils.parsers]), where a
@@ -101,7 +97,8 @@ class StatelessParser(Parser, abc.ABC):
         :param arg: The argument instance
         :param value: The value to parse
         :return: The parsed value
-        :rtype: typing.Optional[typing.Any]"""
+        :rtype: typing.Optional[typing.Any]
+        """
         return cls()(ctx, arg, value)
 
 
@@ -111,8 +108,7 @@ class _StringParser(StatelessParser):
 
 
 class BooleanParser(StatelessParser):
-    """
-    Converts a given string into a boolean. Value is casefolded before being parsed.
+    """Converts a given string into a boolean. Value is casefolded before being parsed.
 
     The following resolves to true:
     * 1, y, yes, true, on
@@ -136,8 +132,7 @@ class BooleanParser(StatelessParser):
 
 
 class FloatParser(StatelessParser):
-    """
-    Converts a given string into a floating point number.
+    """Converts a given string into a floating point number.
 
     :return: A parsed floating point number
     :rtype: float
@@ -152,8 +147,7 @@ class FloatParser(StatelessParser):
 
 
 class IntegerParser(Parser):
-    """
-    Parses an integer, or optionally a real number.
+    """Parses an integer, or optionally a real number.
 
     :param allow_floats: Whether to simply defer non-explicit-integer values to the float parser.
         This results in the return type being [float][]
@@ -180,8 +174,7 @@ class IntegerParser(Parser):
 
 
 class JSONParser(StatelessParser):
-    """
-    Converts a given string into a JSON object.
+    """Converts a given string into a JSON object.
 
     !!! note "Performance boost"
         If you want this to be fast, you should install orjson. It is a drop-in replacement for the standard library.
@@ -200,8 +193,7 @@ class JSONParser(StatelessParser):
 
 
 class RoomParser(StatelessParser):
-    """
-    Parses a room ID, alias, or matrix.to link into a MatrixRoom object.
+    """Parses a room ID, alias, or matrix.to link into a MatrixRoom object.
 
     ??? warning "This parser is async"
         This parser is async, and should be awaited when used manually.
@@ -224,7 +216,7 @@ class RoomParser(StatelessParser):
                     break
             else:
                 room: U[nio.RoomResolveAliasResponse, nio.RoomResolveAliasError] = await ctx.client.room_resolve_alias(
-                    value
+                    value,
                 )
                 if isinstance(room, nio.RoomResolveAliasError):
                     raise CommandParserError(f"Invalid room alias: {value}.", response=room)
@@ -247,8 +239,7 @@ class RoomParser(StatelessParser):
 
 
 class EventParser(Parser):
-    """
-    Parses an event reference from either its ID, or matrix.to link.
+    """Parses an event reference from either its ID, or matrix.to link.
 
     :param event_type: The event type to expect (such as m.room.message). If None, any event type is allowed.
     :return: The actual internal (async) parser.
@@ -280,19 +271,17 @@ class EventParser(Parser):
             event: nio.Event = event.event
             if self.event_type is not None and self.event_type != event.source.get("type"):
                 raise CommandParserError(
-                    f"Invalid event ID: {value} (expected {self.event_type}, got {event.source.get('type')})."
+                    f"Invalid event ID: {value} (expected {self.event_type}, got {event.source.get('type')}).",
                 )
             return event
-        else:
-            raise CommandParserError(f"Invalid event ID or matrix.to link: {value!r}.")
+        raise CommandParserError(f"Invalid event ID or matrix.to link: {value!r}.")
 
     def __call__(self, ctx, arg, value) -> typing.Coroutine[typing.Any, typing.Any, nio.Event]:
         return self.internal(ctx, value)
 
 
 class MatrixDotToParser(Parser):
-    """
-    Converts a matrix.to link into a MatrixRoomLink namedtuple, which consists of the room, event, and any query
+    """Converts a matrix.to link into a MatrixRoomLink namedtuple, which consists of the room, event, and any query
     passed to the URL.
 
     :param domain: The domain to check for. Defaults to matrix.to, consistent with average client behaviour.
@@ -353,7 +342,8 @@ class MatrixDotToParser(Parser):
 
         if event_id and not self.stateless:
             event: U[nio.RoomGetEventResponse, nio.RoomGetEventError] = await ctx.client.room_get_event(
-                room_id, event_id
+                room_id,
+                event_id,
             )
             if not isinstance(event, nio.RoomGetEventResponse):
                 raise CommandParserError(f"Invalid event ID: {event_id}.", response=event)
@@ -365,7 +355,10 @@ class MatrixDotToParser(Parser):
         return MatrixToLink(room, event, groups.get("qs"))
 
     def __call__(
-        self, ctx: "Context", arg: "Argument", value: str
+        self,
+        ctx: "Context",
+        arg: "Argument",
+        value: str,
     ) -> typing.Coroutine[typing.Any, typing.Any, MatrixToLink]:
         return self.internal(ctx, value)
 
@@ -374,8 +367,7 @@ MatrixToParser = MatrixDotToParser
 
 
 class MXCParser(StatelessParser):
-    """
-    Parses an MXC URL into a MatrixMXCUrl namedtuple, which consists of the server and media ID.
+    """Parses an MXC URL into a MatrixMXCUrl namedtuple, which consists of the server and media ID.
 
     :return: The parsed MXC URL
     :rtype: MatrixMXCUrl (namedtuple)
@@ -396,9 +388,7 @@ class MXCParser(StatelessParser):
 
 
 class MatrixUserParser(StatelessParser):
-    """
-    Parses a string into a MatrixUser instance from matrix-nio.
-    """
+    """Parses a string into a MatrixUser instance from matrix-nio."""
 
     def __call__(self, ctx, arg, value):
         if not value.startswith("@"):

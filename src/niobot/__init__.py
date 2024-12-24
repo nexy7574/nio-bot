@@ -18,7 +18,7 @@ except ImportError:
     version_meta = __VersionMeta()
 
 __author__ = "Nexus <pip@nexy7574.co.uk>"
-__license__ = "GNU GPLv3"
+__license__ = "GNU LGPLv3"
 __url__ = "https://github.com/nexy7574/niobot"
 __title__ = "niobot"
 __description__ = "A Matrix bot framework written in Python built on matrix-nio."

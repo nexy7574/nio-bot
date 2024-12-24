@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -20,12 +20,15 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install ffmpeg imagemagick
+          sudo apt-get install -y ffmpeg imagemagick
           python -m pip install --upgrade pip wheel setuptools
-          pip install .[e2ee,dev,cli]
-      - name: Lint with Ruff
+          pip install --upgrade .[e2ee,dev,cli]
+      - name: Check formatting with Ruff
         run: |
-          ruff format --check
+          ruff format --diff
+      - name: Check linting with Ruff
+        run: |
+          ruff check --show-fixes
       - name: Run tests
         run: |
           pytest

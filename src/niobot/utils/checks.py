@@ -5,17 +5,16 @@ from ..context import Context
 from ..exceptions import CheckFailure, InsufficientPower, NotOwner
 
 __all__ = (
-    "is_owner",
-    "is_dm",
-    "sender_has_power",
     "client_has_power",
     "from_homeserver",
+    "is_dm",
+    "is_owner",
+    "sender_has_power",
 )
 
 
 def is_owner(*extra_owner_ids):
-    """
-    Requires the sender owns the bot (`[NioBot.owner_id][]`), or is in `extra_owner_ids`.
+    """Requires the sender owns the bot (`[NioBot.owner_id][]`), or is in `extra_owner_ids`.
     :param extra_owner_ids: A set of `@localpart:homeserver.tld` strings to check against.
     :return: True - the check passed.
     :raises NotOwner: The sender is not the owner of the bot and is not in the given IDs.
@@ -34,8 +33,7 @@ def is_owner(*extra_owner_ids):
 
 
 def is_dm(allow_dual_membership: bool = False):
-    """
-    Requires that the current room is a DM with the sender.
+    """Requires that the current room is a DM with the sender.
 
     :param allow_dual_membership: Whether to allow regular rooms, but only with the client and sender as members.
     :return:
@@ -54,8 +52,7 @@ def is_dm(allow_dual_membership: bool = False):
 
 
 def sender_has_power(level: int, room_creator_bypass: bool = False):
-    """
-    Requires that the sender has a certain power level in the current room before running the command.
+    """Requires that the sender has a certain power level in the current room before running the command.
 
     :param level: The minimum power level
     :param room_creator_bypass: If the room creator should bypass the check and always be allowed, regardless of level.
@@ -73,8 +70,7 @@ def sender_has_power(level: int, room_creator_bypass: bool = False):
 
 
 def client_has_power(level: int):
-    """
-    Requires that the bot has a certain power level in the current room before running the command.
+    """Requires that the bot has a certain power level in the current room before running the command.
 
     :param level: The minimum power level
     :return:
@@ -89,8 +85,7 @@ def client_has_power(level: int):
 
 
 def from_homeserver(*homeservers: str):
-    """
-    Requires that the sender is from one of the given homeservers.
+    """Requires that the sender is from one of the given homeservers.
 
     :param homeservers: The homeservers to allowlist.
     :return:

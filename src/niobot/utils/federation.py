@@ -7,13 +7,12 @@ __all__ = ["resolve_homeserver"]
 
 
 async def resolve_homeserver(domain: str) -> str:
-    """
-    Resolves a given homeserver part to the actual homeserver
+    """Resolves a given homeserver part to the actual homeserver
 
     :param domain: The domain to crawl
     :return: The resolved homeserver
     """
-    from niobot import __user_agent__
+    from .. import __user_agent__
 
     if not domain.startswith("https://"):
         domain = f"https://{domain}"

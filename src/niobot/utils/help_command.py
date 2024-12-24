@@ -2,7 +2,7 @@ import re
 import textwrap
 import typing
 
-from niobot.exceptions import CheckFailure
+from ..exceptions import CheckFailure
 
 if typing.TYPE_CHECKING:
     from ..commands import Command
@@ -13,8 +13,7 @@ __all__ = ("DefaultHelpCommand",)
 
 
 class DefaultHelpCommand:
-    """
-    The default help command for NioBot.
+    """The default help command for NioBot.
 
     This is a very basic help command which lists available commands, their arguments, and a short descrption,
     and allows for further information by specifying the command name as an argument.
@@ -34,8 +33,7 @@ class DefaultHelpCommand:
         escape_all_at_signs: bool = False,
         escape_method: typing.Optional[typing.Callable[[str], str]] = None,
     ) -> str:
-        """
-        Escapes given text and sanitises it, ready for outputting to the user.
+        """Escapes given text and sanitises it, ready for outputting to the user.
 
         This should always be used when echoing any sort of user-provided content, as we all know there will be some
         annoying troll who will just go `@room` for no apparent reason every 30 seconds.
@@ -79,8 +77,7 @@ class DefaultHelpCommand:
         """Formats the command name with its aliases if applicable"""
         if not command.aliases:
             return command.name
-        else:
-            return "[{}]".format("|".join([command.name, *command.aliases]))
+        return "[{}]".format("|".join([command.name, *command.aliases]))
 
     def format_command_line(self, prefix: str, command: "Command") -> str:
         """Formats a command line, including name(s) & usage."""
@@ -141,16 +138,15 @@ class DefaultHelpCommand:
                     continue  # user cannot run command
                 display = self.format_command_line(prefix, command)
                 description = self.get_short_description(command)
-                lines.append("* `{}`: {}".format(display, description))
+                lines.append(f"* `{display}`: {description}")
                 added.append(command)
             return "\n".join(lines)
-        elif command is None:
+        if command is None:
             return "No command with the name %r found." % (self.clean_output(command_name))
-        else:
-            display = self.format_command_line(prefix, command)
-            description = self.get_long_description(command)
-            lines = ["* {}:".format(display), *description.splitlines()]
-            return self.clean_output("\n".join(lines))
+        display = self.format_command_line(prefix, command)
+        description = self.get_long_description(command)
+        lines = [f"* {display}:", *description.splitlines()]
+        return self.clean_output("\n".join(lines))
 
     async def respond(self, ctx: "Context", command_name: str = None) -> None:
         """Displays help information about available commands"""

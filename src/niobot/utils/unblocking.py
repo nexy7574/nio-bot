@@ -5,14 +5,13 @@ import typing
 from collections.abc import Callable
 from typing import Any
 
-__all__ = ("run_blocking", "force_await")
+__all__ = ("force_await", "run_blocking")
 
 T = typing.TypeVar("T")
 
 
 async def run_blocking(function: Callable[..., T], *args: Any, **kwargs: Any) -> T:
-    """
-    Takes a blocking function and runs it in a thread, returning the result.
+    """Takes a blocking function and runs it in a thread, returning the result.
 
     You should use this for any long-running functions that may take a long time to respond that are not coroutines
     that you can await. For example, running a subprocess.
@@ -43,8 +42,7 @@ async def run_blocking(function: Callable[..., T], *args: Any, **kwargs: Any) ->
 
 
 async def force_await(function: typing.Union[typing.Callable, typing.Coroutine], *args: Any, **kwargs: Any):
-    """
-    Takes a function, and if it needs awaiting, it will be awaited.
+    """Takes a function, and if it needs awaiting, it will be awaited.
     If it is a synchronous function, it runs it in the event loop, preventing it from blocking.
 
     This is equivalent to (pseudo):
@@ -62,7 +60,6 @@ async def force_await(function: typing.Union[typing.Callable, typing.Coroutine],
     """
     if asyncio.iscoroutinefunction(function):
         return await function(*args, **kwargs)
-    elif inspect.isawaitable(function):
+    if inspect.isawaitable(function):
         return await function
-    else:
-        return await run_blocking(function, *args, **kwargs)
+    return await run_blocking(function, *args, **kwargs)
