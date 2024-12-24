@@ -81,7 +81,7 @@ class VideoAttachment(BaseAttachment):
             video = video.file
         video = _to_path(video)
         x = await run_blocking(VideoAttachment.extract_first_frame, video, "webp")
-        return await ImageAttachment.from_file(io.BytesIO(x), file_name="thumbnail.webp")
+        return await ImageAttachment.from_file(io.BytesIO(x), file_name="thumbnail.webp", thumbnail=False)
 
     @classmethod
     async def get_metadata(cls: Type[BaseAttachment], file: Union[str, Path]) -> Dict[str, Any]:
