@@ -846,7 +846,9 @@ class NioBot(AsyncClient):
         self,
         room_id: typing.Optional[str] = None,
         sender: typing.Optional[str] = None,
-        check: typing.Optional[typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any]] = None,
+        check: typing.Optional[
+            typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Union[typing.Any, typing.Coroutine]]
+        ] = None,
         *,
         timeout: typing.Optional[float] = None,
         msg_type: typing.Type[nio.RoomMessage] = nio.RoomMessageText,
@@ -863,7 +865,9 @@ class NioBot(AsyncClient):
         event_type: typing.Union[str, typing.Type[nio.Event]],
         room_id: typing.Optional[str] = None,
         sender: typing.Optional[str] = None,
-        check: typing.Optional[typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Any]] = None,
+        check: typing.Optional[
+            typing.Callable[[nio.MatrixRoom, nio.RoomMessageText], typing.Union[typing.Any, typing.Coroutine]],
+        ] = None,
         *,
         timeout: typing.Optional[float] = None,
     ) -> typing.Optional[typing.Tuple[nio.MatrixRoom, nio.RoomMessage]]:
