@@ -546,7 +546,10 @@ class NioBot(AsyncClient):
 
                     self.log.debug(f"Running command {command.name} with context {context!r}")
                     try:
-                        task = asyncio.create_task(await command.invoke(context))
+                        task = asyncio.create_task(
+                            await command.invoke(context),
+                            name=f"COMMAND_{event.sender}_{room.room_id}_{command.name}_{time.monotonic_ns()}",
+                        )
                         context._task = task
                         context._perf_timer = time.perf_counter()
                     except CommandArgumentsError as e:
