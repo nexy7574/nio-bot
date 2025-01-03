@@ -296,7 +296,7 @@ class Command:
         for index, parameter in enumerate(inspect.signature(callback).parameters.values()):
             if detected_arguments and detected_arguments[-1].greedy:
                 raise ValueError("Cannot have multiple greedy arguments in a command.")
-            if index == 0 and parameter == "self":
+            if index == 0 and parameter.name == "self":
                 log.debug("Skipping 'self' parameter at position %d", index)
                 continue
             elif parameter.name in ["ctx", "context"]:
