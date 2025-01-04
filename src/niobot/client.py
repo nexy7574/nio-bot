@@ -443,124 +443,109 @@ class NioBot(AsyncClient):
 
     async def process_message(self, room: nio.MatrixRoom, event: nio.RoomMessage) -> None:
         """Processes a message and runs the command it is trying to invoke if any."""
-        lock = self._message_process_lock
-        if lock is None:
-            lock = asyncio.Lock()
-        async with lock:
-            if event.event_id in self._event_id_cache:
-                self.log.warning("Not processing duplicate message event %r.", event.event_id)
-                return
-            if self.start_time is None:
-                raise RuntimeError("Bot has not started yet!")
-            self._event_id_cache.append(event.event_id)
-            self.message_cache.append((room, event))
-            self.dispatch("message", room, event)
-            if not isinstance(event, nio.RoomMessageText):
-                self.log.debug("Ignoring non-text message %r", event.event_id)
-                return
-            if event.sender == self.user and self.ignore_self is True:
-                self.log.debug("Ignoring message sent by self.")
-                return
-            if self.is_old(event):
-                age = self.start_time - event.server_timestamp / 1000
-                self.log.debug(f"Ignoring message sent {age:.0f} seconds before startup.")
-                return
+        if self.start_time is None:
+            raise RuntimeError("Bot has not started yet!")
+        self.message_cache.append((room, event))
+        self.dispatch("message", room, event)
+        if not isinstance(event, nio.RoomMessageText):
+            self.log.debug("Ignoring non-text message %r", event.event_id)
+            return
+        if event.sender == self.user and self.ignore_self is True:
+            self.log.debug("Ignoring message sent by self.")
+            return
+        if self.is_old(event):
+            age = self.start_time - event.server_timestamp / 1000
+            self.log.debug(f"Ignoring message sent {age:.0f} seconds before startup.")
+            return
 
-            if self.case_insensitive:
-                content = event.body.casefold()
+        if self.case_insensitive:
+            content = event.body.casefold()
+        else:
+            content = event.body
+
+        def get_prefix(c: str) -> typing.Union[str, None]:
+            if isinstance(self.command_prefix, re.Pattern):
+                _m = re.match(self.command_prefix, c)
+                if _m:
+                    return _m.group(0)
             else:
-                content = event.body
+                for pfx in self.command_prefix:
+                    if c.startswith(pfx):
+                        return pfx
 
-            def get_prefix(c: str) -> typing.Union[str, None]:
-                if isinstance(self.command_prefix, re.Pattern):
-                    _m = re.match(self.command_prefix, c)
-                    if _m:
-                        return _m.group(0)
-                else:
-                    for pfx in self.command_prefix:
-                        if c.startswith(pfx):
-                            return pfx
-
-            if content.startswith(">"):
-                try:
-                    rep, content = content.split("\n\n", 1)
-                except ValueError:
-                    self.log.warning("Error while splitting message %r.", content)
-                else:
-                    self.log.debug("Parsed message, split into reply and content: %r, %r", rep[:50], content[:50])
-            matched_prefix = get_prefix(content)
-            if matched_prefix:
-                try:
-                    command_name = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
-                except IndexError:
-                    self.log.info(
-                        "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
-                        event.body,
-                    )
+        matched_prefix = get_prefix(content)
+        if matched_prefix:
+            try:
+                command_name = original_command = content[len(matched_prefix) :].splitlines()[0].split(" ")[0]
+            except IndexError:
+                self.log.info(
+                    "Failed to parse message %r - message terminated early (was the content *just* the prefix?)",
+                    event.body,
+                )
+                return
+            command: typing.Optional[Command] = self.get_command(command_name)
+            if command:
+                if command.disabled is True:
+                    error = CommandDisabledError(command)
+                    self.dispatch("command_error", command, error)
                     return
-                command: typing.Optional[Command] = self.get_command(command_name)
-                if command:
-                    if command.disabled is True:
-                        error = CommandDisabledError(command)
-                        self.dispatch("command_error", command, error)
-                        return
 
-                    context = command.construct_context(
-                        self,
-                        room=room,
-                        src_event=event,
-                        invoking_prefix=matched_prefix,
-                        meta=matched_prefix + original_command,
-                    )
+                context = command.construct_context(
+                    self,
+                    room=room,
+                    src_event=event,
+                    invoking_prefix=matched_prefix,
+                    meta=matched_prefix + original_command,
+                )
 
+                try:
+                    if not await context.command.can_run(context):
+                        raise CheckFailure(None, "Unknown check failure")
+                except CheckFailure as err:
+                    self.dispatch("command_error", context, err)
+                    return
+
+                def _task_callback(t: asyncio.Task):
                     try:
-                        if not await context.command.can_run(context):
-                            raise CheckFailure(None, "Unknown check failure")
-                    except CheckFailure as err:
-                        self.dispatch("command_error", context, err)
-                        return
-
-                    def _task_callback(t: asyncio.Task):
-                        try:
-                            exc = t.exception()
-                        except asyncio.CancelledError:
-                            self.dispatch("command_cancelled", context, t)
-                        else:
-                            if exc:
-                                if "command_error" not in self._events:
-                                    self.log.exception(
-                                        "There was an error while running %r: %r",
-                                        command,
-                                        exc,
-                                        exc_info=exc,
-                                    )
-                                self.dispatch("command_error", context, CommandError(exception=exc))
-                            else:
-                                self.dispatch("command_complete", context, t)
-                        if hasattr(context, "_perf_timer"):
-                            self.log.debug(
-                                "Command %r finished in %.2f seconds",
-                                command.name,
-                                time.perf_counter() - context._perf_timer,
-                            )
-
-                    self.log.debug(f"Running command {command.name} with context {context!r}")
-                    try:
-                        task = asyncio.create_task(
-                            await command.invoke(context),
-                            name=f"COMMAND_{event.sender}_{room.room_id}_{command.name}_{time.monotonic_ns()}",
-                        )
-                        context._task = task
-                        context._perf_timer = time.perf_counter()
-                    except CommandArgumentsError as e:
-                        self.dispatch("command_error", context, e)
-                    except Exception as e:
-                        self.log.exception("Failed to invoke command %s", command.name, exc_info=e)
-                        self.dispatch("command_error", context, CommandError(exception=e))
+                        exc = t.exception()
+                    except asyncio.CancelledError:
+                        self.dispatch("command_cancelled", context, t)
                     else:
-                        task.add_done_callback(_task_callback)
+                        if exc:
+                            if "command_error" not in self._events:
+                                self.log.exception(
+                                    "There was an error while running %r: %r",
+                                    command,
+                                    exc,
+                                    exc_info=exc,
+                                )
+                            self.dispatch("command_error", context, CommandError(exception=exc))
+                        else:
+                            self.dispatch("command_complete", context, t)
+                    if hasattr(context, "_perf_timer"):
+                        self.log.debug(
+                            "Command %r finished in %.2f seconds",
+                            command.name,
+                            time.perf_counter() - context._perf_timer,
+                        )
+
+                self.log.debug(f"Running command {command.name} with context {context!r}")
+                try:
+                    task = asyncio.create_task(
+                        await command.invoke(context),
+                        name=f"COMMAND_{event.sender}_{room.room_id}_{command.name}_{time.monotonic_ns()}",
+                    )
+                    context._task = task
+                    context._perf_timer = time.perf_counter()
+                except CommandArgumentsError as e:
+                    self.dispatch("command_error", context, e)
+                except Exception as e:
+                    self.log.exception("Failed to invoke command %s", command.name, exc_info=e)
+                    self.dispatch("command_error", context, CommandError(exception=e))
                 else:
-                    self.log.debug(f"Command {original_command!r} not found.")
+                    task.add_done_callback(_task_callback)
+            else:
+                self.log.debug(f"Command {original_command!r} not found.")
 
     def is_owner(self, user_id: str) -> bool:
         """Checks whether a user is the owner of the bot.

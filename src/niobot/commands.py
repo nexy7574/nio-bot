@@ -2,6 +2,7 @@ import functools
 import inspect
 import logging
 import os
+import types
 import typing
 import warnings
 from collections.abc import Callable
@@ -111,16 +112,10 @@ class Argument:
                 from .utils import Parser
 
                 # not a basic type (such as int, str, etc.) - ensure it subclasses Parser.
-                if not issubclass(type(self.parser), Parser):
-                    # raise TypeError(
-                    #     "parser must be a subclass of niobot.utils.Parser, or a builtin type (e.g. str, int, etc.)"
-                    # )
-                    warnings.warn(
-                        DeprecationWarning(
-                            "custom parsers must be a subclass of niobot.utils.Parser. The old parsing methods have"
-                            " been deprecated in favour of uniform ABC-inherited parsers. This will be an error after"
-                            " v1.2.0",
-                        ),
+                if not issubclass(type(self.parser), Parser) and not isinstance(self.parser, types.LambdaType):
+                    raise TypeError(
+                        "parser must be a subclass of niobot.utils.Parser, or a builtin type (e.g. str, int, etc.),"
+                        "got %r" % self.parser
                     )
 
         if raw_type == inspect.Parameter.KEYWORD_ONLY and self.type is not str:
@@ -235,94 +230,99 @@ class Command:
         self.greedy = greedy
 
     @staticmethod
-    def autodetect_args(callback) -> list[Argument]:
-        """Attempts to auto-detect the arguments for the command, based on the callback's signature
+    def _get_annotation_type(parameter: inspect.Parameter) -> typing.Tuple[typing.Type, bool]:
+        log = logging.getLogger(__name__).getChild("get_annotation_type")
+        annotation_origin = typing.get_origin(parameter.annotation)
+        annotation_args = typing.get_args(parameter.annotation)
+        greedy = False
+
+        if annotation_origin is list:  # typing.List[xyz]
+            if len(annotation_args) != 1:
+                raise TypeError("List types must have exactly one argument.")
+            log.debug("Resolved %r to list type %r", parameter.annotation, annotation_args[0])
+            argument_type = annotation_args[0]
+            greedy = True
+        elif annotation_origin is typing.Union:  # typing.Union[a, b] or typing.Optional[a]
+            if len(annotation_args) == 2 and annotation_args[1] is type(None):
+                log.debug("Resolved Union[...] (%r) to optional type %r", parameter.annotation, annotation_args[0])
+                argument_type = annotation_args[0]
+            else:
+                raise CommandArgumentsError("Union types are not yet supported.")
+        elif annotation_origin is typing.Annotated:  # typing.Annotated[real_type, real_parser]
+            real_type, type_parser = annotation_args
+            log.debug(
+                "Resolved Annotated[...] (%r) to real type %r with parser %r",
+                parameter.annotation,
+                real_type,
+                type_parser,
+            )
+            argument_type = real_type
+        else:
+            log.debug(
+                "Assuming bare type for %r, as it has no special origin (e.g. List, Union, etc.)",
+                parameter.annotation,
+            )
+            if not callable(parameter.annotation):
+                raise TypeError(
+                    f"Unsupported type annotation {parameter.annotation} for parameter {parameter.name}:"
+                    f" not callable ({parameter.annotation!r})"
+                )
+            argument_type = parameter.annotation
+
+        return argument_type, greedy
+
+    @classmethod
+    def autodetect_args(cls, callback) -> typing.List[Argument]:
+        """
+        Attempts to automatically detect arguments, their types, and their default values for the command,
+        based on the function signature.
+
+        This is usually quite reliable, however, also quite inflexible. If you need more control over the arguments,
+        consider manually passing them to the Command constructor.
 
         :param callback: The function to inspect
         :return: A list of arguments. `self`, and `ctx` are skipped.
+        :raises TypeError: If the parameter kind is not supported, or there was another issue with introspection.
+        :raises ValueError: If there are multiple greedy arguments in the command.
         """
-        # We need to get each parameter's type annotation, and create an Argument for it.
-        # If it has a default value, assign that default value to the Argument.
-        # If the parameter is `self`, ignore it.
-        # If the parameter is `ctx`, use the `Context` type.
-        log = logging.getLogger(__name__)
+        log = logging.getLogger(__name__).getChild("autodetect_args")
         log.debug("Processing arguments for callback %r", callback)
-        args = []
-        for n, parameter in enumerate(inspect.signature(callback).parameters.values()):
-            # If it has a parent class and this is the first parameter, skip it.
-            if n == 0 and parameter.name == "self":
-                log.debug("Found 'self' parameter (%r) at position %d, skipping argument detection.", parameter, n)
+
+        detected_arguments: typing.List[Argument] = []
+
+        for index, parameter in enumerate(inspect.signature(callback).parameters.values()):
+            if detected_arguments and detected_arguments[-1].greedy:
+                raise ValueError("Cannot have arguments after a greedy argument.")
+            if index == 0 and parameter.name == "self":
+                log.debug("Skipping 'self' parameter at position %d", index)
+                continue
+            elif parameter.name in ["ctx", "context"]:
+                log.debug("Skipping 'context' parameter at position %d", index)
                 continue
 
-            if parameter.name in ["ctx", "context"] or parameter.annotation is Context:
-                log.debug(
-                    "Found 'context' parameter (%r) at position %d, skipping argument detection.",
-                    parameter,
-                    n,
-                )
-                continue
+            if parameter.kind not in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
+                raise TypeError(f"Unknown parameter kind {parameter.kind} is unsupported.")
 
-            # Disallow **kwargs
-            if parameter.kind == inspect.Parameter.POSITIONAL_ONLY:
-                raise TypeError("Positional-only arguments are not supported.")
-            if parameter.kind == inspect.Parameter.VAR_KEYWORD:
-                raise TypeError("Implicit keyword arguments (**kwargs) are not supported.")
-            is_positional = parameter.kind == inspect.Parameter.VAR_POSITIONAL  # *args
-            is_kwarg = parameter.kind == inspect.Parameter.KEYWORD_ONLY
-            greedy = is_positional or is_kwarg
-
+            argument_type: typing.Type
+            default_greedy = parameter.kind == inspect.Parameter.KEYWORD_ONLY
             if parameter.annotation is inspect.Parameter.empty:
-                log.debug("Found argument %r, however no type was specified. Assuming string.", parameter)
-                a = Argument(parameter.name, str, default=parameter.default, greedy=greedy, raw_type=parameter.kind)
+                log.warning("No type annotation for parameter %r, assuming str", parameter)
+                argument_type = str
             else:
-                annotation = parameter.annotation
-                origin = typing.get_origin(annotation)
-                annotation_args = typing.get_args(annotation)
-                if origin is typing.Annotated:
-                    real_type, type_parser = annotation_args
-                    log.debug(
-                        "Resolved Annotated[...] (%r) to real type %r with parser %r",
-                        annotation,
-                        real_type,
-                        type_parser,
-                    )
-                    a = Argument(
-                        parameter.name,
-                        real_type,
-                        default=parameter.default,
-                        parser=type_parser,
-                        greedy=greedy,
-                        raw_type=parameter.kind,
-                    )
-                elif origin is typing.Union:
-                    if len(annotation_args) == 2 and annotation_args[1] is type(None):
-                        log.debug("Resolved Union[...] (%r) to optional type %r", annotation, annotation_args[0])
-                        a = Argument(
-                            parameter.name,
-                            annotation_args[0],
-                            default=parameter.default,
-                            greedy=greedy,
-                            raw_type=parameter.kind,
-                        )
-                    else:
-                        raise CommandArgumentsError("Union types are not yet supported (argument No. %d)." % n)
-                else:
-                    log.debug("Found argument %r with unknown annotated type %r", parameter, parameter.annotation)
-                    a = Argument(
-                        parameter.name,
-                        parameter.annotation,
-                        default=parameter.default,
-                        greedy=greedy,
-                        raw_type=parameter.kind,
-                    )
+                argument_type, default_greedy = cls._get_annotation_type(parameter)
 
-            if parameter.default is not inspect.Parameter.empty:
-                a.default = parameter.default
-                a.required = False
-            args.append(a)
-            # NOTE: It may be worth breaking here, but an error should be raised if there are too many arguments.
-        log.debug("Automatically detected the following arguments: %r", args)
-        return args
+            argument = Argument(
+                name=parameter.name,
+                arg_type=argument_type,
+                default=parameter.default,
+                required=parameter.default is inspect.Parameter.empty,
+                raw_type=parameter.kind,
+                greedy=default_greedy,
+            )
+            detected_arguments.append(argument)
+
+        log.debug("Automatically detected the following arguments: %r", detected_arguments)
+        return detected_arguments
 
     def __hash__(self):
         return hash(self.__runtime_id)
