@@ -32,7 +32,7 @@ class ContextualResponse:
         self._response = response
 
     def __repr__(self):
-        return f"<ContextualResponse ctx={self.ctx!r} response={self.response!r}>"
+        return f"<ContextualResponse ctx={self.ctx!r} response={self._response!r}>"
 
     @property
     @deprecated("original_event")
