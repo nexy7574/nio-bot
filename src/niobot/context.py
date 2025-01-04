@@ -5,6 +5,7 @@ import time
 import typing
 
 import nio
+import typing_extensions
 
 from .utils.lib import deprecated
 from .utils.string_view import ArgumentView
@@ -86,12 +87,12 @@ class ContextualResponse:
         message_type: typing.Optional[str] = None,
         content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
         override: typing.Optional[dict] = None,
-    ) -> ContextualResponse:
+    ) -> typing_extensions.Self:
         """Edits the current response.
 
         See [niobot.NioBot.edit_message][] for more information.
         """
-        await self.ctx.client.edit_message(
+        self._response = await self.ctx.client.edit_message(
             self.ctx.room,
             self._response.event_id,
             content,
