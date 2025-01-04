@@ -1646,8 +1646,50 @@
 are often not properly battle-tested.</p>
 <p>However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!</p>
 </details>
+<div class="admonition danger">
+<p class="admonition-title">Potentially breaking changes since the last release</p>
+<p>The following changes may be potentially breaking if you use some lower-level features of the library:</p>
+<ul>
+<li>Attachments have been massively reworked, please check your code to see if there are any intellisense errors, or if you are using any of the removed methods.</li>
+<li>Argument detection has been massively reworked - while it should be a massive improvement, please check to make sure your arguments are still parsed as expected.</li>
+</ul>
+</div>
 <ul>
 <li>Added the sync filter "lazy load members" - should hopefully improve performance in large rooms.</li>
+<li>Removed temporary lock on <code>niobot.NioBot.process_message</code>, which should allow parallel command execution again.</li>
+<li>Removed faulty fallback reply parser, it is no-longer needed. Clients should not be sending fallback replies anymore.</li>
+<li>Overhauled argument parsing</li>
+<li><code>*args</code> no longer works - please use <code>list[str]</code> (<code>typing.List[str]</code> on python 3.9) instead.</li>
+<li>Arguments are no-longer given <code>None</code> (I am not sure what even caused this, but it's fixed now)</li>
+<li>Greedy arguments are now correctly greedy.</li>
+<li>Extra arguments passed to commands once again correctly raise an error.</li>
+<li>Added support for <code>list[TYPE]</code></li>
+<li>Added python 3.13 to the CI matrix</li>
+<li>Updated the pre-commit hooks (they were ANCIENT)</li>
+<li>Set <code>__license__</code> in <code>__init__.py</code> to <code>LGPLv3</code> (it was previously still <code>GPLv3</code>)</li>
+<li>Completely overhauled how attachments are handled</li>
+<li>the monolithic <code>niobot.attachments</code> module has been split into its own package</li>
+<li><code>detect_mime_type</code> no-longer requires <code>magic</code> to be installed (but still REALLY prefers it, and will be noisy if it's not)</li>
+<li><code>niobot.AudioAttachment</code> is now located in <code>niobot/attachments/audio.py</code></li>
+<li><code>niobot.VideoAttachment</code> is now located in <code>niobot/attachments/video.py</code></li>
+<li><code>niobot.ImageAttachment</code> is now located in <code>niobot/attachments/image.py</code></li>
+<li><code>niobot.FileAttachment</code> is now located in <code>niobot/attachments/file.py</code></li>
+<li>The extensible <code>niobot.BaseAttachment</code> is now located in <code>niobot/attachments/base.py</code></li>
+<li>Added task names to the asyncio background tasks for commands dispatched by the bot using the format:
+<code>COMMAND_{event.sender}_{room.room_id}_{command.name}_{monotonic_nanoseconds}</code>. This allows you to see what tasks are
+running by calling <code>asyncio.all_tasks()</code>, and means you can precisely cancel running commands.</li>
+<li>Fixed [niobot.NioBot.add_event_listener][] not accepting <code>nio.Event</code> types, again.</li>
+<li>Fixed <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.remove_event_listener">niobot.NioBot.remove_event_listener</a> not accepting <code>nio.Event</code> types.</li>
+<li>Added <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.wait_for_event">niobot.NioBot.wait_for_event</a>, a generic evolution of <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.wait_for_message">niobot.NioBot.wait_for_message</a>.</li>
+<li>Removed <code>niobot.NioBot._recursively_upload_attachments</code>, attachments should now properly be uploaded by the
+<code>send_message</code> function.</li>
+<li>Remove the archaic deprecated behaviour that permitted non-<a class="autorefs autorefs-internal" href="../reference/utils/parsers/#niobot.utils.parsers.Parser">niobot.Parser</a> objects to be used as parsers in commands.</li>
+<li>As mentioned above, overhauled argument parsing, in the process making [niobot.Argument.autodetect_args][]
+less complex and more reliable.</li>
+<li>Fixed <code>repr(ContextualResponse)</code> raising an AttributeError</li>
+<li>Fixed <a class="autorefs autorefs-internal" href="../reference/context/#niobot.context.ContextualResponse">niobot.ContextualResponse</a> being broken after <a class="autorefs autorefs-internal" href="../reference/context/#niobot.context.ContextualResponse.edit">niobot.ContextualResponse.edit</a> was called.</li>
+<li>Added <code>NIOBOT_DEPRECATION_ERROR</code> environment variable, which when set, causes deprecation warnings to become
+errors instead. Intended for CI testing, but useful for local development too.</li>
 </ul>
 <h2 id="v120">v1.2.0<a class="headerlink" href="#v120" title="Permanent link">&para;</a></h2>
 <p>There are a lot of changes in v1.2.0, so in this release you'll see a lot of performance improvements and some fancy new features for you to
@@ -1906,7 +1948,7 @@ We love new contributors!</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">December 5, 2024 20:43:14</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">January 4, 2025 00:59:59</span>
   </span>
 
     

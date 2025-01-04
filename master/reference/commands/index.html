@@ -1892,16 +1892,19 @@ while wrapping the function its decorating.</p>
 
 
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
   </span>
 
 <a href="#niobot.commands.Command.autodetect_args" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">autodetect_args</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.commands.Argument" href="#niobot.commands.Argument">Argument</a></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">autodetect_args</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.List" href="https://docs.python.org/3/library/typing.html#typing.List">List</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="niobot.commands.Argument" href="#niobot.commands.Argument">Argument</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Attempts to auto-detect the arguments for the command, based on the callback's signature</p>
+        <p>Attempts to automatically detect arguments, their types, and their default values for the command,
+based on the function signature.</p>
+<p>This is usually quite reliable, however, also quite inflexible. If you need more control over the arguments,
+consider manually passing them to the Command constructor.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1945,11 +1948,44 @@ while wrapping the function its decorating.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a>[<a class="autorefs autorefs-internal" title="niobot.commands.Argument" href="#niobot.commands.Argument">Argument</a>]</code>
+                  <code><a class="autorefs autorefs-external" title="typing.List" href="https://docs.python.org/3/library/typing.html#typing.List">List</a>[<a class="autorefs autorefs-internal" title="niobot.commands.Argument" href="#niobot.commands.Argument">Argument</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
                 <p>A list of arguments. <code>self</code>, and <code>ctx</code> are skipped.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>TypeError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If the parameter kind is not supported, or there was another issue with introspection.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If there are multiple greedy arguments in the command.</p>
               </div>
             </td>
           </tr>
