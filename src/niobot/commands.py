@@ -112,15 +112,9 @@ class Argument:
 
                 # not a basic type (such as int, str, etc.) - ensure it subclasses Parser.
                 if not issubclass(type(self.parser), Parser):
-                    # raise TypeError(
-                    #     "parser must be a subclass of niobot.utils.Parser, or a builtin type (e.g. str, int, etc.)"
-                    # )
-                    warnings.warn(
-                        DeprecationWarning(
-                            "custom parsers must be a subclass of niobot.utils.Parser. The old parsing methods have"
-                            " been deprecated in favour of uniform ABC-inherited parsers. This will be an error after"
-                            " v1.2.0",
-                        ),
+                    raise TypeError(
+                        "parser must be a subclass of niobot.utils.Parser, or a builtin type (e.g. str, int, etc.),"
+                        "got %r" % self.parser
                     )
 
         if raw_type == inspect.Parameter.KEYWORD_ONLY and self.type is not str:
@@ -297,7 +291,7 @@ class Command:
 
         for index, parameter in enumerate(inspect.signature(callback).parameters.values()):
             if detected_arguments and detected_arguments[-1].greedy:
-                raise ValueError("Cannot have multiple greedy arguments in a command.")
+                raise ValueError("Cannot have arguments after a greedy argument.")
             if index == 0 and parameter.name == "self":
                 log.debug("Skipping 'self' parameter at position %d", index)
                 continue
@@ -309,9 +303,7 @@ class Command:
                 raise TypeError(f"Unknown parameter kind {parameter.kind} is unsupported.")
 
             argument_type: typing.Type
-            default_greedy = (
-                    parameter.default is inspect.Parameter.empty and parameter.kind == inspect.Parameter.KEYWORD_ONLY
-            )
+            default_greedy = parameter.kind == inspect.Parameter.KEYWORD_ONLY
             if parameter.annotation is inspect.Parameter.empty:
                 log.warning("No type annotation for parameter %r, assuming str", parameter)
                 argument_type = str
