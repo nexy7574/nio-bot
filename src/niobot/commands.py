@@ -235,16 +235,18 @@ class Command:
         self.greedy = greedy
 
     @staticmethod
-    def _get_annotation_type(parameter: inspect.Parameter) -> typing.Type:
+    def _get_annotation_type(parameter: inspect.Parameter) -> typing.Tuple[typing.Type, bool]:
         log = logging.getLogger(__name__).getChild("get_annotation_type")
         annotation_origin = typing.get_origin(parameter.annotation)
         annotation_args = typing.get_args(parameter.annotation)
+        greedy = False
 
         if annotation_origin is list:  # typing.List[xyz]
             if len(annotation_args) != 1:
                 raise TypeError("List types must have exactly one argument.")
             log.debug("Resolved %r to list type %r", parameter.annotation, annotation_args[0])
             argument_type = annotation_args[0]
+            greedy = True
         elif annotation_origin is typing.Union:  # typing.Union[a, b] or typing.Optional[a]
             if len(annotation_args) == 2 and annotation_args[1] is type(None):
                 log.debug("Resolved Union[...] (%r) to optional type %r", parameter.annotation, annotation_args[0])
@@ -272,7 +274,7 @@ class Command:
                 )
             argument_type = parameter.annotation
 
-        return argument_type
+        return argument_type, greedy
 
     @classmethod
     def autodetect_args(cls, callback) -> typing.List[Argument]:
@@ -307,12 +309,14 @@ class Command:
                 raise TypeError(f"Unknown parameter kind {parameter.kind} is unsupported.")
 
             argument_type: typing.Type
+            default_greedy = (
+                    parameter.default is inspect.Parameter.empty and parameter.kind == inspect.Parameter.KEYWORD_ONLY
+            )
             if parameter.annotation is inspect.Parameter.empty:
                 log.warning("No type annotation for parameter %r, assuming str", parameter)
                 argument_type = str
-
             else:
-                argument_type = cls._get_annotation_type(parameter)
+                argument_type, default_greedy = cls._get_annotation_type(parameter)
 
             argument = Argument(
                 name=parameter.name,
@@ -320,7 +324,7 @@ class Command:
                 default=parameter.default,
                 required=parameter.default is inspect.Parameter.empty,
                 raw_type=parameter.kind,
-                greedy=parameter.kind == inspect.Parameter.KEYWORD_ONLY
+                greedy=default_greedy
             )
             detected_arguments.append(argument)
 
