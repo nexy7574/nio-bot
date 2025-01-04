@@ -1540,6 +1540,9 @@ class NioBot(AsyncClient):
             # THIS IS NOT THREAD SAFE
             # hell it probably isn't even async safe.
             rooms = await self.list_direct_rooms()
+            if not isinstance(rooms, nio.DirectRoomsResponse):
+                self.log.warning("Failed to get DM rooms. Account data may be out of sync.")
+                return r
             # NOW it's fine
             cpy = rooms.rooms.copy()
 
