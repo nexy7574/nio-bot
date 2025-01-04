@@ -8,7 +8,47 @@
 
     However, if you encounter an issue with these changes, you should open an issue on GitHub so that we can release them sooner!
 
+!!! danger "Potentially breaking changes since the last release"
+    The following changes may be potentially breaking if you use some lower-level features of the library:
+
+    * Attachments have been massively reworked, please check your code to see if there are any intellisense errors, or if you are using any of the removed methods.
+    * Argument detection has been massively reworked - while it should be a massive improvement, please check to make sure your arguments are still parsed as expected.
+
 * Added the sync filter "lazy load members" - should hopefully improve performance in large rooms.
+* Removed temporary lock on `niobot.NioBot.process_message`, which should allow parallel command execution again.
+* Removed faulty fallback reply parser, it is no-longer needed. Clients should not be sending fallback replies anymore.
+* Overhauled argument parsing
+  * `*args` no longer works - please use `list[str]` (`typing.List[str]` on python 3.9) instead.
+  * Arguments are no-longer given `None` (I am not sure what even caused this, but it's fixed now)
+  * Greedy arguments are now correctly greedy.
+  * Extra arguments passed to commands once again correctly raise an error.
+  * Added support for `list[TYPE]`
+* Added python 3.13 to the CI matrix
+* Updated the pre-commit hooks (they were ANCIENT)
+* Set `__license__` in `__init__.py` to `LGPLv3` (it was previously still `GPLv3`)
+* Completely overhauled how attachments are handled
+  * the monolithic `niobot.attachments` module has been split into its own package
+  * `detect_mime_type` no-longer requires `magic` to be installed (but still REALLY prefers it, and will be noisy if it's not)
+  * `niobot.AudioAttachment` is now located in `niobot/attachments/audio.py`
+  * `niobot.VideoAttachment` is now located in `niobot/attachments/video.py`
+  * `niobot.ImageAttachment` is now located in `niobot/attachments/image.py`
+  * `niobot.FileAttachment` is now located in `niobot/attachments/file.py`
+  * The extensible `niobot.BaseAttachment` is now located in `niobot/attachments/base.py`
+* Added task names to the asyncio background tasks for commands dispatched by the bot using the format:
+`COMMAND_{event.sender}_{room.room_id}_{command.name}_{monotonic_nanoseconds}`. This allows you to see what tasks are
+running by calling `asyncio.all_tasks()`, and means you can precisely cancel running commands.
+* Fixed [niobot.NioBot.add_event_listener][] not accepting `nio.Event` types, again.
+* Fixed [niobot.NioBot.remove_event_listener][] not accepting `nio.Event` types.
+* Added [niobot.NioBot.wait_for_event][], a generic evolution of [niobot.NioBot.wait_for_message][].
+* Removed `niobot.NioBot._recursively_upload_attachments`, attachments should now properly be uploaded by the
+`send_message` function.
+* Remove the archaic deprecated behaviour that permitted non-[niobot.Parser][] objects to be used as parsers in commands.
+* As mentioned above, overhauled argument parsing, in the process making [niobot.Argument.autodetect_args][]
+less complex and more reliable.
+* Fixed `repr(ContextualResponse)` raising an AttributeError
+* Fixed [niobot.ContextualResponse][] being broken after [niobot.ContextualResponse.edit][] was called.
+* Added `NIOBOT_DEPRECATION_ERROR` environment variable, which when set, causes deprecation warnings to become
+errors instead. Intended for CI testing, but useful for local development too.
 
 ## v1.2.0
 
