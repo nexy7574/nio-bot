@@ -2,6 +2,7 @@ import functools
 import inspect
 import logging
 import os
+import types
 import typing
 import warnings
 from collections.abc import Callable
@@ -111,7 +112,7 @@ class Argument:
                 from .utils import Parser
 
                 # not a basic type (such as int, str, etc.) - ensure it subclasses Parser.
-                if not issubclass(type(self.parser), Parser):
+                if not issubclass(type(self.parser), Parser) and not isinstance(self.parser, types.LambdaType):
                     raise TypeError(
                         "parser must be a subclass of niobot.utils.Parser, or a builtin type (e.g. str, int, etc.),"
                         "got %r" % self.parser
@@ -316,7 +317,7 @@ class Command:
                 default=parameter.default,
                 required=parameter.default is inspect.Parameter.empty,
                 raw_type=parameter.kind,
-                greedy=default_greedy
+                greedy=default_greedy,
             )
             detected_arguments.append(argument)
 
