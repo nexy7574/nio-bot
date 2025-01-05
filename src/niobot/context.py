@@ -11,10 +11,8 @@ from .utils.lib import deprecated
 from .utils.string_view import ArgumentView
 
 if typing.TYPE_CHECKING:
-    from .attachment import BaseAttachment
     from .client import NioBot
     from .commands import Command
-    from .utils.mentions import Mentions
 
 
 __all__ = ("Context", "ContextualResponse")
@@ -36,7 +34,7 @@ class ContextualResponse:
         return f"<ContextualResponse ctx={self.ctx!r} response={self._response!r}>"
 
     @property
-    @deprecated("original_event")
+    @deprecated("original_event", "1.3.0")
     def message(self) -> typing.Optional[nio.RoomMessage]:
         result = self.ctx.client.get_cached_message(self._response.event_id)
         if result:
@@ -52,54 +50,25 @@ class ContextualResponse:
         if isinstance(event, nio.RoomGetEventResponse):
             return nio.RoomMessage.parse_event(event.event.source)
 
-    async def reply(
-        self,
-        content: typing.Optional[str] = None,
-        file: typing.Optional[BaseAttachment] = None,
-        message_type: typing.Optional[str] = None,
-        *,
-        content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
-        override: typing.Optional[dict] = None,
-    ) -> ContextualResponse:
+    async def reply(self, *args, **kwargs) -> ContextualResponse:
         """Replies to the current response.
 
         This does NOT reply to the original invoking message.
 
-        See [niobot.NioBot.send_message][] for more information.
+        See [niobot.NioBot.send_message][] for more information. You do not need to provide the room.
         """
+        kwargs.setdefault("reply_to", self._response)
         return ContextualResponse(
             self.ctx,
-            await self.ctx.client.send_message(
-                self.ctx.room,
-                content,
-                file,
-                message_type=message_type,
-                content_type=content_type,
-                reply_to=self._response.event_id,
-                override=override,
-            ),
+            await self.ctx.client.send_message(self.ctx.room, *args, **kwargs),
         )
 
-    async def edit(
-        self,
-        content: str,
-        *,
-        message_type: typing.Optional[str] = None,
-        content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
-        override: typing.Optional[dict] = None,
-    ) -> typing_extensions.Self:
+    async def edit(self, *args, **kwargs) -> typing_extensions.Self:
         """Edits the current response.
 
-        See [niobot.NioBot.edit_message][] for more information.
+        See [niobot.NioBot.edit_message][] for more information. You do not need to provide the room or event_id.
         """
-        self._response = await self.ctx.client.edit_message(
-            self.ctx.room,
-            self._response.event_id,
-            content,
-            message_type=message_type,
-            content_type=content_type,
-            override=override,
-        )
+        self._response = await self.ctx.client.edit_message(self.ctx.room, self._response.event_id, *args, **kwargs)
         return self
 
     async def delete(self, reason: typing.Optional[str] = None) -> None:
@@ -190,29 +159,11 @@ class Context:
         """Returns the current event's latency in milliseconds."""
         return self.client.latency(self.event, received_at=self._init_ts)
 
-    async def respond(
-        self,
-        content: typing.Optional[str] = None,
-        file: typing.Optional[BaseAttachment] = None,
-        reply_to: typing.Optional[typing.Union[nio.RoomMessageText, str]] = None,
-        message_type: typing.Optional[str] = None,
-        *,
-        content_type: typing.Literal["plain", "markdown", "html", "html.raw"] = "markdown",
-        override: typing.Optional[dict] = None,
-        mentions: typing.Union[Mentions, typing.Literal[False], None] = None,
-    ) -> ContextualResponse:
+    async def respond(self, *args, **kwargs) -> ContextualResponse:
         """Responds to the current event.
 
         See [niobot.NioBot.send_message][] for more information.
         """
-        result = await self.client.send_message(
-            self.room,
-            content,
-            file,
-            reply_to=reply_to or self.event,
-            message_type=message_type,
-            content_type=content_type,
-            override=override,
-            mentions=mentions,
-        )
+        kwargs.setdefault("reply_to", self.event)
+        result = await self.client.send_message(self.room, *args, **kwargs)
         return ContextualResponse(self, result)
