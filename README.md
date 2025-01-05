@@ -51,7 +51,7 @@ Some features include, but are not limited to:
 * Very customisable monolithic client instance
 * A simple, easy-to-use CLI tool for some on-the-go tasks
 * Full attachment support (File, Image, Audio, Video), with encryption support
-* [In-depth, simple, clean documentation](https://docs.nio-bot.dev)
+* [In-depth, simple, clean documentation](https://docs.nio-bot.dev/stable)
 
 ## Help
 
@@ -102,7 +102,7 @@ client.run(access_token="...")
 ### Using the CLI to get an access token
 
 If you install the cli extras, you can use `niocli` to get an access token
-from a username and password (read [this](https://docs.nio-bot.dev/guides/001-getting-started/#why-is-logging-in-with-a-password-so-bad) for why you'd want to use an access token):
+from a username and password (read [this](https://docs.nio-bot.dev/stable/guides/001-getting-started/#why-is-logging-in-with-a-password-so-bad) for why you'd want to use an access token):
 
 ```bash
 niocli get-access-token -U '@example1:example.org' -D 'my-device-name'
