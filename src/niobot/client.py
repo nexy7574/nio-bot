@@ -1489,10 +1489,13 @@ class NioBot(AsyncClient):
         if room_id:
             path = ["user", self.user_id, "rooms", room_id, "account_data", key]
         method, path = "GET", Api._build_path(path)
-        async with self.send(method, path) as response:
-            if response.status != 200:
-                return None
-            return await response.json()
+        headers = {
+            "Authorization": "Bearer %s" % self.access_token,
+        }
+        response = await self.send(method, path, headers=headers)
+        if response.status != 200:
+            return None
+        return await response.json()
 
     async def set_account_data(self, key: str, data: dict, *, room_id: str = None) -> None:
         """Sets account data for the currently logged in account
@@ -1505,10 +1508,14 @@ class NioBot(AsyncClient):
         if room_id:
             path = ["user", self.user_id, "rooms", room_id, "account_data", key]
         method, path = "PUT", Api._build_path(path)
-        async with self.send(method, path, data, {"Content-Type": "application/json"}) as response:
-            if response.status != 200:
-                return None
-            return await response.json()
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer %s" % self.access_token,
+        }
+        response = await self.send(method, path, data, headers=headers)
+        if response.status != 200:
+            return None
+        return await response.json()
 
     async def join(self, room_id: str, reason: str = None, is_dm: bool = False) -> U[JoinResponse, JoinError]:
         """Joins a room. room_id must be a room ID, not alias

@@ -355,7 +355,7 @@ class Command:
         return " ".join(usage)
 
     async def can_run(self, ctx: Context) -> bool:
-        """Checks if the current user passes all of the checks on the command.
+        """Checks if the current user passes all the checks on the command.
 
         If the user fails a check, CheckFailure is raised.
         Otherwise, True is returned.
