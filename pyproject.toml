@@ -62,7 +62,7 @@ dev = [
     'pytest-asyncio',
     'pytest-benchmark',
     'pytest-dependency',
-    'ruff>=0.8',
+    'ruff~=0.9',
     'mike',
     'pre-commit'
 ]
