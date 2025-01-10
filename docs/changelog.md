@@ -53,6 +53,7 @@ errors instead. Intended for CI testing, but useful for local development too.
   ([#40](https://github.com/nexy7574/nio-bot/issues/40))
 * Added `process_message_edits` argument to [niobot.NioBot][], enabled by default, which will treat edited messages as
   new messages when checking for commands (meaning editing a message to invoke a command will invoke that command).
+* Added [niobot.SimpleNioBot][] as a simplified version of [niobot.NioBot][].
 
 ## v1.2.0
 

@@ -67,7 +67,7 @@ from nio import (
     RoomLeaveResponse,
 )
 
-__all__ = ("NioBot",)
+__all__ = ("NioBot", "SimpleNioBot")
 
 T = typing.TypeVar("T")
 
@@ -1579,3 +1579,39 @@ class NioBot(AsyncClient):
                 # Update the DM list
                 self.log.debug("Account data response: %r", await self.set_account_data("m.direct", cpy))
         return r
+
+
+class SimpleNioBot(NioBot):
+    """
+    A subclass of [NioBot][] that provides a simpler interface to NioBot.
+
+    This class is meant to be a bridge between simplicity and customisability.
+    """
+
+    def __init__(
+        self,
+        homeserver: str,
+        user_id: str,
+        device_id: str = "nio-bot",
+        store_path: typing.Optional[str] = None,
+        *,
+        command_prefix: typing.Union[str, re.Pattern, typing.Callable[[str], bool]] = "!",
+        owner_id: typing.Optional[str] = None,
+    ):
+        super().__init__(
+            homeserver,
+            user_id,
+            device_id,
+            store_path,
+            command_prefix=command_prefix,
+            case_insensitive=True,
+            owner_id=owner_id,
+            global_message_type="m.notice",
+            ignore_self=True,
+            ignore_old_events=True,
+            default_parse_mentions=True,
+            use_fallback_replies=False,
+            force_initial_sync=False,
+            process_message_edits=True,
+            onsite_state_resolution=False,
+        )
