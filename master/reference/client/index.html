@@ -971,6 +971,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#niobot.client.SimpleNioBot" class="md-nav__link">
+    <span class="md-ellipsis">
+      SimpleNioBot
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1683,6 +1692,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#niobot.client.SimpleNioBot" class="md-nav__link">
+    <span class="md-ellipsis">
+      SimpleNioBot
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2059,6 +2077,38 @@ if you are missing aforementioned data that you need.</p>
             </td>
             <td>
                   <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>onsite_state_resolution</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to resolve state changes on-site. This is slower but more accurate.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>process_message_edits</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to process message edits as new messages and re-invoke any applicable commands. This behaves similar to maubot and is enabled by default. Disable if you don't want message edits to [re-]trigger commands.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
             </td>
           </tr>
       </tbody>
@@ -4740,6 +4790,51 @@ This should be the last function to be called in your script, as once it exits, 
     </div>
 
 </div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="niobot.client.SimpleNioBot" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">SimpleNioBot</span>
+
+
+<a href="#niobot.client.SimpleNioBot" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="niobot.client.NioBot" href="#niobot.client.NioBot">NioBot</a></code></p>
+
+
+        <p>A subclass of [NioBot][] that provides a simpler interface to NioBot.</p>
+<p>This class is meant to be a bridge between simplicity and customisability.</p>
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
 
 
 
