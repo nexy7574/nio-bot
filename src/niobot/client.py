@@ -1512,7 +1512,7 @@ class NioBot(AsyncClient):
             "Content-Type": "application/json",
             "Authorization": "Bearer %s" % self.access_token,
         }
-        response = await self.send(method, path, data, headers=headers)
+        response = await self.send(method, path, Api.to_json(data), headers=headers)
         if response.status != 200:
             return None
         return await response.json()
