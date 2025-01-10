@@ -109,6 +109,10 @@ class NioBot(AsyncClient):
     :param force_initial_sync: Forcefully perform a full initial sync at startup.
     :param use_fallback_replies: Whether to force the usage of deprecated fallback replies. Not recommended outside
     of compatibility reasons.
+    :param onsite_state_resolution: Whether to resolve state changes on-site. This is slower but more accurate.
+    :param process_message_edits: Whether to process message edits as new messages and re-invoke any applicable
+    commands. This behaves similar to maubot and is enabled by default. Disable if you don't want message edits to
+    [re-]trigger commands.
     """
 
     # Long typing definitions out here instead of in __init__ to just keep it cleaner.
@@ -146,6 +150,7 @@ class NioBot(AsyncClient):
         force_initial_sync: bool = False,
         use_fallback_replies: bool = False,
         onsite_state_resolution: bool = False,
+        process_message_edits: bool = True,
     ):
         if user_id == owner_id and ignore_self is True:
             warnings.warn(
@@ -190,6 +195,7 @@ class NioBot(AsyncClient):
         self.case_insensitive = case_insensitive
         self.owner_id = owner_id
         self.ignore_self = ignore_self
+        self.process_edits = process_message_edits
 
         if not isinstance(command_prefix, (str, re.Pattern)):
             try:
@@ -458,10 +464,14 @@ class NioBot(AsyncClient):
             self.log.debug(f"Ignoring message sent {age:.0f} seconds before startup.")
             return
 
+        body = event.body
+        if self.process_edits and event.flattened().get("content.m.new_content"):
+            body = event.flattened()["content.m.new_content"].get("body", event.body)
+
         if self.case_insensitive:
-            content = event.body.casefold()
+            content = body.casefold()
         else:
-            content = event.body
+            content = body
 
         def get_prefix(c: str) -> typing.Union[str, None]:
             if isinstance(self.command_prefix, re.Pattern):

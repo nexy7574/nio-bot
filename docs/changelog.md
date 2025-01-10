@@ -49,6 +49,10 @@ less complex and more reliable.
 * Fixed [niobot.ContextualResponse][] being broken after [niobot.ContextualResponse.edit][] was called.
 * Added `NIOBOT_DEPRECATION_ERROR` environment variable, which when set, causes deprecation warnings to become
 errors instead. Intended for CI testing, but useful for local development too.
+* Fixed [niobot.NioBot.get_account_data][] and [niobot.NioBot.set_account_data][] not working
+  ([#40](https://github.com/nexy7574/nio-bot/issues/40))
+* Added `process_message_edits` argument to [niobot.NioBot][], enabled by default, which will treat edited messages as
+  new messages when checking for commands (meaning editing a message to invoke a command will invoke that command).
 
 ## v1.2.0
 
@@ -296,4 +300,3 @@ The first stable release! This version has many breaking changes since v0.1.0, a
 You've reached the end! There are no previously documented releases before the big 1.0.0.
 If you want to expand this list, you can contribute on GitHub! Open issues, or even better, make some pull requests.
 We love new contributors!
-
