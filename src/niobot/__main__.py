@@ -109,7 +109,7 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
     else:
         click.secho("OK", fg="green")
         if output != "-":
-            click.secho(f'Access token: {response.json()["access_token"]}', fg="green")
+            click.secho(f"Access token: {response.json()['access_token']}", fg="green")
             with click.open_file(output, "w+") as f:
                 f.write(response.json()["access_token"])
         else:
