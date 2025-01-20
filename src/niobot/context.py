@@ -68,7 +68,7 @@ class ContextualResponse:
 
         See [niobot.NioBot.edit_message][] for more information. You do not need to provide the room or event_id.
         """
-        self._response = await self.ctx.client.edit_message(self.ctx.room, self._response.event_id, *args, **kwargs)
+        await self.ctx.client.edit_message(self.ctx.room, self._response.event_id, *args, **kwargs)
         return self
 
     async def delete(self, reason: typing.Optional[str] = None) -> None:
