@@ -125,7 +125,7 @@ class ImageAttachment(BaseAttachment):
             log.warning("Width or Height (%r, %r) is None, this may break the display on some clients.", height, width)
         if thumbnail is False:
             thumbnail = None
-            gen_thumbnail = True
+            gen_thumbnail = False
         else:
             thumbnail: ImageAttachment | None
             gen_thumbnail = thumbnail is None
