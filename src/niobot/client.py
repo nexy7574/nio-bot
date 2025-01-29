@@ -1387,7 +1387,13 @@ class NioBot(AsyncClient):
                     self.log.error("Failed to replay sync: %r. Will not resume.", e, exc_info=e)
 
             self.log.info("Uploading sync filter...")
-            filter_response = await self.upload_filter(self.user_id, room={"lazy_load_members": True})
+            filter_response = await self.upload_filter(
+                self.user_id,
+                room={
+                    "timeline": {"lazy_load_members": True, "include_redundant_members": True},
+                    "state": {"lazy_load_members": True, "include_redundant_members": True},
+                },
+            )
 
             self.log.info("Performing first sync...")
 
