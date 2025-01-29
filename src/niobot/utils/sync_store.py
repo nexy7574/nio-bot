@@ -345,13 +345,22 @@ class SyncStore:
                     self.log.debug("State event %r replaced state event %r.", new_event["event_id"], replaces_state)
                     existing_state.remove(event)
                     break
-                elif event.get("event_id", None) == new_event.get("event_id", None):
+                elif event.get("event_id", None) == new_event["event_id"]:
                     self.log.error(
                         "Duplicate state event %r found in room %r. Not appending to store.",
                         new_event["event_id"],
-                        replaces_state,
+                        room_id,
                     )
                     return
+                elif event.get("content", os.urandom(16)) == new_event.get("content", os.urandom(16)):
+                    self.log.warning(
+                        "State event %r has the same content as another state event in room %r. "
+                        "Possibly a duplicate. Not appending to store.",
+                        new_event["event_id"],
+                        room_id,
+                    )
+                    return
+
             else:
                 self.log.warning(
                     "Got a state event (%r) that is meant to replace another one (%r), however we do not have"
