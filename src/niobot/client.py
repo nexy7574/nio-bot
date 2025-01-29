@@ -148,7 +148,6 @@ class NioBot(AsyncClient):
         sync_full_state: bool = True,
         default_parse_mentions: bool = True,
         force_initial_sync: bool = False,
-        use_fallback_replies: bool = False,
         onsite_state_resolution: bool = False,
         process_message_edits: bool = True,
     ):
@@ -259,7 +258,6 @@ class NioBot(AsyncClient):
         self.ignore_old_events = ignore_old_events
         self.auto_join_rooms = auto_join_rooms
         self.auto_read_messages = auto_read_messages
-        self.use_fallback_replies = use_fallback_replies
 
         self.add_event_callback(self.process_message, nio.RoomMessage)  # type: ignore
         self.direct_rooms: dict[str, nio.MatrixRoom] = {}
@@ -950,29 +948,6 @@ class NioBot(AsyncClient):
             return obj
         raise ValueError("Unable to determine ID of object: %r" % obj)
 
-    @deprecated(None)
-    def generate_mx_reply(self, room: nio.MatrixRoom, event: nio.RoomMessageText) -> str:
-        """Fallback replies have been removed by MSC2781. Do not use this anymore."""
-        if not self.use_fallback_replies:
-            return ""
-        return (
-            "<mx-reply>"
-            "<blockquote>"
-            '<a href="{reply_url}">{reply}</a> '
-            '<a href="{user_url}">{user}</a><br/>'
-            "</blockquote>"
-            "</mx-reply>".format(
-                reply_url="https://matrix.to/#/{}:{}/{}".format(
-                    room.room_id,
-                    room.machine_name.split(":")[1],
-                    event.event_id,
-                ),
-                reply=event.body,
-                user_url=f"https://matrix.to/#/{event.sender}",
-                user=event.sender,
-            )
-        )
-
     @typing.overload
     async def get_dm_rooms(self) -> typing.Dict[str, typing.List[str]]:
         """Gets all DM rooms stored in account data.
@@ -1610,7 +1585,6 @@ class SimpleNioBot(NioBot):
             ignore_self=True,
             ignore_old_events=True,
             default_parse_mentions=True,
-            use_fallback_replies=False,
             force_initial_sync=False,
             process_message_edits=True,
             onsite_state_resolution=False,
