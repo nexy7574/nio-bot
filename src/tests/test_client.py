@@ -61,6 +61,6 @@ def test_client_init(
             expected_attrs = kwargs
         client = niobot.NioBot(**kwargs)
         for expected_attr_name, expected_attr_value in expected_attrs.items():
-            assert (
-                getattr(client, expected_attr_name) == expected_attr_value
-            ), f"Attribute {expected_attr_name} is not {expected_attr_value}"
+            assert getattr(client, expected_attr_name) == expected_attr_value, (
+                f"Attribute {expected_attr_name} is not {expected_attr_value}"
+            )
