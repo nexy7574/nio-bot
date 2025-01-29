@@ -345,6 +345,13 @@ class SyncStore:
                     self.log.debug("State event %r replaced state event %r.", new_event["event_id"], replaces_state)
                     existing_state.remove(event)
                     break
+                elif event.get("event_id", None) == new_event.get("event_id", None):
+                    self.log.error(
+                        "Duplicate state event %r found in room %r. Not appending to store.",
+                        new_event["event_id"],
+                        replaces_state,
+                    )
+                    return
             else:
                 self.log.warning(
                     "Got a state event (%r) that is meant to replace another one (%r), however we do not have"
