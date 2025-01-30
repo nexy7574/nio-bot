@@ -341,7 +341,7 @@ class SyncStore:
                     existing_state.remove(event)
                     break
                 elif event.get("event_id", None) == new_event["event_id"]:
-                    self.log.error(
+                    self.log.debug(
                         "Duplicate state event %r found in room %r. Not appending to store.",
                         new_event["event_id"],
                         room_id,
