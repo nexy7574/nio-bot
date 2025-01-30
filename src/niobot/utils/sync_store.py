@@ -536,13 +536,13 @@ class SyncStore:
 
         async with self._db.execute('SELECT room_id, state FROM "rooms.invite"') as cursor:
             async for row in cursor:
-                self.log.debug("Loading state for invited room %r", row["room_id"])
+                log.debug("Loading state for invited room %r", row["room_id"])
                 payload["rooms"]["invite"][row["room_id"]] = {"invite_state": {"events": json.loads(row["state"])}}
                 log.debug("Added room %r to `rooms.invite`", row["room_id"])
 
         async with self._db.execute('SELECT * FROM "rooms.leave"') as cursor:
             async for row in cursor:
-                self.log.debug("Loading state for left room %r", row["room_id"])
+                log.debug("Loading state for left room %r", row["room_id"])
                 payload["rooms"]["leave"][row["room_id"]] = {
                     "timeline": {"events": json.loads(row["timeline"])},
                     "state": {"events": json.loads(row["state"])},
