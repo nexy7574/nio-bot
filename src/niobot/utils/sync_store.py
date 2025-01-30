@@ -319,11 +319,6 @@ class SyncStore:
                 new_event = new_event.source["source"]
             except KeyError:
                 new_event = new_event.source
-                self.log.warning(
-                    "Event %r does not have a source key, falling back to the event itself. This may result in "
-                    "an invalid replay.",
-                    new_event,
-                )
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
@@ -403,11 +398,6 @@ class SyncStore:
                 new_event = new_event.source["source"]
             except KeyError:
                 new_event = new_event.source
-                self.log.warning(
-                    "Event %r does not have a source key, falling back to the event itself. This may result in "
-                    "an invalid replay.",
-                    new_event,
-                )
         # Just do some basic validation first
         for key in ("type", "event_id", "sender"):
             if key not in new_event:
@@ -426,6 +416,8 @@ class SyncStore:
                 dumped_timeline = dumped_timeline[:512] + "..."
             self.log.debug("Appending event %r to timeline %r.", new_event, dumped_timeline)
         existing_timeline.append(new_event)
+        if len(existing_timeline) > 10:
+            existing_timeline = existing_timeline[-10:]
         self.log.debug("Room %r now has %d timeline events.", room_id, len(existing_timeline))
         await self._db.execute(
             f'UPDATE "{table}" SET timeline=? WHERE room_id=?',
