@@ -126,6 +126,20 @@ class SyncStore:
                 (),
             ),
         ],
+        [
+            (
+                """
+                CREATE INDEX IF NOT EXISTS "idx_rooms_invite_room_id" ON "rooms.invite" (room_id)
+                """,
+                (),
+            ),
+            (
+                """
+                CREATE INDEX IF NOT EXISTS "idx_rooms_join_room_id" ON "rooms.join" (room_id)
+                """,
+                (),
+            ),
+        ],
     ]
     log = logging.getLogger(__name__)
 
