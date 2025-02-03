@@ -5,5 +5,5 @@ blurhash-python~=1.2
 pillow>=9.3.0
 beautifulsoup4~=4.13
 pydantic~=2.10
-aiosqlite~=0.20
+aiosqlite~=0.21
 orjson~=3.10
