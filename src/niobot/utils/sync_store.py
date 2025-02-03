@@ -285,20 +285,21 @@ class SyncStore:
                     await self.insert_timeline_event(room_id, Membership.JOIN, event)
         self.log.debug("Processed join in %r.", room_id)
 
-    async def process_leave(self, room_id: str, info: nio.RoomInfo) -> None:
+    async def process_leave(self, room_id: str, _: nio.RoomInfo) -> None:
         """Processes a room leave"""
         await self._init_db()
         await self._pop_from(room_id, "invite", "knock", "join")
-        self.log.debug("Processing leave room %r.", room_id)
-        await self._db.execute(
-            "INSERT OR IGNORE INTO 'rooms.leave' (room_id, account_data, state, timeline) VALUES (?, ?, ?, ?)",
-            (
-                room_id,
-                await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
-                await self.adumps([dataclasses.asdict(x)["source"] for x in info.state]),
-                await self.adumps([dataclasses.asdict(x)["source"] for x in info.timeline.events]),
-            ),
-        )
+        self.log.debug("Processed leave room %r.", room_id)
+        # Room leaves are no longer stored
+        # await self._db.execute(
+        #     "INSERT OR IGNORE INTO 'rooms.leave' (room_id, account_data, state, timeline) VALUES (?, ?, ?, ?)",
+        #     (
+        #         room_id,
+        #         await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
+        #         await self.adumps([dataclasses.asdict(x)["source"] for x in info.state]),
+        #         await self.adumps([dataclasses.asdict(x)["source"] for x in info.timeline.events]),
+        #     ),
+        # )
 
     async def get_state_for(self, room_id: str, membership: Membership) -> typing.List[typing.Dict]:
         """Fetches the stored state for a specific room."""
@@ -368,7 +369,9 @@ class SyncStore:
                         new_event["event_id"],
                         room_id,
                     )
-                    return
+                    # Replace the old event with the new one
+                    existing_state.remove(event)
+                    break
 
             else:
                 self.log.warning(
