@@ -354,6 +354,20 @@ class Command:
                 usage.append(opt.format(arg.name))
         return " ".join(usage)
 
+    @staticmethod
+    async def run_check(function, name: str, context: Context) -> typing.Literal[True]:
+        from .utils import force_await
+
+        try:
+            cr = await force_await(function, context)
+        except CheckFailure:
+            raise  # re-raise existing check failures
+        except Exception as e:
+            raise CheckFailure(name, exception=e) from e
+        if not cr:
+            raise CheckFailure(name)
+        return True
+
     async def can_run(self, ctx: Context) -> bool:
         """Checks if the current user passes all the checks on the command.
 
@@ -362,19 +376,11 @@ class Command:
         """
         if self.disabled:
             raise CommandDisabledError(self)
-        from .utils import force_await
 
+        await self.run_check(ctx.client.global_command_check, "global_command_check", ctx)
         if self.checks:
             for chk_func in self.checks:
-                name = self.callback.__nio_checks__[chk_func]
-                try:
-                    cr = await force_await(chk_func, ctx)
-                except CheckFailure:
-                    raise  # re-raise existing check failures
-                except Exception as e:
-                    raise CheckFailure(name, exception=e) from e
-                if not cr:
-                    raise CheckFailure(name)
+                await self.run_check(chk_func, chk_func.__name__, ctx)
         return True
 
     async def parse_args(
@@ -412,8 +418,10 @@ class Command:
             self.log.debug("Parsed argument %d (%r<%r>) to %r", next_arg, arg, value, parsed)
             if arg.greedy:
                 to_pass[arg].append(parsed)
+                self.log.debug("Not incrementing argument index due to greedy=True")
             else:
                 to_pass[arg] = parsed
+                self.log.debug("Incrementing next_arg from %d to %d", next_arg, next_arg + 1)
                 next_arg += 1
 
         for arg, value in to_pass.items():

@@ -381,6 +381,14 @@ class NioBot(AsyncClient):
         if event.state_key == self.user_id:
             await self._auto_join_room_callback(room, event)
 
+    async def global_command_check(self, ctx: "Context") -> bool:
+        """A global check that runs before every command.
+
+        This is a no-op by default, but can be overridden to provide global checks.
+        If this function returns False or raises an error, the check is considered failed, and the command will not run.
+        """
+        return True
+
     @staticmethod
     def latency(event: nio.Event, *, received_at: typing.Optional[float] = None) -> float:
         """Returns the latency for a given event in milliseconds
