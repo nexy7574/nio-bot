@@ -19,6 +19,9 @@ from .image import ImageAttachment
 log = logging.getLogger(__name__)
 
 
+__all__ = ("VideoAttachment",)
+
+
 class VideoAttachment(BaseAttachment):
     """Represents a video attachment.
 
