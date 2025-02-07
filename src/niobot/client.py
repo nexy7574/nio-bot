@@ -1390,8 +1390,8 @@ class NioBot(AsyncClient):
             filter_response = await self.upload_filter(
                 self.user_id,
                 room={
-                    "timeline": {"lazy_load_members": True, "include_redundant_members": True},
-                    "state": {"lazy_load_members": True, "include_redundant_members": True},
+                    "timeline": {"lazy_load_members": True, "include_redundant_members": True, "limit": 100},
+                    "state": {"lazy_load_members": True, "include_redundant_members": True, "limit": 100},
                 },
             )
 
