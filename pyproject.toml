@@ -61,6 +61,7 @@ dev = [
     'pytest',
     'pytest-asyncio',
     'pytest-benchmark',
+    'pytest-cov',
     'pytest-dependency',
     'ruff~=0.9',
     'mike',
