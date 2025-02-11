@@ -32,15 +32,19 @@ You may also want some extras:
 * Both: `nio-bot[cli,e2ee]`
 * Development dependencies: `nio-bot[dev]`
 
-Please note that `e2ee` uses `olm`, which depends on `libolm`. You can likely install this though your system package manager.
+Please note that `e2ee` uses `olm`, which depends on `libolm`. You can likely install this though
+your system package manager.
+To install the `dev` extra (for developing niobot itself), you will additionally need
+cmake, gcc, g++, python devel, and rustc.
 
 ## Features
 
-Nio-Bot is built on the solid client library, [matrix-nio](https://pypi.org/project/matrix-nio). This means that you get the full experience of a 
-Matrix client, with the added benefit of being able to easily create bots.
+Nio-Bot extends [matrix-nio](https://pypi.org/project/matrix-nio), sitting on top of it, and simply
+providing a unified command interface, honing the base client to be more suited to bots and other
+automated applications.
 
-Nio-Bot comes with a whole host of features to help make your development experience as easy as possible.
-Some features include, but are not limited to:
+Nio-Bot comes with a whole host of features to help make your development experience as easy as
+possible. Some features include, but are not limited to:
 
 * A powerful commands framework (Modules, aliases, checks, easy extensibility)
 * Custom argument parser support
@@ -56,7 +60,8 @@ Some features include, but are not limited to:
 ## Help
 
 You can join our [Matrix Room](https://nio-bot.dev/support) for help, or to just chat.
-You can also get the latest updates in development there, including having your say in how new things are implemented!
+You can also get the latest updates in development there, including having your say in how new
+things are implemented!
 
 ## A quick example
 
@@ -108,8 +113,10 @@ from a username and password (read [this](https://docs.nio-bot.dev/stable/guides
 niocli get-access-token -U '@example1:example.org' -D 'my-device-name'
 ```
 
-After putting in your password, an access token will be printed to the console once the login is successful.
+After putting in your password, an access token will be printed to the console once the login is
+successful.
 
 ## Further reading
 
-Look at the [docs](https://docs.nio-bot.dev) for more information on how to use Nio-Bot, or the [examples on github](https://github.com/nexy7574/niobot).
+Look at the [docs](https://docs.nio-bot.dev) for more information on how to use Nio-Bot, or the
+[examples on GitHub](https://github.com/nexy7574/niobot).
