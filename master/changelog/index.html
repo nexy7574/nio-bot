@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.4">
     
     
       
@@ -24,7 +24,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.d7758b05.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
@@ -1156,6 +1156,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../reference/utils/html_table/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Table Builder
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reference/utils/mentions/" class="md-nav__link">
         
   
@@ -1680,6 +1702,7 @@ are often not properly battle-tested.</p>
 <ul>
 <li>Attachments have been massively reworked, please check your code to see if there are any intellisense errors, or if you are using any of the removed methods.</li>
 <li>Argument detection has been massively reworked - while it should be a massive improvement, please check to make sure your arguments are still parsed as expected.</li>
+<li>Historical rooms (<code>rooms.leave</code>) are no longer stored in the sync store.</li>
 </ul>
 </div>
 <ul>
@@ -1723,6 +1746,14 @@ errors instead. Intended for CI testing, but useful for local development too.</
 <li>Added <code>process_message_edits</code> argument to <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot">niobot.NioBot</a>, enabled by default, which will treat edited messages as
   new messages when checking for commands (meaning editing a message to invoke a command will invoke that command).</li>
 <li>Added <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.SimpleNioBot">niobot.SimpleNioBot</a> as a simplified version of <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot">niobot.NioBot</a>.</li>
+<li>Fixed a bug that caused thumbnail bodies to duplicate</li>
+<li>Removed the storage of left rooms in the sync store (has DRASTICALLY sped up startup times)</li>
+<li>Duplicate events (compared via event ID and body) are no longer added to the sync store (reducing space taken)</li>
+<li>Limited the number of timeline events that are stored in the sync store</li>
+<li>Added SQL indexes for the sync store</li>
+<li>Limited the sync payload to only include 100 timeline &amp; state events per room</li>
+<li>Implemented <a class="autorefs autorefs-internal" href="../reference/client/#niobot.client.NioBot.global_command_check">niobot.NioBot.global_command_check</a> to allow for global command checks</li>
+<li>Added <a class="autorefs autorefs-internal" href="../reference/utils/html_table/#niobot.utils.html_table.HTMLTable">niobot.utils.HTMLTable</a> to help with generating tables in HTML and plaintext</li>
 </ul>
 <h2 id="v120">v1.2.0<a class="headerlink" href="#v120" title="Permanent link">&para;</a></h2>
 <p>There are a lot of changes in v1.2.0, so in this release you'll see a lot of performance improvements and some fancy new features for you to
@@ -1981,7 +2012,7 @@ We love new contributors!</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">January 10, 2025 16:37:23</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">February 19, 2025 02:39:59</span>
   </span>
 
     
