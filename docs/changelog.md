@@ -13,6 +13,7 @@
 
     * Attachments have been massively reworked, please check your code to see if there are any intellisense errors, or if you are using any of the removed methods.
     * Argument detection has been massively reworked - while it should be a massive improvement, please check to make sure your arguments are still parsed as expected.
+    * Historical rooms (`rooms.leave`) are no longer stored in the sync store.
 
 * Added the sync filter "lazy load members" - should hopefully improve performance in large rooms.
 * Removed temporary lock on `niobot.NioBot.process_message`, which should allow parallel command execution again.
@@ -54,6 +55,14 @@ errors instead. Intended for CI testing, but useful for local development too.
 * Added `process_message_edits` argument to [niobot.NioBot][], enabled by default, which will treat edited messages as
   new messages when checking for commands (meaning editing a message to invoke a command will invoke that command).
 * Added [niobot.SimpleNioBot][] as a simplified version of [niobot.NioBot][].
+* Fixed a bug that caused thumbnail bodies to duplicate
+* Removed the storage of left rooms in the sync store (has DRASTICALLY sped up startup times)
+* Duplicate events (compared via event ID and body) are no longer added to the sync store (reducing space taken)
+* Limited the number of timeline events that are stored in the sync store
+* Added SQL indexes for the sync store
+* Limited the sync payload to only include 100 timeline & state events per room
+* Implemented [niobot.NioBot.global_command_check][] to allow for global command checks
+* Added [niobot.utils.HTMLTable][] to help with generating tables in HTML and plaintext
 
 ## v1.2.0
 

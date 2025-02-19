@@ -8,3 +8,4 @@ from .string_view import *
 from .sync_store import *
 from .typing import *
 from .unblocking import *
+from .html_table import HTMLTable as HTMLTable
