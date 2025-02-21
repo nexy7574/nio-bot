@@ -290,18 +290,8 @@ class SyncStore:
         await self._init_db()
         await self._pop_from(room_id, "invite", "knock", "join")
         self.log.debug("Processed leave room %r.", room_id)
-        # Room leaves are no longer stored
-        # await self._db.execute(
-        #     "INSERT OR IGNORE INTO 'rooms.leave' (room_id, account_data, state, timeline) VALUES (?, ?, ?, ?)",
-        #     (
-        #         room_id,
-        #         await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
-        #         await self.adumps([dataclasses.asdict(x)["source"] for x in info.state]),
-        #         await self.adumps([dataclasses.asdict(x)["source"] for x in info.timeline.events]),
-        #     ),
-        # )
 
-    async def get_state_for(self, room_id: str, membership: Membership) -> typing.List[typing.Dict]:
+    async def get_state_for(self, room_id: str, membership: Membership = Membership.JOIN) -> typing.List[typing.Dict]:
         """Fetches the stored state for a specific room."""
         await self._init_db()
         state_table = f"rooms.{membership.value}"
@@ -310,6 +300,84 @@ class SyncStore:
             if result:
                 return await self.aloads(result["state"])
             return []
+
+    async def get_state_event_for(
+        self, room_id: str, event_type: str, state_key: str = None, membership: Membership = Membership.JOIN
+    ) -> typing.Dict:
+        """
+        Fetches a specific state event for a specific room.
+
+        :param room_id: The room ID to fetch state for
+        :param event_type: The type of event to fetch (e.g. `m.room.create`)
+        :param state_key: The state key of the event to fetch
+        :param membership: The membership state to fetch the event from
+        :raises ValueError: If a relevant state event cannot be found
+        """
+        await self._init_db()
+        state_table = f"rooms.{membership.value}"
+        async with self._db.execute(f'SELECT state FROM "{state_table}" WHERE room_id=?', (room_id,)) as cursor:
+            row = await cursor.fetchone()
+            if not row:
+                raise ValueError(f"No state found for room {room_id}")
+            state = await self.aloads(row["state"])
+            for event in state:
+                if event["type"] == event_type and (state_key is None or event["state_key"] == state_key):
+                    return event
+            raise ValueError(
+                f"No state event found for room {room_id} with type {event_type} and state key {state_key}"
+            )
+
+    async def fetch_state_for(self, room_id: str, membership: Membership = Membership.JOIN) -> typing.List[typing.Dict]:
+        """
+        Similar to get_state_for, however will attempt to fetch from the homeserver (and insert) if the state is not
+        found locally.
+
+        :param room_id: The room ID to fetch state for
+        :param membership: The membership state to fetch the event from
+        :raises ValueError: If a relevant state event cannot be found
+        """
+        state = await self.get_state_for(room_id, membership)
+        if state:
+            # Found locally
+            return state
+
+        state_response = await self._client.room_get_state(room_id)
+        if not isinstance(state_response, nio.RoomGetStateResponse):
+            raise ValueError(f"Failed to fetch state for room {room_id}: {state_response}")
+        for event in state_response.events:
+            await self.insert_state_event(room_id, membership, event)
+        return state_response.events
+
+    async def fetch_state_event_for(
+        self, room_id: str, event_type: str, state_key: str = None, membership: Membership = Membership.JOIN
+    ) -> typing.Dict:
+        """
+        Similar to get_state_event_for, however will attempt to fetch from the homeserver (and insert) if the state is
+        not found locally.
+
+        :param room_id: The room ID to fetch state for
+        :param event_type: The type of event to fetch (e.g. `m.room.create`)
+        :param state_key: The state key of the event to fetch
+        :param membership: The membership state to fetch the event from
+        :raises ValueError: If a relevant state event cannot be found
+        """
+        try:
+            return await self.get_state_event_for(room_id, event_type, state_key, membership)
+        except ValueError:
+            pass
+
+        method, path = (
+            "GET",
+            nio.Api._build_path(["rooms", room_id, "state", event_type, state_key], {"format": "event"}),
+        )
+        response = await self._client.send(method, path, None, {"Authorization": f"Bearer {self._client.access_token}"})
+        if response.status != 200:
+            raise ValueError(
+                f"No state event found for room {room_id} with type {event_type} and state key {state_key}"
+            )
+        body = await response.json()
+        await self.insert_state_event(room_id, membership, body)
+        return body
 
     async def insert_state_event(
         self,
@@ -470,9 +538,11 @@ class SyncStore:
         """Returns the next batch token for the given user ID (or the client's user ID)"""
         await self._init_db()
         user_id = user_id or self._client.user_id
-        async with self._db.execute("SELECT next_batch FROM meta WHERE user_id=?", (user_id,)) as cursor:
+        async with self._db.execute("SELECT user_id,next_batch FROM meta") as cursor:
             result = await cursor.fetchone()
             if result:
+                if result["user_id"] != user_id:
+                    raise ValueError(f"This sync store is for {result['user_id']}, not {user_id}")
                 self.log.debug("Next batch record for %r: %r", user_id, result["next_batch"])
                 return result["next_batch"]
             self.log.debug("No next batch stored, returning empty token.")
