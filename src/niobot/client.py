@@ -1532,7 +1532,13 @@ class NioBot(AsyncClient):
             return r
         return r
 
-    async def room_leave(self, room_id: str, reason: str = None) -> U[RoomLeaveError, RoomLeaveResponse]:
+    async def room_leave(
+        self, 
+        room_id: str,
+        reason: str = None,
+        *,
+        forget: bool = True
+    ) -> U[RoomLeaveError, RoomLeaveResponse]:
         """Leaves a room. room_id must be an ID, not alias"""
         method, path = Api.room_leave(self.access_token, room_id)
         data = {}
@@ -1540,6 +1546,9 @@ class NioBot(AsyncClient):
             data["reason"] = reason
         r = await self._send(RoomLeaveResponse, method, path, Api.to_json(data))
         if isinstance(r, RoomLeaveResponse):
+            if forget:
+                self.log.debug("Forgetting room %s", room_id)
+                await self.room_forget(room_id)
             self.log.debug("Left a room successfully. Updating account data if it was a DM room.")
             # Remove from account data
             # First, need to get the DM list.
