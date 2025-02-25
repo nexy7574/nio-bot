@@ -1347,7 +1347,7 @@ For example:</p>
 
         <p>A base model class for parsers.</p>
 <p>This ABC defines one uniform method, which is <code>__call__</code>, which takes a <a class="autorefs autorefs-internal" href="../../context/#niobot.context.Context">Context</a> instance,
-<a class="autorefs autorefs-internal" href="../../commands/#niobot.commands">Argument</a> instance, and the user-provided string value.</p>
+<a class="autorefs autorefs-internal" title="commands" href="../../commands/#niobot.commands">Argument</a> instance, and the user-provided string value.</p>
 <p>This parser is designed to be instantiated, and then called with the above arguments.
 If you want to make a simple parser that does not take additional configuration, it is recommended to use
 <a class="autorefs autorefs-internal" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a> instead.</p>
@@ -1391,14 +1391,14 @@ If you want to make a simple parser that does not take additional configuration,
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.Parser" href="#niobot.utils.parsers.Parser">Parser</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="Parser (niobot.utils.parsers.Parser)" href="#niobot.utils.parsers.Parser">Parser</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
 
 
         <p>A parser base that will not be instantiated, but rather called directly.</p>
 <p>This is useful for parsers that do not take any configuration
-(such as the simple <a class="autorefs autorefs-internal" href="#niobot.utils.parsers">BooleanParser</a>), where a
+(such as the simple <a class="autorefs autorefs-internal" title="parsers" href="#niobot.utils.parsers">BooleanParser</a>), where a
 simple one-off call is enough.</p>
-<p>Traditionally, you'd call a <a class="autorefs autorefs-internal" href="#niobot.utils.parsers">Parser</a> like this:</p>
+<p>Traditionally, you'd call a <a class="autorefs autorefs-internal" title="parsers" href="#niobot.utils.parsers">Parser</a> like this:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">Parser</span><span class="p">(</span><span class="n">my_argument</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># or, in one line</span>
@@ -1410,7 +1410,7 @@ The <code>StatelessParser</code> ABC adds the <code>parse</code> classmethod, me
 </span></code></pre></div>
 Which is just a shortand for the above one-liner.
 This offers little to no performance benefit, however can make code look cleaner.</p>
-<p>As this ABC subclasses the regular <a class="autorefs autorefs-internal" href="#niobot.utils.parsers">Parser</a>,
+<p>As this ABC subclasses the regular <a class="autorefs autorefs-internal" title="parsers" href="#niobot.utils.parsers">Parser</a>,
 you can still use the traditional instantiation+call method.</p>
 
 
@@ -1444,7 +1444,7 @@ you can still use the traditional instantiation+call method.</p>
 
 <a href="#niobot.utils.parsers.StatelessParser.parse" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">parse</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">ctx</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.context.Context" href="../../context/#niobot.context.Context">Context</a></span><span class="p">,</span> <span class="n">arg</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="niobot.commands.Argument" href="../../commands/#niobot.commands.Argument">Argument</a></span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">ctx</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Context (niobot.context.Context)" href="../../context/#niobot.context.Context">Context</a></span><span class="p">,</span> <span class="n">arg</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Argument (niobot.commands.Argument)" href="../../commands/#niobot.commands.Argument">Argument</a></span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]</span>
 </span></code></pre></div>
 
@@ -1469,7 +1469,7 @@ you can still use the traditional instantiation+call method.</p>
                 <code>ctx</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="niobot.context.Context" href="../../context/#niobot.context.Context">Context</a></code>
+                  <code><a class="autorefs autorefs-internal" title="Context (niobot.context.Context)" href="../../context/#niobot.context.Context">Context</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1485,7 +1485,7 @@ you can still use the traditional instantiation+call method.</p>
                 <code>arg</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="niobot.commands.Argument" href="../../commands/#niobot.commands.Argument">Argument</a></code>
+                  <code><a class="autorefs autorefs-internal" title="Argument (niobot.commands.Argument)" href="../../commands/#niobot.commands.Argument">Argument</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1563,7 +1563,7 @@ you can still use the traditional instantiation+call method.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.StatelessParser" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="StatelessParser (niobot.utils.parsers.StatelessParser)" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
 
 
         <p>Converts a given string into a boolean. Value is casefolded before being parsed.</p>
@@ -1635,7 +1635,7 @@ you can still use the traditional instantiation+call method.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.StatelessParser" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="StatelessParser (niobot.utils.parsers.StatelessParser)" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
 
 
         <p>Converts a given string into a floating point number.</p>
@@ -1725,7 +1725,7 @@ you can still use the traditional instantiation+call method.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.Parser" href="#niobot.utils.parsers.Parser">Parser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="Parser (niobot.utils.parsers.Parser)" href="#niobot.utils.parsers.Parser">Parser</a></code></p>
 
 
         <p>Parses an integer, or optionally a real number.</p>
@@ -1862,7 +1862,7 @@ you can still use the traditional instantiation+call method.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.StatelessParser" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="StatelessParser (niobot.utils.parsers.StatelessParser)" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
 
 
         <p>Converts a given string into a JSON object.</p>
@@ -1957,7 +1957,7 @@ While the parser will still work without it, it may be slower, especially for la
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.StatelessParser" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="StatelessParser (niobot.utils.parsers.StatelessParser)" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
 
 
         <p>Parses a room ID, alias, or matrix.to link into a MatrixRoom object.</p>
@@ -2028,7 +2028,7 @@ While the parser will still work without it, it may be slower, especially for la
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.Parser" href="#niobot.utils.parsers.Parser">Parser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="Parser (niobot.utils.parsers.Parser)" href="#niobot.utils.parsers.Parser">Parser</a></code></p>
 
 
         <p>Parses an event reference from either its ID, or matrix.to link.</p>
@@ -2126,7 +2126,7 @@ While the parser will still work without it, it may be slower, especially for la
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.Parser" href="#niobot.utils.parsers.Parser">Parser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="Parser (niobot.utils.parsers.Parser)" href="#niobot.utils.parsers.Parser">Parser</a></code></p>
 
 
         <p>Converts a matrix.to link into a MatrixRoomLink namedtuple, which consists of the room, event, and any query
@@ -2289,7 +2289,7 @@ passed to the URL.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.StatelessParser" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="StatelessParser (niobot.utils.parsers.StatelessParser)" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
 
 
         <p>Parses an MXC URL into a MatrixMXCUrl namedtuple, which consists of the server and media ID.</p>
@@ -2356,7 +2356,7 @@ passed to the URL.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="niobot.utils.parsers.StatelessParser" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="StatelessParser (niobot.utils.parsers.StatelessParser)" href="#niobot.utils.parsers.StatelessParser">StatelessParser</a></code></p>
 
 
         <p>Parses a string into a MatrixUser instance from matrix-nio.</p>
@@ -2429,7 +2429,7 @@ passed to the URL.</p>
 </span></code></pre></div>
 </details>
 <p>Creating custom parsers for nio-bot is really simple. All you need to do is subclass either 
-<a class="autorefs autorefs-internal" href="#niobot.utils.parsers">Parser</a> or <a class="autorefs autorefs-internal" href="#niobot.utils.parsers">StatelessParser</a> and implement the <code>parse</code> method.</p>
+<a class="autorefs autorefs-internal" title="parsers" href="#niobot.utils.parsers">Parser</a> or <a class="autorefs autorefs-internal" title="parsers" href="#niobot.utils.parsers">StatelessParser</a> and implement the <code>parse</code> method.</p>
 <p>However, if you want some detailed information, seek <a href="../../../guides/004-creating-custom-parsers/">the guide</a></p>
 
 
