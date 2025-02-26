@@ -551,6 +551,15 @@ class SyncStore:
                         },
                     )
                     payload["rooms"]["join"][room_id]["state"]["events"].append(event)
+                elif room_loc[room_id] == Membership.LEAVE:
+                    payload["rooms"]["leave"].setdefault(
+                        room_id,
+                        {
+                            "timeline": {"events": []},
+                            "state": {"events": await self.get_room_state(room_id)},
+                        },
+                    )
+                    payload["rooms"]["leave"][room_id]["timeline"]["events"].append(event)
 
         return nio.SyncResponse.from_dict(payload)
 
