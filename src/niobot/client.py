@@ -1128,12 +1128,15 @@ class NioBot(AsyncClient):
         }
 
         if file is not None:
+            if (_room_id := self._get_id(room)) not in self.rooms:
+                raise RuntimeError("Room %r was not found in the bot's room list." % _room_id)
+            encrypted = self.rooms[_room_id].encrypted
             if hasattr(file, "thumbnail") and isinstance(file.thumbnail, ImageAttachment):
                 self.log.info("Uploading thumbnail %r for %r.", file.thumbnail, file)
-                await file.thumbnail.upload(self)
+                await file.thumbnail.upload(self, encrypted)
                 self.log.info("Finished uploading thumbnail %r.", file.thumbnail)
             self.log.info("Uploading %r.", file)
-            await file.upload(self)
+            await file.upload(self, encrypted)
             self.log.info("Finished uploading %r.", file)
             body = file.as_body(content)
         else:
