@@ -191,7 +191,7 @@ class SyncStore:
         if origin_server_ts is not None:
             content["origin_server_ts"] = origin_server_ts
         if unsigned is not None:
-            content["unsigned"] = unsigned
+            content["unsigned"] = json.loads(unsigned)
         return content
 
     async def get_room_state(self, room_id: str) -> list[dict[str, typing.Any]]:
