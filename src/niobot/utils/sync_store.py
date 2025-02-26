@@ -2,7 +2,6 @@ import enum
 import json
 import logging
 import os
-import time
 import typing
 import uuid
 import warnings
@@ -27,6 +26,7 @@ class Membership(enum.Enum):
     JOIN = "join"
     KNOCK = "knock"
     LEAVE = "leave"
+    BAN = "ban"
 
 
 class _DudSyncStore:
@@ -104,6 +104,16 @@ class SyncStore:
                 heroes TEXT,
                 invited_member_count INTEGER,
                 joined_member_count INTEGER
+            );
+            """,
+            [],
+        ],
+        [
+            """
+            CREATE TABLE IF NOT EXISTS account_data (
+                room_id VARCHAR(255),
+                data_type TEXT NOT NULL,
+                content TEXT NOT NULL
             );
             """,
             [],
@@ -217,7 +227,6 @@ class SyncStore:
                 SELECT room_id,event_type,state_key,sender,content,event_id,origin_server_ts,unsigned
                 FROM room_state
                 WHERE room_id = ? AND event_type = ? AND state_key = ?
-                LIMIT 1
                 ORDER BY origin_server_ts DESC
                 """,
             (room_id, event_type, state_key),
@@ -247,7 +256,8 @@ class SyncStore:
                 )
 
         if "content" not in client_event:
-            raise ValueError("No content in event: %r" % client_event)
+            self.log.warning("No content in event: %r", client_event)
+            client_event["content"] = {}
 
         args = [
             room_id,
@@ -291,23 +301,89 @@ class SyncStore:
             args,
         )
 
-    async def get_next_batch(self, user_id: str = None) -> str:
+    async def get_room_summary(self, room_id: str) -> dict[str, typing.Any] | None:
+        """
+        Fetches the summary for a given room from the store.
+        """
+        await self._init_db()
+        async with self._db.execute(
+            """
+            SELECT heroes,invited_member_count,joined_member_count
+            FROM room_summary
+            WHERE room_id = ?
+            """,
+            (room_id,),
+        ) as cursor:
+            row: aiosqlite.Row = await cursor.fetchone()
+            if row is None:
+                return None
+
+            result = {}
+            if row["heroes"]:
+                result["m.heroes"] = json.loads(row["heroes"])
+            if row["invited_member_count"] is not None:
+                result["m.invited_member_count"] = row["invited_member_count"]
+            if row["joined_member_count"] is not None:
+                result["m.joined_member_count"] = row["joined_member_count"]
+            return result
+
+    async def get_account_data(
+        self, data_type: str | None = None, room_id: str | None = None
+    ) -> list[dict[str, typing.Any]]:
+        """
+        Fetches relevant account data entries from the store.
+
+        If data_type is None, all account data entries are returned.
+        if room_id is not None, only account data entries for that room are returned.
+
+        This function always returns a list, even if there are no entries.
+        """
+        await self._init_db()
+        query = "SELECT data_type,content FROM account_data WHERE room_id = ?"
+        args = [room_id]
+
+        if data_type is not None:
+            query += " AND data_type = ?"
+            args.append(data_type)
+
+        async with self._db.execute(query, args) as cursor:
+            result = []
+            async for row in cursor:
+                result.append(
+                    {
+                        "type": row["data_type"],
+                        "content": json.loads(row["content"]),
+                    }
+                )
+        return result
+
+    async def append_account_data(self, data_type: str, content: dict[str, typing.Any], room_id: str | None = None):
+        """Appends a new account data entry into the account data store."""
+        await self._init_db()
+        await self._db.execute(
+            """
+            INSERT INTO account_data (room_id,data_type,content)
+            VALUES (?,?,?)
+            """,
+            (room_id, data_type, json.dumps(content, separators=(",", ":"))),
+        )
+
+    async def get_next_batch(self) -> str:
         """Returns the next batch token for the given user ID (or the client's user ID)"""
         await self._init_db()
-        user_id = user_id or self._client.user_id
         async with self._db.execute("SELECT next_batch FROM niobot_meta") as cursor:
             result = await cursor.fetchone()
             if result:
-                self.log.debug("Next batch record for %r: %r", user_id, result["next_batch"])
+                self.log.debug("Next batch record %r", result["next_batch"])
                 return result["next_batch"]
             self.log.debug("No next batch stored, returning empty token.")
             return ""
 
-    async def set_next_batch(self, user_id: str, next_batch: str) -> None:
+    async def set_next_batch(self, next_batch: str) -> None:
         """Sets the next batch token for the given user ID"""
         await self._init_db()
-        self.log.debug("Setting next batch to %r for %r.", next_batch, user_id)
-        if await self.get_next_batch(""):
+        self.log.debug("Setting next batch to %r.", next_batch)
+        if await self.get_next_batch():
             query = "UPDATE niobot_meta SET next_batch = ?"
         else:
             query = "INSERT INTO niobot_meta (next_batch) VALUES (?)"
@@ -317,7 +393,6 @@ class SyncStore:
         """Handles a sync response from the server"""
         await self._init_db()
         self.log.debug("Handling sync: %r", response.uuid or uuid.uuid4())
-
         for room_id, room in response.rooms.invite.items():
             self.membership_cache[room_id] = 1
             for event in room.invite_state:
@@ -333,6 +408,15 @@ class SyncStore:
                     )
 
         for room_id, room in response.rooms.join.items():
+            if self.membership_cache.get(room_id) == 1:  # have since joined a room
+                self.log.info("Joined new room %r", room_id)
+                await self._db.execute(
+                    """
+                    DELETE FROM room_state WHERE room_id = ? AND event_id = NULL
+                    """,
+                    (room_id,),
+                )
+
             self.membership_cache[room_id] = 2
             for event in room.state:
                 try:
@@ -346,6 +430,46 @@ class SyncStore:
                         exc_info=e,
                     )
 
+            if room.summary:
+                existing = (await self.get_room_summary(room_id)) or {}
+                summary = room.summary
+                heroes = existing.get("m.heroes")
+                invite = existing.get("m.invited_member_count")
+                joined = existing.get("m.joined_member_count")
+
+                if summary.heroes is not None:
+                    heroes = json.dumps(summary.heroes, separators=(",", ":"))
+                if summary.invited_member_count is not None:
+                    invite = summary.invited_member_count
+                if summary.joined_member_count is not None:
+                    joined = summary.joined_member_count
+                await self._db.execute(
+                    """
+                    INSERT INTO room_summary (room_id,heroes,invited_member_count,joined_member_count)
+                    VALUES (?,?,?,?)
+                    ON CONFLICT(room_id) DO 
+                    UPDATE 
+                    SET 
+                        heroes=excluded.heroes,
+                        invited_member_count=excluded.invited_member_count,
+                        joined_member_count=excluded.joined_member_count
+                    """,
+                    (room_id, heroes, invite, joined),
+                )
+
+            if room.account_data:
+                for event in room.account_data:
+                    try:
+                        await self.append_account_data(event["type"], event["content"], room_id)
+                    except (TypeError, ValueError) as e:
+                        self.log.warning(
+                            "Failed to append account data %r in %s: %r",
+                            room_id,
+                            event,
+                            e,
+                            exc_info=e,
+                        )
+
         for room_id, room in response.rooms.leave.items():
             self.membership_cache[room_id] = 0
             await self._db.execute(
@@ -356,64 +480,67 @@ class SyncStore:
             )
             await self._db.execute("DELETE FROM room_summary WHERE room_id = ?", (room_id,))
 
-        await self.set_next_batch(self._client.user_id, response.next_batch)
+        await self.set_next_batch(response.next_batch)
         await self.commit()
 
     async def generate_sync(self) -> nio.SyncResponse:
         """Generates a sync response, ready for replaying."""
-        # I wonder if an incremental sync would make sense here
-        # Large accounts in lots of rooms or with complex states will struggle with this replay
-        # because the construction of the SyncResponse dataclass does a lot of validation and is
-        # very expensive.
-        # Incrementally returning little bits of the sync would probably be better in this scenario, but I feel there
-        # may be unintended side effects of this.
-        # log = self.log.getChild("generate_sync")
+        log = self.log.getChild("generate_sync")
         payload = {
-            "next_batch": await self.get_next_batch(self._client.user_id),
+            "next_batch": await self.get_next_batch(),
+            "account_data": {"events": await self.get_account_data()},
             "rooms": {"invite": {}, "join": {}, "leave": {}},
         }
-        # TODO: convert this to new format
-        # async with self._db.execute('SELECT * FROM "rooms.join"') as cursor:
-        #     async for row in cursor:
-        #         self.log.debug("Loading state for joined room %r", row["room_id"])
-        #         summary = await self.aloads(row["summary"])
-        #         timeline_events = await self.aloads(row["timeline"])
-        #         state_events = await self.aloads(row["state"])
-        #         account_data = await self.aloads(row["account_data"])
-        #         payload["rooms"]["join"][row["room_id"]] = {
-        #             "timeline": {"events": timeline_events},
-        #             "state": {"events": state_events},
-        #             "account_data": {"events": account_data},
-        #             "summary": summary,
-        #             "ephemeral": {},
-        #         }
-        #         log.debug("Added room %r to `rooms.join`", row["room_id"])
-        #
-        # async with self._db.execute('SELECT room_id, state FROM "rooms.invite"') as cursor:
-        #     async for row in cursor:
-        #         log.debug("Loading state for invited room %r", row["room_id"])
-        #         payload["rooms"]["invite"][row["room_id"]] = {"invite_state": {"events": json.loads(row["state"])}}
-        #         log.debug("Added room %r to `rooms.invite`", row["room_id"])
-        #
-        # async with self._db.execute('SELECT * FROM "rooms.leave"') as cursor:
-        #     async for row in cursor:
-        #         log.debug("Loading state for left room %r", row["room_id"])
-        #         payload["rooms"]["leave"][row["room_id"]] = {
-        #             "timeline": {"events": json.loads(row["timeline"])},
-        #             "state": {"events": json.loads(row["state"])},
-        #             "account_data": {"events": json.loads(row["account_data"])},
-        #             "summary": {},
-        #             "ephemeral": {},
-        #         }
-        #         log.debug("Added room %r to `rooms.leave`", row["room_id"])
+        async with self._db.execute(
+            """
+            SELECT * FROM room_state;
+            """
+        ) as cursor:
+            room_loc = {}
+            async for row in cursor:
+                room_id = row["room_id"]
+                event = self._create_event_from_row(*row)
+                if room_id not in room_loc:
+                    our_membership = await self.get_room_state_event(
+                        room_id,
+                        "m.room.member",
+                        self._client.user_id,
+                    )
+                    if not our_membership:
+                        room_loc[room_id] = Membership.LEAVE
+                        log.warning("No membership for room %r", room_id)
+                        continue
+                    membership = our_membership["content"]["membership"]
+                    if membership not in ["invite", "join", "leave"]:
+                        room_loc[room_id] = "UNKNOWN!"
+                        log.warning("Unknown membership %r for room %r", membership, room_id)
+                        continue
+                    room_loc[room_id] = Membership(membership)
+
+                if room_loc[room_id] == Membership.INVITE:
+                    payload["rooms"]["invite"].setdefault(
+                        room_id,
+                        {"invite_state": {"events": []}},
+                    )
+                    payload["rooms"]["invite"][room_id]["invite_state"]["events"].append(event)
+                elif room_loc[room_id] == Membership.JOIN:
+                    payload["rooms"]["join"].setdefault(
+                        room_id,
+                        {
+                            "timeline": {"events": []},
+                            "state": {"events": []},
+                            "account_data": {"events": await self.get_account_data(room_id)},
+                            "summary": await self.get_room_summary(room_id),
+                            "ephemeral": {},
+                        },
+                    )
+                    payload["rooms"]["join"][room_id]["state"]["events"].append(event)
 
         return nio.SyncResponse.from_dict(payload)
 
     async def commit(self) -> None:
         """Forcefully writes unsaved changes to the database, without closing the connection"""
         await self._db.commit()
-        self._last_commit = time.monotonic()
-        self._change_count = self._db.total_changes
 
     def __bool__(self):
         return True
