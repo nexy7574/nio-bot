@@ -24,9 +24,10 @@ SYNC_FILES = [
 @pytest.mark.asyncio
 async def test_sync_store():
     delete = os.getenv("NIOBOT_CI_PERSIST_STORE", "0") != "1"
-    with tempfile.TemporaryDirectory(prefix="niobot-ci-", delete=delete) as store_dir:
-        if delete is False:
-            print("Sync store directory:", store_dir, file=sys.stderr)
+    kwargs = {"prefix": f"niobot-ci-{time.time_ns()}-"}
+    if sys.version_info >= (3, 12):
+        kwargs["delete"] = delete
+    with tempfile.TemporaryDirectory(**kwargs) as store_dir:
         client = niobot.NioBot(
             "https://matrix.example",
             "@niobot-test:nexy7574.co.uk",
