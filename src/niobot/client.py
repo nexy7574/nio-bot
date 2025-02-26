@@ -302,7 +302,7 @@ class NioBot(AsyncClient):
 
         self.sync_store: typing.Union[SyncStore, _DudSyncStore] = _DudSyncStore()
         if self.store_path:
-            self.sync_store = SyncStore(self, self.store_path + "/sync.db", resolve_state=onsite_state_resolution)
+            self.sync_store = SyncStore(self, f"{self.store_path}/sync-{self.user_id}-{self.device_id}.db")
 
     @property
     def supported_server_versions(self) -> typing.List[typing.Tuple[int, int, int]]:
