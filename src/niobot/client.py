@@ -1398,10 +1398,12 @@ class NioBot(AsyncClient):
             filter_response = await self.upload_filter(
                 self.user_id,
                 room={
-                    "timeline": {"lazy_load_members": True, "include_redundant_members": True, "limit": 100},
-                    "state": {"lazy_load_members": True, "include_redundant_members": True, "limit": 100},
+                    "timeline": {"lazy_load_members": True, "limit": 100},
+                    "state": {"lazy_load_members": True, "limit": 100},
                 },
             )
+            if isinstance(filter_response, nio.UploadFilterError):
+                raise NioBotException("Failed to upload sync filter.", filter_response)
 
             self.log.info("Performing first sync...")
 
@@ -1425,7 +1427,6 @@ class NioBot(AsyncClient):
             self.log.info("Starting sync loop")
             try:
                 await self.sync_forever(
-                    timeout=30000,
                     full_state=self._sync_full_state,
                     set_presence=presence_getter(1),
                     sync_filter=filter_response.filter_id,
