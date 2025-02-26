@@ -1533,11 +1533,7 @@ class NioBot(AsyncClient):
         return r
 
     async def room_leave(
-        self, 
-        room_id: str,
-        reason: str = None,
-        *,
-        forget: bool = True
+        self, room_id: str, reason: str = None, *, forget: bool = True
     ) -> U[RoomLeaveError, RoomLeaveResponse]:
         """Leaves a room. room_id must be an ID, not alias"""
         method, path = Api.room_leave(self.access_token, room_id)
