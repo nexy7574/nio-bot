@@ -403,6 +403,8 @@ class SyncStore:
         await self._init_db()
         self.log.debug("Handling sync: %r", response.uuid or uuid.uuid4())
         for room_id, room in response.rooms.invite.items():
+            if self.membership_cache.get(room_id) != 1:
+                self.log.info("Invited to room %r", room_id)
             self.membership_cache[room_id] = 1
             for event in room.invite_state:
                 try:
@@ -483,6 +485,8 @@ class SyncStore:
                         )
 
         for room_id, room in response.rooms.leave.items():
+            if self.membership_cache.get(room_id) != 0:
+                self.log.info("Left room %r", room_id)
             self.membership_cache[room_id] = 0
             await self._db.execute(
                 """
