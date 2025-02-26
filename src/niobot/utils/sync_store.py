@@ -447,11 +447,14 @@ class SyncStore:
                 joined = existing.get("m.joined_member_count")
 
                 if summary.heroes is not None:
-                    heroes = json.dumps(summary.heroes, separators=(",", ":"))
+                    heroes = summary.heroes
                 if summary.invited_member_count is not None:
                     invite = summary.invited_member_count
                 if summary.joined_member_count is not None:
                     joined = summary.joined_member_count
+
+                if heroes:
+                    heroes = json.dumps(heroes, separators=(",", ":"))
                 await self._db.execute(
                     """
                     INSERT INTO room_summary (room_id,heroes,invited_member_count,joined_member_count)
