@@ -236,6 +236,15 @@ class SyncStore:
                 return None
             return self._create_event_from_row(*row)
 
+    async def download_room_state(self, room_id: str) -> list[nio.Event | nio.BadEvent]:
+        """Downloads the state of a room from the server, applying it to the local store."""
+        state = await self._client.room_get_state(room_id)
+        if not isinstance(state, nio.RoomGetStateResponse):
+            return []
+        for event in state.events:
+            await self.append_state_event(event.source, room_id)
+        return state.events
+
     async def append_state_event(self, client_event: dict[str, typing.Any], room_id: str | None = None):
         """Appends a new state event into the state store."""
         if isinstance(client_event, (nio.Event, nio.InviteEvent)):
