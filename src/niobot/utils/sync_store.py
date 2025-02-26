@@ -9,11 +9,6 @@ import warnings
 import aiosqlite
 import nio
 
-try:
-    import orjson
-except ImportError:
-    orjson = None
-
 if typing.TYPE_CHECKING:
     from ..client import NioBot
 
