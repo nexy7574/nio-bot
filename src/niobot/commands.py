@@ -230,11 +230,13 @@ class Command:
         self.greedy = greedy
 
     @staticmethod
-    def _get_annotation_type(parameter: inspect.Parameter) -> typing.Tuple[typing.Type, bool]:
+    def _get_annotation_type(
+        parameter: inspect.Parameter, already_greedy: bool = False
+    ) -> typing.Tuple[typing.Type, bool]:
         log = logging.getLogger(__name__).getChild("get_annotation_type")
         annotation_origin = typing.get_origin(parameter.annotation)
         annotation_args = typing.get_args(parameter.annotation)
-        greedy = False
+        greedy = already_greedy
 
         if annotation_origin is list:  # typing.List[xyz]
             if len(annotation_args) != 1:
@@ -242,7 +244,7 @@ class Command:
             log.debug("Resolved %r to list type %r", parameter.annotation, annotation_args[0])
             argument_type = annotation_args[0]
             greedy = True
-        elif annotation_origin is typing.Union:  # typing.Union[a, b] or typing.Optional[a]
+        elif annotation_origin in (typing.Union, types.UnionType):  # typing.Union[a, b] or typing.Optional[a]
             if len(annotation_args) == 2 and annotation_args[1] is type(None):
                 log.debug("Resolved Union[...] (%r) to optional type %r", parameter.annotation, annotation_args[0])
                 argument_type = annotation_args[0]
@@ -265,7 +267,7 @@ class Command:
             if not callable(parameter.annotation):
                 raise TypeError(
                     f"Unsupported type annotation {parameter.annotation} for parameter {parameter.name}:"
-                    f" not callable ({parameter.annotation!r})"
+                    f" not callable ({parameter.annotation!r}, {parameter.annotation.__class__})"
                 )
             argument_type = parameter.annotation
 
@@ -309,7 +311,7 @@ class Command:
                 log.warning("No type annotation for parameter %r, assuming str", parameter)
                 argument_type = str
             else:
-                argument_type, default_greedy = cls._get_annotation_type(parameter)
+                argument_type, default_greedy = cls._get_annotation_type(parameter, default_greedy)
 
             argument = Argument(
                 name=parameter.name,
