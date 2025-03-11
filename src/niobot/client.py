@@ -1371,6 +1371,15 @@ class NioBot(AsyncClient):
             else:
                 raise LoginException("You must specify either a password/SSO token or an access token.")
 
+            whoamires = await self.whoami()
+            if isinstance(whoamires, nio.WhoamiError):
+                raise LoginException("Failed to authenticate", whoamires)
+            self.user_id = whoamires.user_id
+            self.device_id = whoamires.device_id
+            self.log.info(
+                "Overwrote user_id and device_id with %r and %r from whoami response.", self.user_id, self.device_id
+            )
+
             if self.should_upload_keys:
                 self.log.info("Uploading encryption keys...")
                 response = await self.keys_upload()
