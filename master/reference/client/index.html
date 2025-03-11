@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
     
     
       
@@ -1917,6 +1917,7 @@
 
 
 
+
   <div class="doc doc-children">
 
 
@@ -2297,6 +2298,7 @@ if you are missing aforementioned data that you need.</p>
 
 
 
+
   <div class="doc doc-children">
 
 
@@ -2324,6 +2326,7 @@ if you are missing aforementioned data that you need.</p>
     <div class="doc doc-contents ">
 
         <p>Internal command register.</p>
+
     </div>
 
 </div>
@@ -2347,6 +2350,7 @@ if you are missing aforementioned data that you need.</p>
     <div class="doc doc-contents ">
 
         <p>Internal module register.</p>
+
     </div>
 
 </div>
@@ -2370,6 +2374,7 @@ if you are missing aforementioned data that you need.</p>
     <div class="doc doc-contents ">
 
         <p>Internal events register.</p>
+
     </div>
 
 </div>
@@ -2396,6 +2401,7 @@ if you are missing aforementioned data that you need.</p>
 <p>The only time <code>patch</code> is &gt;0 is when the server is using a deprecated <code>r</code> release.
 All stable releases (<code>v1</code>) will have <code>patch</code> as 0.</p>
 <p>This property returns <code>[(1, 1, 0)]</code> if no server info is available.</p>
+
     </div>
 
 </div>
@@ -2429,6 +2435,7 @@ All stable releases (<code>v1</code>) will have <code>patch</code> as 0.</p>
 value multiple times if it has aliases.</p>
 <p>You can check if two commands are identical by comparing them (<code>command1instance == command2instance</code>)</p>
 </div>
+
     </div>
 
 </div>
@@ -2456,6 +2463,7 @@ value multiple times if it has aliases.</p>
 <p class="admonition-title">Warning</p>
 <p>Modifying any values here will update the internal register too.</p>
 </div>
+
     </div>
 
 </div>
@@ -2478,6 +2486,7 @@ value multiple times if it has aliases.</p>
     <div class="doc doc-contents ">
 
         <p>Checks that the server supports at least this matrix version.</p>
+
 
     </div>
 
@@ -2576,6 +2585,7 @@ however supports matrix 1.10 and below's unauthenticated media automatically.</p
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -2600,6 +2610,7 @@ however supports matrix 1.10 and below's unauthenticated media automatically.</p
     <div class="doc doc-contents ">
 
         <p>Callback for auto-joining rooms</p>
+
 
     </div>
 
@@ -2626,6 +2637,7 @@ however supports matrix 1.10 and below's unauthenticated media automatically.</p
 
         <p>Callback for auto-joining rooms that are backlogged on startup</p>
 
+
     </div>
 
 </div>
@@ -2650,6 +2662,7 @@ however supports matrix 1.10 and below's unauthenticated media automatically.</p
         <p>A global check that runs before every command.</p>
 <p>This is a no-op by default, but can be overridden to provide global checks.
 If this function returns False or raises an error, the check is considered failed, and the command will not run.</p>
+
 
     </div>
 
@@ -2746,6 +2759,7 @@ If this function returns False or raises an error, the check is considered faile
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -2765,6 +2779,7 @@ If this function returns False or raises an error, the check is considered faile
 
         <p>Dispatches an event to listeners</p>
 
+
     </div>
 
 </div>
@@ -2783,6 +2798,7 @@ If this function returns False or raises an error, the check is considered faile
     <div class="doc doc-contents ">
 
         <p>Checks if an event was sent before the bot started. Always returns False when ignore_old_events is False</p>
+
 
     </div>
 
@@ -2883,6 +2899,7 @@ As such, your read receipt will always be the most recent message. You rarely ne
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -2907,6 +2924,7 @@ As such, your read receipt will always be the most recent message. You rarely ne
     <div class="doc doc-contents ">
 
         <p>Processes a message and runs the command it is trying to invoke if any.</p>
+
 
     </div>
 
@@ -2980,6 +2998,7 @@ As such, your read receipt will always be the most recent message. You rarely ne
           </tr>
       </tbody>
     </table>
+
 
     </div>
 
@@ -3107,6 +3126,7 @@ populated), but the event loop will be running.</p>
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -3157,6 +3177,7 @@ This will remove any commands that have been added to the bot from the given mod
           </tr>
       </tbody>
     </table>
+
 
     </div>
 
@@ -3231,6 +3252,7 @@ This will remove any commands that have been added to the bot from the given mod
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -3252,6 +3274,7 @@ This will remove any commands that have been added to the bot from the given mod
 <p>if a name or alias is already registered, this throws a ValueError.
 Otherwise, it returns None.</p>
 
+
     </div>
 
 </div>
@@ -3272,6 +3295,7 @@ Otherwise, it returns None.</p>
         <p>Removes a command from the internal register.</p>
 <p>If the command is not registered, this is a no-op.</p>
 
+
     </div>
 
 </div>
@@ -3290,6 +3314,7 @@ Otherwise, it returns None.</p>
     <div class="doc doc-contents ">
 
         <p>Registers a command with the bot.</p>
+
 
     </div>
 
@@ -3315,6 +3340,7 @@ Otherwise, it returns None.</p>
 <p>if event_type is None, the function name is used as the event type.</p>
 <p>Please note that if you pass a <a class="autorefs autorefs-external" href="https://matrix-nio.readthedocs.io/en/latest/nio.html#nio.events.room_events.Event">Event</a>, you are responsible for capturing errors.</p>
 
+
     </div>
 
 </div>
@@ -3333,6 +3359,7 @@ Otherwise, it returns None.</p>
     <div class="doc doc-contents ">
 
         <p>Removes an event listener from the bot. Must be the exact function passed to add_event_listener.</p>
+
 
     </div>
 
@@ -3447,6 +3474,7 @@ Otherwise, it returns None.</p>
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -3470,6 +3498,7 @@ Otherwise, it returns None.</p>
 <p>This returns both the room the message was sent in, and the event itself.</p>
 <p>If the message is not in the cache, this returns None.</p>
 
+
     </div>
 
 </div>
@@ -3492,6 +3521,7 @@ Otherwise, it returns None.</p>
     <div class="doc doc-contents ">
 
         <p>Fetches a message from the server.</p>
+
 
     </div>
 
@@ -3523,7 +3553,13 @@ Otherwise, it returns None.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Alias for <a class="autorefs autorefs-internal" href="#niobot.client.NioBot.wait_for_event">niobot.NioBot.wait_for_event</a> with a message type filter.</p>
+        <p>Alias for <a class="autorefs autorefs-internal" title="wait_for_event
+
+
+  
+      async
+  " href="#niobot.client.NioBot.wait_for_event">niobot.NioBot.wait_for_event</a> with a message type filter.</p>
+
 
     </div>
 
@@ -3676,6 +3712,7 @@ Otherwise, it returns None.</p>
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -3753,6 +3790,7 @@ Otherwise, it returns None.</p>
           </tr>
       </tbody>
     </table>
+
 
     </div>
 
@@ -3832,6 +3870,7 @@ Otherwise, it returns None.</p>
           </tr>
       </tbody>
     </table>
+
 
     </div>
 
@@ -3917,6 +3956,7 @@ Otherwise, it returns None.</p>
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -3995,6 +4035,7 @@ Otherwise, it returns None.</p>
           </tr>
       </tbody>
     </table>
+
 
     </div>
 
@@ -4263,6 +4304,7 @@ nor sanitising or formatting.</li>
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -4442,6 +4484,7 @@ nor sanitising or formatting.</li>
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -4564,6 +4607,7 @@ nor sanitising or formatting.</li>
           </tr>
       </tbody>
     </table>
+
 
     </div>
 
@@ -4701,6 +4745,7 @@ nor sanitising or formatting.</li>
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -4726,6 +4771,7 @@ nor sanitising or formatting.</li>
     <div class="doc doc-contents ">
 
         <p>Alias for NioBot.delete_message, but more appropriately named for reactions.</p>
+
 
     </div>
 
@@ -4753,6 +4799,7 @@ nor sanitising or formatting.</li>
     <div class="doc doc-contents ">
 
         <p>Starts the bot, running the sync loop.</p>
+
 
     </div>
 
@@ -4868,6 +4915,7 @@ This should be the last function to be called in your script, as once it exits, 
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -4892,6 +4940,7 @@ This should be the last function to be called in your script, as once it exits, 
     <div class="doc doc-contents ">
 
         <p>Returns either a user ID (@example:example.example) or room ID (!123ABC:example.example)</p>
+
 
     </div>
 
@@ -4988,6 +5037,7 @@ This should be the last function to be called in your script, as once it exits, 
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -5075,6 +5125,7 @@ This should be the last function to be called in your script, as once it exits, 
           </tr>
       </tbody>
     </table>
+
 
     </div>
 
@@ -5164,6 +5215,7 @@ This should be the last function to be called in your script, as once it exits, 
       </tbody>
     </table>
 
+
     </div>
 
 </div>
@@ -5188,6 +5240,7 @@ This should be the last function to be called in your script, as once it exits, 
     <div class="doc doc-contents ">
 
         <p>Leaves a room. room_id must be an ID, not alias</p>
+
 
     </div>
 
@@ -5219,6 +5272,7 @@ This should be the last function to be called in your script, as once it exits, 
 
         <p>A subclass of [NioBot][] that provides a simpler interface to NioBot.</p>
 <p>This class is meant to be a bridge between simplicity and customisability.</p>
+
 
 
 
@@ -5276,7 +5330,7 @@ This should be the last function to be called in your script, as once it exits, 
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">October 9, 2023 20:31:51</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="October 9, 2023 20:31:51">October 9, 2023 20:31:51</span>
   </span>
 
     
@@ -5286,7 +5340,7 @@ This should be the last function to be called in your script, as once it exits, 
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime">July 3, 2023 21:33:51</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="July 3, 2023 21:33:51">July 3, 2023 21:33:51</span>
   </span>
 
     
@@ -5392,7 +5446,7 @@ This should be the last function to be called in your script, as once it exits, 
     <script id="__config" type="application/json">{"base": "../..", "features": ["content.tabs.link", "content.action.edit", "navigation.footer", "header.autohide", "search.share", "navigation.instant", "navigation.tracking"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.f1b6f286.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>
       
     
   <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
