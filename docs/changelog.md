@@ -69,6 +69,9 @@ errors instead. Intended for CI testing, but useful for local development too.
 * Fixed command argument detection not working with py 3.10 type syntaxes, and greedy not being detected correctly
 * Removed python 3.9 from the testing matrix (and consequently support)
 * Rewrote the sync store to actually store state rather than just sync payloads
+* `user_id` and `device_id` are both fetched from the access token on startup. As a result, you can no-longer
+accidentally specify the incorrect user ID or device ID.
+* Removed the option to specify a custom device ID in `niocli get-access-token`
 
 ## v1.2.0
 
