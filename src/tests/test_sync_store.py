@@ -1,5 +1,7 @@
 import json
+import os
 import pathlib
+import sys
 import tempfile
 import time
 
@@ -19,24 +21,26 @@ SYNC_FILES = [
 ]
 
 
-@pytest.mark.parametrize("resolve_state", [True, False])
 @pytest.mark.asyncio
-async def test_sync_store(resolve_state):
-    with tempfile.TemporaryDirectory() as store_dir:
+async def test_sync_store():
+    delete = os.getenv("NIOBOT_CI_PERSIST_STORE", "0") != "1"
+    kwargs = {"prefix": f"niobot-ci-{time.time_ns()}-"}
+    if sys.version_info >= (3, 12):
+        kwargs["delete"] = delete
+    with tempfile.TemporaryDirectory(**kwargs) as store_dir:
         client = niobot.NioBot(
             "https://matrix.example",
-            "@example:matrix.example",
+            "@niobot-test:nexy7574.co.uk",
             store_path=store_dir,
             command_prefix="!",
         )
-        sync_manager = niobot.SyncStore(client, store_dir + "/sync.db", resolve_state=resolve_state)
-        async with sync_manager:
+        async with client.sync_store as sync_manager:
             for file in SYNC_FILES:
                 parsed = json.loads(file.read_text())
                 sync = niobot.SyncResponse.from_dict(parsed)
                 assert isinstance(sync, niobot.SyncResponse), "Failed to parse test data: %r" % sync
                 await sync_manager.handle_sync(sync)
-                assert await sync_manager.get_next_batch("@example:matrix.example") == sync.next_batch
+                assert await sync_manager.get_next_batch() == sync.next_batch
                 await sync_manager.commit()
 
             replay = await sync_manager.generate_sync()
@@ -45,7 +49,7 @@ async def test_sync_store(resolve_state):
             client.access_token = "fake"
             client.start_time = time.time()
             await client._handle_sync(replay)
-            assert await sync_manager.get_next_batch("@example:matrix.example") == "42219939"
+            assert await sync_manager.get_next_batch() == "42219939"
             assert len(client.rooms) == 2
 
         # Teardown

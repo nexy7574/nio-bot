@@ -1,21 +1,13 @@
-import asyncio
-import dataclasses
 import enum
-import functools
 import json
 import logging
 import os
-import time
 import typing
 import uuid
+import warnings
 
 import aiosqlite
 import nio
-
-try:
-    import orjson
-except ImportError:
-    orjson = None
 
 if typing.TYPE_CHECKING:
     from ..client import NioBot
@@ -29,6 +21,7 @@ class Membership(enum.Enum):
     JOIN = "join"
     KNOCK = "knock"
     LEAVE = "leave"
+    BAN = "ban"
 
 
 class _DudSyncStore:
@@ -73,72 +66,52 @@ class SyncStore:
         "m.room.topic",
         "m.room.member",
     )
-    SCRIPTS = [
+    # [ ["foo $2", [ "foo" ] ] ]
+    SCRIPTS: list[list[str, list[typing.Any]]] = [
         [
-            (
-                """
-                CREATE TABLE IF NOT EXISTS "rooms.invite" (
-                    room_id TEXT PRIMARY KEY,
-                    state BLOB NOT NULL
-                );
-                """,
-                [],
-            ),
-            (
-                """
-                CREATE TABLE IF NOT EXISTS "rooms.join" (
-                    room_id TEXT PRIMARY KEY,
-                    account_data BLOB NOT NULL,
-                    state BLOB NOT NULL,
-                    summary BLOB NOT NULL,
-                    timeline BLOB NOT NULL
-                );
-                """,
-                [],
-            ),
-            (
-                """
-                CREATE TABLE IF NOT EXISTS "rooms.knock" (
-                    room_id TEXT PRIMARY KEY,
-                    state BLOB NOT NULL
-                );
-                """,
-                [],
-            ),
-            (
-                """
-                CREATE TABLE IF NOT EXISTS "rooms.leave" (
-                    room_id TEXT PRIMARY KEY,
-                    account_data BLOB NOT NULL,
-                    state BLOB NOT NULL,
-                    timeline BLOB NOT NULL
-                );
-                """,
-                [],
-            ),
-            (
-                """
-                CREATE TABLE IF NOT EXISTS "meta" (
-                    user_id TEXT PRIMARY KEY,
-                    next_batch TEXT DEFAULT ''
-                )
-                """,
-                (),
-            ),
+            """
+            CREATE TABLE IF NOT EXISTS niobot_meta (
+                next_batch TEXT,
+                store_version INTEGER DEFAULT 1
+            );
+            """,
+            [],
         ],
         [
-            (
-                """
-                CREATE INDEX IF NOT EXISTS "idx_rooms_invite_room_id" ON "rooms.invite" (room_id)
-                """,
-                (),
-            ),
-            (
-                """
-                CREATE INDEX IF NOT EXISTS "idx_rooms_join_room_id" ON "rooms.join" (room_id)
-                """,
-                (),
-            ),
+            """
+            CREATE TABLE IF NOT EXISTS room_state (
+                room_id VARCHAR(255),
+                event_type TEXT NOT NULL,
+                state_key TEXT NOT NULL,
+                sender TEXT NOT NULL,
+                content TEXT NOT NULL,
+                event_id TEXT UNIQUE,
+                origin_server_ts INTEGER,
+                unsigned TEXT
+            );
+            """,
+            [],
+        ],
+        [
+            """
+            CREATE TABLE IF NOT EXISTS room_summary (
+                room_id VARCHAR(255) PRIMARY KEY,
+                heroes TEXT,
+                invited_member_count INTEGER,
+                joined_member_count INTEGER
+            );
+            """,
+            [],
+        ],
+        [
+            """
+            CREATE TABLE IF NOT EXISTS account_data (
+                room_id VARCHAR(255),
+                data_type TEXT NOT NULL,
+                content TEXT NOT NULL
+            );
+            """,
+            [],
         ],
     ]
     log = logging.getLogger(__name__)
@@ -147,18 +120,12 @@ class SyncStore:
         self,
         client: "NioBot",
         db_path: typing.Union[os.PathLike, str] = None,
-        important_events: typing.Iterable[str] = IMPORTANT_TIMELINE_EVENTS,
-        resolve_state: bool = False,
-        checkpoint_every: int = 100,
     ):
         self._client = client
         self._db_path = db_path
-        self.important_events = tuple(important_events)
-        self.resolve_state = resolve_state
+
         self._db: typing.Optional[aiosqlite.Connection] = None
-        self._change_count = 0
-        self._last_commit = 0
-        self.checkpoint_every = checkpoint_every
+        self.membership_cache: dict[str, int] = {}
 
     async def _init_db(self):
         if self._db:
@@ -167,10 +134,8 @@ class SyncStore:
         self.log.debug("Created database connection.")
         self._db.row_factory = aiosqlite.Row
 
-        for migration in self.SCRIPTS:
-            for script, args in migration:
-                await self._db.execute(script, *args)
-            await self.commit()
+        for script, args in self.SCRIPTS:
+            await self._db.execute(script, *args)
 
     async def close(self) -> None:
         """Closes the database connection, committing any unsaved data."""
@@ -189,463 +154,413 @@ class SyncStore:
         self.log.debug("SyncStore closed via context manager.")
 
     @staticmethod
-    def _loads_sync(obj: typing.Union[str, bytes]) -> typing.Any:
-        if orjson:
-            return orjson.loads(obj)
-        if isinstance(obj, bytes):
-            obj = obj.decode()
-        return json.loads(obj)
+    def _resolve_state_list(obj: list[dict[str, typing.Any]]) -> list[dict[str, typing.Any]]:
+        resolved = obj.copy()
+        for event in obj:
+            if isinstance(event.get("unsigned"), dict) and "replaces_state" in event["unsigned"]:
+                for r_event in resolved:
+                    if r_event.get("event_id") == event["event_id"]:
+                        resolved.remove(r_event)
+        return resolved
 
     @staticmethod
-    def _dumps_sync(obj: typing.Any) -> bytes:
-        if orjson:
-            return orjson.dumps(obj)
-        return json.dumps(obj, separators=(",", ":")).encode()
-
-    @staticmethod
-    async def aloads(obj: bytes) -> typing.Any:
-        """Asynchronously loads a JSON string into an object"""
-        event_loop = asyncio.get_event_loop()
-        call = functools.partial(SyncStore._loads_sync, obj)
-        return await event_loop.run_in_executor(None, call)
-
-    @staticmethod
-    async def adumps(obj: typing.Any) -> bytes:
-        """Asynchronously dumps an object to a JSON byte string"""
-        event_loop = asyncio.get_event_loop()
-        call = functools.partial(SyncStore._dumps_sync, obj)
-        return await event_loop.run_in_executor(None, call)
-
-    async def _pop_from(self, room_id: str, *old_states: str) -> None:
-        """Removes the given room ID from *old_states"""
-        # If you hold this function incorrectly, you are vulnerable to SQL injection.
-        # The library does not hold this function incorrectly.
-        for old_state in old_states:
-            self.log.debug("Removing %r from the %r state, if it is in there.", room_id, old_state)
-            table = f"rooms.{old_state}"
-            await self._db.execute(f'DELETE FROM "{table}" WHERE room_id=?', (room_id,))
-
-    async def process_invite(self, room_id: str, info: nio.InviteInfo) -> None:
-        """Processes an invite event.
-
-        :param room_id: The room ID of the invite
-        :param info: The invite information
-        """
-        await self._init_db()
-        await self._pop_from(room_id, "join", "knock", "leave")
-        self.log.debug("Processing join room %r.", room_id)
-        state = await self.adumps([dataclasses.asdict(x)["source"] for x in info.invite_state])
-        await self._db.execute(
-            "INSERT OR IGNORE INTO 'rooms.invite' (room_id, state) VALUES (?, ?)",
-            (room_id, state),
-        )
-
-    @staticmethod
-    def summary_to_json(summary: nio.RoomSummary) -> typing.Dict:
-        d = {
-            "m.heroes": summary.heroes,
-            "m.invited_member_count": summary.invited_member_count,
-            "m.joined_member_count": summary.joined_member_count,
+    def _create_event_from_row(
+        room_id: str,
+        event_type: str,
+        state_key: str,
+        sender: str,
+        content_raw: str,
+        event_id: str | None,
+        origin_server_ts,
+        unsigned,
+    ) -> dict[str, typing.Any]:
+        content = {
+            "room_id": room_id,
+            "type": event_type,
+            "state_key": state_key,
+            "sender": sender,
+            "content": json.loads(content_raw),
         }
-        for k, v in d.copy().items():
-            if v is None:
-                del d[k]
-        return d
+        if event_id:
+            content["event_id"] = event_id
+        if origin_server_ts is not None:
+            content["origin_server_ts"] = origin_server_ts
+        if unsigned is not None:
+            content["unsigned"] = json.loads(unsigned)
+        return content
 
-    async def process_join(self, room_id: str, info: nio.RoomInfo) -> None:
-        """Processes a room join
+    async def get_room_state(self, room_id: str) -> list[dict[str, typing.Any]]:
+        """
+        Fetches the entire state for a given room from the store.
 
-        :param room_id: The room ID of the room
-        :param info: The room information
+        An empty list is returned if the room does not exist.
         """
         await self._init_db()
-        await self._pop_from(room_id, "invite", "knock", "leave")
-        async with self._db.execute('SELECT room_id FROM "rooms.join" WHERE room_id=?', (room_id,)) as cursor:
-            result = await cursor.fetchone()
-            if not result:
-                self.log.debug("Processing new joined room %r.", room_id)
-                await self._db.execute(
-                    """
-                    INSERT OR IGNORE INTO 'rooms.join' (room_id, account_data, state, summary, timeline)
-                    VALUES (?, ?, ?, ?, ?)
-                    """,
-                    (
-                        room_id,
-                        await self.adumps([dataclasses.asdict(x) for x in info.account_data]),
-                        await self.adumps([dataclasses.asdict(x)["source"] for x in info.state]),
-                        await self.adumps(self.summary_to_json(info.summary)),
-                        await self.adumps([dataclasses.asdict(x)["source"] for x in info.timeline.events]),
-                    ),
-                )
-            else:
-                self.log.debug("Processing previously joined room %r.", room_id)
-                for event in info.state:
-                    await self.insert_state_event(room_id, Membership.JOIN, event)
-                for event in info.timeline.events:
-                    await self.insert_timeline_event(room_id, Membership.JOIN, event)
-        self.log.debug("Processed join in %r.", room_id)
+        async with self._db.execute(
+            """
+                SELECT room_id,event_type,state_key,sender,content,event_id,origin_server_ts,unsigned
+                FROM room_state
+                WHERE room_id = ?
+                """,
+            (room_id,),
+        ) as cursor:
+            event_rows = await cursor.fetchall()
+            state = list(map(lambda r: self._create_event_from_row(*r), event_rows))
+        return self._resolve_state_list(state)
 
-    async def process_leave(self, room_id: str, _: nio.RoomInfo) -> None:
-        """Processes a room leave"""
-        await self._init_db()
-        await self._pop_from(room_id, "invite", "knock", "join")
-        self.log.debug("Processed leave room %r.", room_id)
+    async def get_room_state_event(
+        self, room_id: str, event_type: str, state_key: str = ""
+    ) -> dict[str, typing.Any] | None:
+        """
+        Fetches a state event matching the given criteria for a room from the store.
 
-    async def get_state_for(self, room_id: str, membership: Membership = Membership.JOIN) -> typing.List[typing.Dict]:
-        """Fetches the stored state for a specific room."""
+        Returns `None` if there's no state matching the given criteria.
+        """
         await self._init_db()
-        state_table = f"rooms.{membership.value}"
-        async with self._db.execute(f'SELECT state FROM "{state_table}" WHERE room_id=?', (room_id,)) as cursor:
-            result = await cursor.fetchone()
-            if result:
-                return await self.aloads(result["state"])
+        async with self._db.execute(
+            """
+                SELECT room_id,event_type,state_key,sender,content,event_id,origin_server_ts,unsigned
+                FROM room_state
+                WHERE room_id = ? AND event_type = ? AND state_key = ?
+                ORDER BY origin_server_ts DESC
+                """,
+            (room_id, event_type, state_key),
+        ) as cursor:
+            row: aiosqlite.Row = await cursor.fetchone()
+            if row is None:
+                return None
+            return self._create_event_from_row(*row)
+
+    async def download_room_state(self, room_id: str) -> list[nio.Event | nio.BadEvent]:
+        """Downloads the state of a room from the server, applying it to the local store."""
+        state = await self._client.room_get_state(room_id)
+        if not isinstance(state, nio.RoomGetStateResponse):
             return []
+        for event in state.events:
+            await self.append_state_event(event.source, room_id)
+        return state.events
 
-    async def get_state_event_for(
-        self, room_id: str, event_type: str, state_key: str = None, membership: Membership = Membership.JOIN
-    ) -> typing.Dict:
-        """
-        Fetches a specific state event for a specific room.
+    async def append_state_event(self, client_event: dict[str, typing.Any], room_id: str | None = None):
+        """Appends a new state event into the state store."""
+        if isinstance(client_event, (nio.Event, nio.InviteEvent)):
+            warnings.warn("Accidentally got an event object instead of source.", stacklevel=2)
+            client_event = client_event.source
+        elif not isinstance(client_event, dict):
+            raise TypeError("Expected a dictionary state event, got %r" % client_event)
 
-        :param room_id: The room ID to fetch state for
-        :param event_type: The type of event to fetch (e.g. `m.room.create`)
-        :param state_key: The state key of the event to fetch
-        :param membership: The membership state to fetch the event from
-        :raises ValueError: If a relevant state event cannot be found
-        """
-        await self._init_db()
-        state_table = f"rooms.{membership.value}"
-        async with self._db.execute(f'SELECT state FROM "{state_table}" WHERE room_id=?', (room_id,)) as cursor:
-            row = await cursor.fetchone()
-            if not row:
-                raise ValueError(f"No state found for room {room_id}")
-            state = await self.aloads(row["state"])
-            for event in state:
-                if event["type"] == event_type and (state_key is None or event["state_key"] == state_key):
-                    return event
-            raise ValueError(
-                f"No state event found for room {room_id} with type {event_type} and state key {state_key}"
-            )
-
-    async def fetch_state_for(self, room_id: str, membership: Membership = Membership.JOIN) -> typing.List[typing.Dict]:
-        """
-        Similar to get_state_for, however will attempt to fetch from the homeserver (and insert) if the state is not
-        found locally.
-
-        :param room_id: The room ID to fetch state for
-        :param membership: The membership state to fetch the event from
-        :raises ValueError: If a relevant state event cannot be found
-        """
-        state = await self.get_state_for(room_id, membership)
-        if state:
-            # Found locally
-            return state
-
-        state_response = await self._client.room_get_state(room_id)
-        if not isinstance(state_response, nio.RoomGetStateResponse):
-            raise ValueError(f"Failed to fetch state for room {room_id}: {state_response}")
-        for event in state_response.events:
-            await self.insert_state_event(room_id, membership, event)
-        return state_response.events
-
-    async def fetch_state_event_for(
-        self, room_id: str, event_type: str, state_key: str = None, membership: Membership = Membership.JOIN
-    ) -> typing.Dict:
-        """
-        Similar to get_state_event_for, however will attempt to fetch from the homeserver (and insert) if the state is
-        not found locally.
-
-        :param room_id: The room ID to fetch state for
-        :param event_type: The type of event to fetch (e.g. `m.room.create`)
-        :param state_key: The state key of the event to fetch
-        :param membership: The membership state to fetch the event from
-        :raises ValueError: If a relevant state event cannot be found
-        """
-        try:
-            return await self.get_state_event_for(room_id, event_type, state_key, membership)
-        except ValueError:
-            pass
-
-        method, path = (
-            "GET",
-            nio.Api._build_path(["rooms", room_id, "state", event_type, state_key], {"format": "event"}),
-        )
-        response = await self._client.send(method, path, None, {"Authorization": f"Bearer {self._client.access_token}"})
-        if response.status != 200:
-            raise ValueError(
-                f"No state event found for room {room_id} with type {event_type} and state key {state_key}"
-            )
-        body = await response.json()
-        await self.insert_state_event(room_id, membership, body)
-        return body
-
-    async def insert_state_event(
-        self,
-        room_id: str,
-        membership: Membership,
-        new_event: typing.Union[dict, nio.Event],
-        *,
-        force: bool = False,
-    ) -> None:
-        """Inserts a new event into the state store for a specified room
-
-        :param room_id: The room ID in which this state event belongs
-        :param membership: The client's membership state
-        :param new_event: The new event to insert
-        :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
-        """
-        if isinstance(new_event, nio.BadEvent):
-            self.log.warning("Rejecting malformed event %r.", new_event)
-            return
-        if isinstance(new_event, nio.Event):
-            try:
-                new_event = new_event.source["source"]
-            except KeyError:
-                new_event = new_event.source
-        # Just do some basic validation first
-        for key in ("type", "event_id", "sender"):
-            if key not in new_event:
-                raise ValueError("State event %r is missing required key %r" % (new_event, key))
-        if force is not True and new_event["type"] not in self.important_events:
-            self.log.debug("Ignoring unimportant state event %r.", new_event)
-            return
-        # If you hold this function incorrectly, you are vulnerable to an SQL injection attack.
-        # The library does not hold it incorrectly.
-        await self._init_db()
-        state_table = f"rooms.{membership.value}"
-        existing_state = await self.get_state_for(room_id, membership)
-
-        unsigned_data = new_event.get("unsigned", {})
-        replaces_state = unsigned_data.get("replaces_state", None)
-        if replaces_state and self.resolve_state:
-            for event in existing_state:
-                if event.get("event_id", None) == replaces_state:
-                    self.log.debug("State event %r replaced state event %r.", new_event["event_id"], replaces_state)
-                    existing_state.remove(event)
-                    break
-                elif event.get("event_id", None) == new_event["event_id"]:
-                    self.log.debug(
-                        "Duplicate state event %r found in room %r. Not appending to store.",
-                        new_event["event_id"],
-                        room_id,
-                    )
-                    return
-                elif event.get("content", os.urandom(16)) == new_event.get("content", os.urandom(16)):
-                    self.log.warning(
-                        "State event %r has the same content as another state event in room %r. "
-                        "Possibly a duplicate. Not appending to store.",
-                        new_event["event_id"],
-                        room_id,
-                    )
-                    # Replace the old event with the new one
-                    existing_state.remove(event)
-                    break
-
-            else:
-                self.log.warning(
-                    "Got a state event (%r) that is meant to replace another one (%r), however we do not have"
-                    " the latter.",
-                    new_event["event_id"],
-                    replaces_state,
+        if room_id is None and "room_id" not in client_event:
+            raise ValueError("Got a state event for an unknown room!")
+        elif room_id is None and "room_id" in client_event:
+            room_id = client_event["room_id"]
+        elif room_id is not None and "room_id" in client_event:
+            if room_id != client_event["room_id"]:
+                raise ValueError(
+                    f"Received mismatched room IDs for state event - explicitly given {room_id!r}, but event was for"
+                    f" {client_event['room_id']!r}"
                 )
-        if self.log.isEnabledFor(logging.DEBUG):
-            dumped_state = (await self.adumps(existing_state)).decode()
-            if len(dumped_state) > 512:
-                dumped_state = dumped_state[:512] + "..."
-            self.log.debug("Appending event %r to state %r.", new_event, dumped_state)
-        existing_state.append(new_event)
-        self.log.debug("Room %r now has %d state events.", room_id, len(existing_state))
+
+        if "content" not in client_event:
+            self.log.warning("No content in event: %r", client_event)
+            client_event["content"] = {}
+
+        args = [
+            room_id,
+            client_event["type"],
+            client_event["state_key"],
+            client_event["sender"],
+            json.dumps(client_event["content"], separators=(",", ":")),
+            client_event.get("event_id"),
+            client_event.get("origin_server_ts"),
+        ]
+        if client_event.get("unsigned") is not None:
+            args.append(json.dumps(client_event["unsigned"], separators=(",", ":")))
+        else:
+            args.append(None)
+
+        # Check that it is not already in the database
+        if event_id := client_event.get("event_id"):
+            existing_result = await self._db.execute(
+                "SELECT room_id FROM room_state WHERE room_id = ? AND event_id = ?", (room_id, event_id)
+            )
+            if await existing_result.fetchone():
+                self.log.debug(
+                    "Refusing to re-append conflicting state event %s in %s: %r", event_id, room_id, client_event
+                )
+                return
+        else:
+            existing_result = await self._db.execute(
+                "SELECT content FROM room_state WHERE room_id = ? AND event_type = ? AND state_key = ?",
+                (room_id, client_event["type"], client_event["state_key"]),
+            )
+            content = await existing_result.fetchone()
+            if content == client_event["content"]:
+                self.log.debug("Refusing to append duplicate state event %s in %s: %r", event_id, room_id, client_event)
+                return
+
         await self._db.execute(
-            f'UPDATE "{state_table}" SET state=? WHERE room_id=?',
-            (await self.adumps(existing_state), room_id),
+            """
+            INSERT INTO room_state (room_id,event_type,state_key,sender,content,event_id,origin_server_ts,unsigned)
+            VALUES (?,?,?,?,?,?,?,?)
+            """,
+            args,
         )
 
-    async def insert_timeline_event(
-        self,
-        room_id: str,
-        membership: Membership,
-        new_event: typing.Union[dict, nio.Event],
-        *,
-        force: bool = False,
-    ) -> None:
-        """Inserts a new event into the timeline store for a specified room
-
-        :param room_id: The room ID in which this timeline event belongs
-        :param membership: The client's membership state
-        :param new_event: The new event to insert
-        :param force: If True, the function will always insert the new event, even if it is deemed uninteresting
+    async def get_room_summary(self, room_id: str) -> dict[str, typing.Any] | None:
         """
-        if isinstance(new_event, nio.BadEvent):
-            self.log.warning("Rejecting malformed event %r.", new_event)
-            return
-        if isinstance(new_event, nio.Event):
-            try:
-                new_event = new_event.source["source"]
-            except KeyError:
-                new_event = new_event.source
-        # Just do some basic validation first
-        for key in ("type", "event_id", "sender"):
-            if key not in new_event:
-                raise ValueError("Timeline event %r is missing required key %r" % (new_event, key))
-        if force is not True and new_event["type"] not in self.important_events:
-            self.log.debug("Ignoring unimportant timeline event %r.", new_event)
-            return
-        # If you hold this function incorrectly, you are vulnerable to an SQL injection attack.
-        # The library does not hold it incorrectly.
-        await self._init_db()
-        table = f"rooms.{membership.value}"
-        existing_timeline = await self.get_state_for(room_id, membership)
-        if self.log.isEnabledFor(logging.DEBUG):
-            dumped_timeline = (await self.adumps(existing_timeline)).decode()
-            if len(dumped_timeline) > 512:
-                dumped_timeline = dumped_timeline[:512] + "..."
-            self.log.debug("Appending event %r to timeline %r.", new_event, dumped_timeline)
-        existing_timeline.append(new_event)
-        if len(existing_timeline) > 10:
-            existing_timeline = existing_timeline[-10:]
-        self.log.debug("Room %r now has %d timeline events.", room_id, len(existing_timeline))
-        await self._db.execute(
-            f'UPDATE "{table}" SET timeline=? WHERE room_id=?',
-            (await self.adumps(existing_timeline), room_id),
-        )
-
-    async def remove_event(
-        self,
-        room_id: str,
-        membership: Membership,
-        event_id: str,
-        event_type: typing.Literal["timeline", "state"],
-    ) -> None:
-        """Forcibly removes an event from the store.
-        This usually is not necessary, but included for convenience
+        Fetches the summary for a given room from the store.
         """
-        if event_type not in ("timeline", "state"):
-            raise ValueError("Can only remove events from timeline or state")
         await self._init_db()
-        table = f"rooms.{membership.value}"
-        existing_data = await self.get_state_for(room_id, membership)
-        for event in existing_data:
-            if event["event_id"] == event_id:
-                self.log.debug("Removing event %r", event)
-                existing_data.remove(event)
-                break
+        async with self._db.execute(
+            """
+            SELECT heroes,invited_member_count,joined_member_count
+            FROM room_summary
+            WHERE room_id = ?
+            """,
+            (room_id,),
+        ) as cursor:
+            row: aiosqlite.Row = await cursor.fetchone()
+            if row is None:
+                return None
+
+            result = {}
+            if row["heroes"]:
+                result["m.heroes"] = json.loads(row["heroes"])
+            if row["invited_member_count"] is not None:
+                result["m.invited_member_count"] = row["invited_member_count"]
+            if row["joined_member_count"] is not None:
+                result["m.joined_member_count"] = row["joined_member_count"]
+            return result
+
+    async def get_account_data(
+        self, data_type: str | None = None, room_id: str | None = None
+    ) -> list[dict[str, typing.Any]]:
+        """
+        Fetches relevant account data entries from the store.
+
+        If data_type is None, all account data entries are returned.
+        if room_id is not None, only account data entries for that room are returned.
+
+        This function always returns a list, even if there are no entries.
+        """
+        await self._init_db()
+        query = "SELECT data_type,content FROM account_data WHERE room_id = ?"
+        args = [room_id]
+
+        if data_type is not None:
+            query += " AND data_type = ?"
+            args.append(data_type)
+
+        async with self._db.execute(query, args) as cursor:
+            result = []
+            async for row in cursor:
+                result.append(
+                    {
+                        "type": row["data_type"],
+                        "content": json.loads(row["content"]),
+                    }
+                )
+        return result
+
+    async def append_account_data(self, data_type: str, content: dict[str, typing.Any], room_id: str | None = None):
+        """Appends a new account data entry into the account data store."""
+        await self._init_db()
         await self._db.execute(
-            f'UPDATE "{table}" SET {event_type}=? WHERE room_id=?',
-            (await self.adumps(existing_data), room_id),
+            """
+            INSERT INTO account_data (room_id,data_type,content)
+            VALUES (?,?,?)
+            """,
+            (room_id, data_type, json.dumps(content, separators=(",", ":"))),
         )
 
-    async def get_next_batch(self, user_id: str = None) -> str:
+    async def get_next_batch(self) -> str:
         """Returns the next batch token for the given user ID (or the client's user ID)"""
         await self._init_db()
-        user_id = user_id or self._client.user_id
-        async with self._db.execute("SELECT user_id,next_batch FROM meta") as cursor:
+        async with self._db.execute("SELECT next_batch FROM niobot_meta") as cursor:
             result = await cursor.fetchone()
             if result:
-                if result["user_id"] != user_id:
-                    raise ValueError(f"This sync store is for {result['user_id']}, not {user_id}")
-                self.log.debug("Next batch record for %r: %r", user_id, result["next_batch"])
+                self.log.debug("Next batch record %r", result["next_batch"])
                 return result["next_batch"]
             self.log.debug("No next batch stored, returning empty token.")
             return ""
 
-    async def set_next_batch(self, user_id: str, next_batch: str) -> None:
+    async def set_next_batch(self, next_batch: str) -> None:
         """Sets the next batch token for the given user ID"""
         await self._init_db()
-        self.log.debug("Setting next batch to %r for %r.", next_batch, user_id)
-        await self._db.execute(
-            """
-            INSERT INTO meta (user_id, next_batch) VALUES (?, ?)
-            ON CONFLICT(user_id) 
-            DO 
-                UPDATE SET next_batch=excluded.next_batch
-                WHERE user_id=excluded.user_id
-            """,
-            (user_id, next_batch),
-        )
+        self.log.debug("Setting next batch to %r.", next_batch)
+        if await self.get_next_batch():
+            query = "UPDATE niobot_meta SET next_batch = ?"
+        else:
+            query = "INSERT INTO niobot_meta (next_batch) VALUES (?)"
+        await self._db.execute(query, (next_batch,))
 
     async def handle_sync(self, response: nio.SyncResponse) -> None:
         """Handles a sync response from the server"""
         await self._init_db()
         self.log.debug("Handling sync: %r", response.uuid or uuid.uuid4())
         for room_id, room in response.rooms.invite.items():
-            self.log.debug("Processing invited room %r", room_id)
-            await self.process_invite(room_id, room)
-        for room_id, room in response.rooms.join.items():
-            self.log.debug("Processing joined room %r", room_id)
-            await self.process_join(room_id, room)
-        for room_id, room in response.rooms.leave.items():
-            self.log.debug("Processing left room %r", room_id)
-            await self.process_leave(room_id, room)
+            if self.membership_cache.get(room_id) != 1:
+                self.log.info("Invited to room %r", room_id)
+            self.membership_cache[room_id] = 1
+            for event in room.invite_state:
+                try:
+                    await self.append_state_event(event.source, room_id)
+                except (TypeError, ValueError) as e:
+                    self.log.warning(
+                        "Failed to append state event %r in %s: %r",
+                        room_id,
+                        event,
+                        e,
+                        exc_info=e,
+                    )
 
-        if self.log.isEnabledFor(logging.DEBUG):
-            self.log.debug(
-                "Processed sync response %r, next batch is now %r.",
-                await self.get_next_batch(self._client.user_id),
-                response.next_batch,
+        for room_id, room in response.rooms.join.items():
+            if self.membership_cache.get(room_id) == 1:  # have since joined a room
+                self.log.info("Joined new room %r", room_id)
+                await self._db.execute(
+                    """
+                    DELETE FROM room_state WHERE room_id = ? AND event_id = NULL
+                    """,
+                    (room_id,),
+                )
+
+            self.membership_cache[room_id] = 2
+            for event in room.state:
+                try:
+                    await self.append_state_event(event.source, room_id)
+                except (TypeError, ValueError) as e:
+                    self.log.warning(
+                        "Failed to append state event %r in %s: %r",
+                        room_id,
+                        event,
+                        e,
+                        exc_info=e,
+                    )
+
+            if room.summary:
+                existing = (await self.get_room_summary(room_id)) or {}
+                summary = room.summary
+                heroes = existing.get("m.heroes")
+                invite = existing.get("m.invited_member_count")
+                joined = existing.get("m.joined_member_count")
+
+                if summary.heroes is not None:
+                    heroes = summary.heroes
+                if summary.invited_member_count is not None:
+                    invite = summary.invited_member_count
+                if summary.joined_member_count is not None:
+                    joined = summary.joined_member_count
+
+                if heroes:
+                    heroes = json.dumps(heroes, separators=(",", ":"))
+                await self._db.execute(
+                    """
+                    INSERT INTO room_summary (room_id,heroes,invited_member_count,joined_member_count)
+                    VALUES (?,?,?,?)
+                    ON CONFLICT(room_id) DO 
+                    UPDATE 
+                    SET 
+                        heroes=excluded.heroes,
+                        invited_member_count=excluded.invited_member_count,
+                        joined_member_count=excluded.joined_member_count
+                    """,
+                    (room_id, heroes, invite, joined),
+                )
+
+            if room.account_data:
+                for event in room.account_data:
+                    try:
+                        await self.append_account_data(event["type"], event["content"], room_id)
+                    except (TypeError, ValueError) as e:
+                        self.log.warning(
+                            "Failed to append account data %r in %s: %r",
+                            room_id,
+                            event,
+                            e,
+                            exc_info=e,
+                        )
+
+        for room_id, room in response.rooms.leave.items():
+            if self.membership_cache.get(room_id) != 0:
+                self.log.info("Left room %r", room_id)
+            self.membership_cache[room_id] = 0
+            await self._db.execute(
+                """
+                DELETE FROM room_state WHERE room_id = ?
+                """,
+                (room_id,),
             )
-        await self.set_next_batch(self._client.user_id, response.next_batch)
-        changes = self._db.total_changes - self._change_count
-        if changes >= self.checkpoint_every:
-            self.log.debug("%d total changes, autosaving to database.", changes)
-            await self.commit()
-        elif (time.monotonic() - self._last_commit) >= 300:
-            self.log.debug("No checkpoint in 300 seconds, autosaving to database.")
-            await self.commit()
+            await self._db.execute("DELETE FROM room_summary WHERE room_id = ?", (room_id,))
+
+        await self.set_next_batch(response.next_batch)
+        await self.commit()
 
     async def generate_sync(self) -> nio.SyncResponse:
         """Generates a sync response, ready for replaying."""
-        # I wonder if an incremental sync would make sense here
-        # Large accounts in lots of rooms or with complex states will struggle with this replay
-        # because the construction of the SyncResponse dataclass does a lot of validation and is
-        # very expensive.
-        # Incrementally returning little bits of the sync would probably be better in this scenario, but I feel there
-        # may be unintended side effects of this.
         log = self.log.getChild("generate_sync")
         payload = {
-            "next_batch": await self.get_next_batch(self._client.user_id),
+            "next_batch": await self.get_next_batch(),
+            "account_data": {"events": await self.get_account_data()},
             "rooms": {"invite": {}, "join": {}, "leave": {}},
         }
-        async with self._db.execute('SELECT * FROM "rooms.join"') as cursor:
+        async with self._db.execute(
+            """
+            SELECT * FROM room_state;
+            """
+        ) as cursor:
+            room_loc = {}
             async for row in cursor:
-                self.log.debug("Loading state for joined room %r", row["room_id"])
-                summary = await self.aloads(row["summary"])
-                timeline_events = await self.aloads(row["timeline"])
-                state_events = await self.aloads(row["state"])
-                account_data = await self.aloads(row["account_data"])
-                payload["rooms"]["join"][row["room_id"]] = {
-                    "timeline": {"events": timeline_events},
-                    "state": {"events": state_events},
-                    "account_data": {"events": account_data},
-                    "summary": summary,
-                    "ephemeral": {},
-                }
-                log.debug("Added room %r to `rooms.join`", row["room_id"])
+                room_id = row["room_id"]
+                event = self._create_event_from_row(*row)
+                if room_id not in room_loc:
+                    our_membership = await self.get_room_state_event(
+                        room_id,
+                        "m.room.member",
+                        self._client.user_id,
+                    )
+                    if not our_membership:
+                        room_loc[room_id] = Membership.LEAVE
+                        log.warning("No membership for room %r", room_id)
+                        continue
+                    membership = our_membership["content"]["membership"]
+                    if membership not in ["invite", "join", "leave"]:
+                        room_loc[room_id] = "UNKNOWN!"
+                        log.warning("Unknown membership %r for room %r", membership, room_id)
+                        continue
+                    room_loc[room_id] = Membership(membership)
 
-        async with self._db.execute('SELECT room_id, state FROM "rooms.invite"') as cursor:
-            async for row in cursor:
-                log.debug("Loading state for invited room %r", row["room_id"])
-                payload["rooms"]["invite"][row["room_id"]] = {"invite_state": {"events": json.loads(row["state"])}}
-                log.debug("Added room %r to `rooms.invite`", row["room_id"])
-
-        async with self._db.execute('SELECT * FROM "rooms.leave"') as cursor:
-            async for row in cursor:
-                log.debug("Loading state for left room %r", row["room_id"])
-                payload["rooms"]["leave"][row["room_id"]] = {
-                    "timeline": {"events": json.loads(row["timeline"])},
-                    "state": {"events": json.loads(row["state"])},
-                    "account_data": {"events": json.loads(row["account_data"])},
-                    "summary": {},
-                    "ephemeral": {},
-                }
-                log.debug("Added room %r to `rooms.leave`", row["room_id"])
+                if room_loc[room_id] == Membership.INVITE:
+                    payload["rooms"]["invite"].setdefault(
+                        room_id,
+                        {"invite_state": {"events": []}},
+                    )
+                    payload["rooms"]["invite"][room_id]["invite_state"]["events"].append(event)
+                elif room_loc[room_id] == Membership.JOIN:
+                    payload["rooms"]["join"].setdefault(
+                        room_id,
+                        {
+                            "timeline": {"events": []},
+                            "state": {"events": []},
+                            "account_data": {"events": await self.get_account_data(room_id)},
+                            "summary": await self.get_room_summary(room_id),
+                            "ephemeral": {},
+                        },
+                    )
+                    payload["rooms"]["join"][room_id]["state"]["events"].append(event)
+                elif room_loc[room_id] == Membership.LEAVE:
+                    payload["rooms"]["leave"].setdefault(
+                        room_id,
+                        {
+                            "timeline": {"events": []},
+                            "state": {"events": await self.get_room_state(room_id)},
+                        },
+                    )
+                    payload["rooms"]["leave"][room_id]["timeline"]["events"].append(event)
 
         return nio.SyncResponse.from_dict(payload)
 
     async def commit(self) -> None:
         """Forcefully writes unsaved changes to the database, without closing the connection"""
         await self._db.commit()
-        self._last_commit = time.monotonic()
-        self._change_count = self._db.total_changes
 
     def __bool__(self):
         return True

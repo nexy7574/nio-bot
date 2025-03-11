@@ -13,7 +13,7 @@
 
     * Attachments have been massively reworked, please check your code to see if there are any intellisense errors, or if you are using any of the removed methods.
     * Argument detection has been massively reworked - while it should be a massive improvement, please check to make sure your arguments are still parsed as expected.
-    * Historical rooms (`rooms.leave`) are no longer stored in the sync store.
+    * The sync store has been completely rewritten - any code previously using helper functions will likely break.
 
 * Added the sync filter "lazy load members" - should hopefully improve performance in large rooms.
 * Removed temporary lock on `niobot.NioBot.process_message`, which should allow parallel command execution again.
@@ -63,6 +63,12 @@ errors instead. Intended for CI testing, but useful for local development too.
 * Limited the sync payload to only include 100 timeline & state events per room
 * Implemented [niobot.NioBot.global_command_check][] to allow for global command checks
 * Added [niobot.utils.HTMLTable][] to help with generating tables in HTML and plaintext
+* Fixed incremental syncs having a hard timeout of 30 seconds, disrespecting the configured timeout
+* Fixed filter uploads on startup not being fatal (later causing an exception)
+* Fixed file uploads not respecting room encryption
+* Fixed command argument detection not working with py 3.10 type syntaxes, and greedy not being detected correctly
+* Removed python 3.9 from the testing matrix (and consequently support)
+* Rewrote the sync store to actually store state rather than just sync payloads
 
 ## v1.2.0
 
