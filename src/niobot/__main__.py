@@ -69,13 +69,6 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
     if not homeserver:
         homeserver = click.prompt("Homeserver URL")
 
-    if not device_id:
-        node = platform.node()
-        device_id = click.prompt(
-            "Device ID (a memorable display name for this login, such as 'bot-production')",
-            default=node,
-        )
-
     click.secho("Resolving homeserver... ", fg="cyan", nl=False)
     try:
         homeserver = asyncio.run(niobot.resolve_homeserver(homeserver))
@@ -93,8 +86,6 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
                 "type": "m.login.password",
                 "identifier": {"type": "m.id.user", "user": username},
                 "password": password,
-                "device_id": device_id,
-                "initial_device_display_name": device_id,
             },
         )
         status_code = response.status_code
@@ -108,12 +99,11 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
         click.secho(f" ({status_code or str(e)})", bg="red")
     else:
         click.secho("OK", fg="green")
+        click.secho(f"Access token: {response.json()['access_token']}", fg="green")
+        click.secho(f"Device ID: {response.json()['device_id']}", fg="green")
         if output != "-":
-            click.secho(f"Access token: {response.json()['access_token']}", fg="green")
             with click.open_file(output, "w+") as f:
-                f.write(response.json()["access_token"])
-        else:
-            click.echo(response.json()["access_token"])
+                f.write(response.json())
 
 
 if __name__ == "__main__":
