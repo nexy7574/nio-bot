@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import platform
 import re
 import sys
 

@@ -89,7 +89,6 @@ class NioBot(AsyncClient):
 
     :param homeserver: The homeserver to connect to. e.g. https://matrix-client.matrix.org
     :param user_id: The user ID to log in as. e.g. @user:matrix.org
-    :param device_id: The device ID to log in as. e.g. nio-bot
     :param store_path: The path to the store file. Defaults to ./store. Must be a directory.
     :param command_prefix: The prefix to use for commands. e.g. `!`. Can be a string, a list of strings,
      or a regex pattern.
@@ -109,7 +108,6 @@ class NioBot(AsyncClient):
     :param force_initial_sync: Forcefully perform a full initial sync at startup.
     :param use_fallback_replies: Whether to force the usage of deprecated fallback replies. Not recommended outside
     of compatibility reasons.
-    :param onsite_state_resolution: Whether to resolve state changes on-site. This is slower but more accurate.
     :param process_message_edits: Whether to process message edits as new messages and re-invoke any applicable
     commands. This behaves similar to maubot and is enabled by default. Disable if you don't want message edits to
     [re-]trigger commands.
@@ -127,7 +125,7 @@ class NioBot(AsyncClient):
         self,
         homeserver: str,
         user_id: str,
-        device_id: str = "nio-bot",
+        device_id: str | None = None,
         store_path: typing.Optional[str] = None,
         *,
         command_prefix: typing.Union[str, re.Pattern, typing.Iterable[str]],
@@ -148,7 +146,6 @@ class NioBot(AsyncClient):
         sync_full_state: bool = True,
         default_parse_mentions: bool = True,
         force_initial_sync: bool = False,
-        onsite_state_resolution: bool = False,
         process_message_edits: bool = True,
     ):
         if user_id == owner_id and ignore_self is True:
@@ -172,7 +169,7 @@ class NioBot(AsyncClient):
 
         if ENCRYPTION_ENABLED:
             if not config:
-                config = nio.AsyncClientConfig(encryption_enabled=True, store_sync_tokens=force_initial_sync is False)
+                config = nio.AsyncClientConfig(encryption_enabled=True, store_sync_tokens=not bool(store_path))
                 self.log.info("Encryption support enabled automatically.")
                 if force_initial_sync:
                     self.log.warning("An initial sync is being forced. Your next/first sync() call will be slow.")
