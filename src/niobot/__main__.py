@@ -36,14 +36,6 @@ def cli_root(ctx, log_level: str):
 @click.option("--password", "-P", default=None, help="The password to use (will be prompted if not given)")
 @click.option("--homeserver", "-H", default=None, help="The homeserver to use (will be prompted if not given)")
 @click.option(
-    "--device-id",
-    "-D",
-    "--session",
-    "--session-id",
-    default=None,
-    help="The device ID to use (will be prompted if not given)",
-)
-@click.option(
     "--output",
     "-o",
     "-O",
@@ -69,13 +61,18 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
     if not homeserver:
         homeserver = click.prompt("Homeserver URL")
 
-    click.secho("Resolving homeserver... ", fg="cyan", nl=False)
-    try:
-        homeserver = asyncio.run(niobot.resolve_homeserver(homeserver))
-    except ConnectionError:
-        click.secho("Failed!", fg="red")
+    if not homeserver.startswith("http"):
+        click.secho("Resolving homeserver %r... " % homeserver, fg="cyan", nl=False)
+        try:
+            homeserver = asyncio.run(niobot.resolve_homeserver(homeserver))
+        except ConnectionError:
+            click.secho("Failed!", fg="red")
+        else:
+            click.secho("OK (%s)" % homeserver, fg="green")
     else:
-        click.secho("OK", fg="green")
+        if homeserver.endswith("/"):
+            homeserver = homeserver.rstrip("/", 1)
+        click.echo("Using manually specified homeserver: %r" % homeserver)
 
     click.secho("Getting access token... ", fg="cyan", nl=False)
     status_code = None
