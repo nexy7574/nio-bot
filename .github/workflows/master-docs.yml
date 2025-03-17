@@ -2,7 +2,7 @@ name: Deploy develop docs
 on:
   push:
     branches:
-      - master
+      - dev
 permissions:
   contents: write
 jobs:
