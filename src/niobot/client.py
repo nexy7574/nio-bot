@@ -106,8 +106,6 @@ class NioBot(AsyncClient):
     is automatic based on the startup progress.
     :param default_parse_mentions: Whether to parse mentions in send_message by default to make them intentional.
     :param force_initial_sync: Forcefully perform a full initial sync at startup.
-    :param use_fallback_replies: Whether to force the usage of deprecated fallback replies. Not recommended outside
-    of compatibility reasons.
     :param process_message_edits: Whether to process message edits as new messages and re-invoke any applicable
     commands. This behaves similar to maubot and is enabled by default. Disable if you don't want message edits to
     [re-]trigger commands.
@@ -785,7 +783,7 @@ class NioBot(AsyncClient):
         :param new_nickname: The new nickname. If None, defaults to the user's display name.
         :param user: The user to update. Defaults to the bot's user.
         :return: The response from the server.
-        :raise: GenericMatrixError - The request failed.
+        :raise GenericMatrixError: The request failed.
         """
         room_id = self._get_id(room)
         user = user or self.user_id
@@ -939,9 +937,8 @@ class NioBot(AsyncClient):
         """Gets the id of most objects as a string.
 
         :param obj: The object whose ID to get, or the ID itself.
-        :type obj: typing.Union[nio.Event, nio.MatrixRoom, nio.MatrixUser, str, Any]
         :returns: the ID of the object
-        :raises: ValueError - the Object doesn't have an ID
+        :raises ValueError: The object doesn't have an ID
         """
         if hasattr(obj, "event_id"):
             return obj.event_id
