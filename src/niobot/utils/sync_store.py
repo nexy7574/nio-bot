@@ -1,3 +1,4 @@
+import dataclasses
 import enum
 import json
 import logging
@@ -468,8 +469,22 @@ class SyncStore:
 
             if room.account_data:
                 for event in room.account_data:
+                    if isinstance(event, nio.FullyReadEvent):
+                        event_type = "m.fully_read"
+                        content = {"event_id": event.event_id}
+                    elif isinstance(event, nio.TagEvent):
+                        event_type = "m.tag"
+                        content = {"tags": event.tags}
+                    elif isinstance(event, nio.PushRulesEvent):
+                        event_type = "m.push_rules"
+                        content = {"global": event.global_rules, "device": event.device_rules}
+                    else:
+                        event_type = event.type
+                        content = event.content
                     try:
-                        await self.append_account_data(event["type"], event["content"], room_id)
+                        data = dataclasses.asdict(event)
+                        self.log.debug("Appending account data %r in %s: %r", event_type, room_id, data)
+                        await self.append_account_data(event_type, content, room_id)
                     except (TypeError, ValueError) as e:
                         self.log.warning(
                             "Failed to append account data %r in %s: %r",

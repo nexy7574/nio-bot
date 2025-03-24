@@ -42,7 +42,7 @@ def cli_root(ctx, log_level: str):
     help="The file to output the results to.",
     type=click.Path(allow_dash=True),
 )
-def get_access_token(output: str, username: str, password: str, homeserver: str, device_id: str):
+def get_access_token(output: str, username: str, password: str, homeserver: str):
     """Fetches your access token from your homeserver."""
     if not username:
         username = ""
@@ -96,7 +96,7 @@ def get_access_token(output: str, username: str, password: str, homeserver: str,
     else:
         click.secho("OK", fg="green")
         click.secho(f"Access token: {response.json()['access_token']}", fg="green")
-        click.secho(f"Device ID: {response.json()['device_id']}", fg="green")
+        click.secho(f"Device ID: {response.json()['device_id']}", fg="green", dim=True)
         if output != "-":
             with click.open_file(output, "w+") as f:
                 f.write(response.json())

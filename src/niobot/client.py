@@ -1351,8 +1351,19 @@ class NioBot(AsyncClient):
                 self.log.info("Logged in as %s", login_response.user_id)
                 self.log.debug(f"Logged in: {login_response.access_token}, {login_response.user_id}")
                 self.start_time = time.time()
+                whoamires = await self.whoami()
+                if isinstance(whoamires, nio.WhoamiError):
+                    raise LoginException("Failed to authenticate", whoamires)
+                self.user_id = whoamires.user_id
+                self.device_id = whoamires.device_id
             elif access_token:
                 self.log.info("Logging in with existing access token.")
+                self.access_token = access_token
+                whoamires = await self.whoami()
+                if isinstance(whoamires, nio.WhoamiError):
+                    raise LoginException("Failed to authenticate", whoamires)
+                self.user_id = whoamires.user_id
+                self.device_id = whoamires.device_id
                 if self.store_path:
                     try:
                         self.load_store()
@@ -1360,16 +1371,10 @@ class NioBot(AsyncClient):
                         self.log.warning("Failed to load store.")
                     except nio.LocalProtocolError as e:
                         self.log.warning("No store? %r", e, exc_info=e)
-                self.access_token = access_token
                 self.start_time = time.time()
             else:
                 raise LoginException("You must specify either a password/SSO token or an access token.")
 
-            whoamires = await self.whoami()
-            if isinstance(whoamires, nio.WhoamiError):
-                raise LoginException("Failed to authenticate", whoamires)
-            self.user_id = whoamires.user_id
-            self.device_id = whoamires.device_id
             self.log.info(
                 "Overwrote user_id and device_id with %r and %r from whoami response.", self.user_id, self.device_id
             )

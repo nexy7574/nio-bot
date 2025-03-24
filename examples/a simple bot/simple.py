@@ -31,13 +31,11 @@ if "niobot" not in config:
     except KeyboardInterrupt:
         token = getpass.getpass("Token: ")
         password = None
-    device_id = input("Device ID/Name (default: niobot-simple-example): ") or "niobot-simple-example"
     prefix = input("Bot prefix (default: !): ") or "!"
     owner_id = input("Owner ID (e.g. @example:example.com, default: None): ") or None
     config["niobot"] = {
         "homeserver": homeserver,
         "username": username,
-        "device_id": device_id,
         "prefix": prefix,
         "owner_id": owner_id,
     }
@@ -58,14 +56,12 @@ else:
         token = b16decode(token.encode()).decode()
     if not any((password, token)):
         raise ValueError("Either password or token must be set in config")
-    device_id = config["niobot"]["device_id"]
     prefix = config["niobot"]["prefix"]
     owner_id = config["niobot"].get("owner_id")
 
 bot = niobot.NioBot(
     homeserver=homeserver,
     user_id=username,
-    device_id=device_id,
     store_path=config["niobot"].get("store_path"),
     command_prefix=prefix,
     owner_id=owner_id,
