@@ -1,0 +1,17 @@
+{
+    "streams": [
+        {
+            "index": 0,
+            "codec_name": "PNG",
+            "codec_long_name": "PNG",
+            "codec_type": "video",
+            "height": 2800,
+            "width": 1800
+        }
+    ],
+    "format": {
+        "filename": "/home/user/Pictures/example.png",
+        "format_long_name": "PNG",
+        "size": "329945"
+    }
+}
