@@ -324,11 +324,13 @@ def _file_okay(file: U[pathlib.Path, io.BytesIO]) -> typing.Literal[True]:
 
 
 @overload
-def _to_path(file: U[str, os.PathLike, pathlib.Path]) -> pathlib.Path: ...
+def _to_path(file: U[str, os.PathLike, pathlib.Path]) -> pathlib.Path:
+    ...
 
 
 @overload
-def _to_path(file: io.BytesIO) -> io.BytesIO: ...
+def _to_path(file: io.BytesIO) -> io.BytesIO:
+    ...
 
 
 def _to_path(file: U[str, pathlib.Path, io.BytesIO]) -> U[pathlib.Path, io.BytesIO]:
@@ -465,7 +467,8 @@ class BaseAttachment(abc.ABC):
         size_bytes: typing.Optional[int] = None,
         *,
         attachment_type: AttachmentType = AttachmentType.FILE,
-    ): ...
+    ):
+        ...
 
     @typing.overload
     def __init__(
@@ -476,7 +479,8 @@ class BaseAttachment(abc.ABC):
         size_bytes: typing.Optional[int] = None,
         *,
         attachment_type: AttachmentType = AttachmentType.FILE,
-    ): ...
+    ):
+        ...
 
     def __init__(
         self,
@@ -871,7 +875,7 @@ class ImageAttachment(BaseAttachment):
         if self.height is not None:
             output_body["info"]["h"] = self.height
         if self.width is not None:
-            output_body["info"]["w"] - self.width
+            output_body["info"]["w"] = self.width
 
         if self.thumbnail:
             if self.thumbnail.keys:
