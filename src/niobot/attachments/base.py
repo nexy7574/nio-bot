@@ -157,6 +157,7 @@ class BaseAttachment(abc.ABC):
         }
         if self.keys:
             output_body["file"] = self.keys
+            output_body["file"]["url"] = output_body.pop("url")
         return output_body
 
     @classmethod
