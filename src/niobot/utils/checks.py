@@ -57,7 +57,7 @@ async def _is_creator(ctx: Context) -> (bool, bool):
     create = await ctx.bot.sync_store.get_room_state_event(ctx.room.room_id, "m.room.create", "")
     if not create:
         raise CheckFailure("No m.room.create event found in room state.")
-    is_v12 = create["content"].get("room_version") not in map(str, range(1, 12))
+    is_v12 = create["content"].get("room_version", "1") not in map(str, range(1, 12))
 
     if is_v12:
         # in v12+, additional_creators exist.
