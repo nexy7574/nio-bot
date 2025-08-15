@@ -1,5 +1,6 @@
 import urllib.parse
 
+
 from ..commands import check
 from ..context import Context
 from ..exceptions import CheckFailure, InsufficientPower, NotOwner
@@ -51,18 +52,38 @@ def is_dm(allow_dual_membership: bool = False):
     return check(predicate)
 
 
+async def _is_creator(ctx: Context) -> (bool, bool):
+    """Internal function to check if the sender is the creator of the room."""
+    create = await ctx.bot.sync_store.get_room_state_event(ctx.room.room_id, "m.room.create", "")
+    if not create:
+        raise CheckFailure("No m.room.create event found in room state.")
+    is_v12 = create["content"].get("version") not in map(str, range(1, 12))
+
+    if is_v12:
+        # in v12+, additional_creators exist.
+        additional = create["content"].get("additional_creators", [])
+        if ctx.event.sender in additional:
+            return True, True
+    return create["sender"] == ctx.message.sender, is_v12
+
+
 def sender_has_power(level: int, room_creator_bypass: bool = False):
     """Requires that the sender has a certain power level in the current room before running the command.
 
     :param level: The minimum power level
     :param room_creator_bypass: If the room creator should bypass the check and always be allowed, regardless of level.
+    Irrelevant in v12 rooms.
     :return:
     """
 
-    def predicate(ctx):
-        if ctx.message.sender == ctx.room.creator and room_creator_bypass:
+    async def predicate(ctx: Context):
+        create = await ctx.bot.sync_store.get_room_state_event(ctx.room.room_id, "m.room.create", "")
+        if not create:
+            raise CheckFailure("No m.room.create event found in room state.")
+        is_creator, is_v12 = await _is_creator(ctx)
+        if (room_creator_bypass or is_v12) and is_creator:
             return True
-        if (sp := ctx.room.power_levels.get(ctx.message.sender, -999)) < level:
+        if (sp := ctx.room.power_levels.get_user_level(ctx.message.sender)) < level:
             raise InsufficientPower(needed=level, have=sp)
         return True
 
@@ -77,7 +98,10 @@ def client_has_power(level: int):
     """
 
     def predicate(ctx):
-        if (sp := ctx.room.power_levels.get(ctx.client.user_id, -999)) < level:
+        is_creator, is_v12 = _is_creator(ctx)
+        if is_v12 and ctx.client.user_id == ctx.message.sender:
+            return True
+        if (sp := ctx.room.power_levels.get_user_level(ctx.client.user_id)) < level:
             raise InsufficientPower(needed=level, have=sp)
         return True
 
