@@ -36,6 +36,60 @@ class _DudSyncStore:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
 
+    async def close(self) -> None:
+        """Closes the database connection, committing any unsaved data."""
+        pass
+
+    async def get_room_state(self, room_id: str) -> list[dict[str, typing.Any]]:
+        """Returns an empty list for the room state."""
+        return []
+
+    async def get_room_state_event(
+        self, room_id: str, event_type: str, state_key: str = ""
+    ) -> dict[str, typing.Any] | None:
+        """Returns None for the room state event."""
+        return None
+
+    async def append_state_event(self, client_event: dict[str, typing.Any], room_id: str | None = None):
+        """Does nothing, as this is a dud store."""
+        warnings.warn("Attempted to append state event to a dud sync store.", stacklevel=2)
+
+    async def get_room_summary(self, room_id: str) -> dict[str, typing.Any] | None:
+        """Returns None for the room summary."""
+        return None
+
+    async def get_account_data(
+        self, data_type: str | None = None, room_id: str | None = None
+    ) -> list[dict[str, typing.Any]]:
+        """Returns an empty list for account data."""
+        return []
+
+    async def append_account_data(self, data_type: str, content: dict[str, typing.Any], room_id: str | None = None):
+        """Does nothing, as this is a dud store."""
+        pass
+
+    async def get_next_batch(self) -> str:
+        """Returns an empty string for the next batch token."""
+        return ""
+
+    async def set_next_batch(self, next_batch: str) -> None:
+        """Does nothing, as this is a dud store."""
+        pass
+
+    async def handle_sync(self, response: nio.SyncResponse) -> None:
+        """Does nothing, as this is a dud store."""
+        pass
+
+    async def generate_sync(self) -> nio.SyncResponse:
+        """Returns an empty sync response."""
+        return nio.SyncResponse.from_dict(
+            {"next_batch": "", "account_data": {"events": []}, "rooms": {"invite": {}, "join": {}, "leave": {}}}
+        )
+
+    async def commit(self) -> None:
+        """Does nothing, as this is a dud store."""
+        pass
+
 
 class SyncStore:
     """This is the main class for the NioBot Sync Store.
