@@ -1392,11 +1392,21 @@ class NioBot(AsyncClient):
             if self.sync_store:
                 self.log.info("Resuming from sync store...")
                 try:
+                    start = time.perf_counter()
                     payload = await self.sync_store.generate_sync()
+                    end_gen = time.perf_counter()
                     assert isinstance(payload, nio.SyncResponse), "Sync store did not return a SyncResponse."
+                    self.log.debug("Generated resume payload in %.2f seconds", end_gen - start)
                     self.log.info("Replaying sync...")
+                    start_handle = time.perf_counter()
                     await self._handle_sync(payload)
-                    self.log.info("Successfully resumed from store.")
+                    end_handle = time.perf_counter()
+                    self.log.info(
+                        "Successfully resumed from store (total=%.2fs, generate=%.2fs, replay=%.2fs).",
+                        end_handle - start,
+                        end_gen - start,
+                        end_handle - start_handle,
+                    )
                 except Exception as e:
                     self.log.error("Failed to replay sync: %r. Will not resume.", e, exc_info=e)
 
