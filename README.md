@@ -1,3 +1,23 @@
+# Nio-Bot is deprecated
+
+NioBot has been an amazing project and a sturdy SDK for several years now. However, several complications have meant
+that, as time has marched forward, NioBot has increasingly been left in the past, slowly rotting away, even with
+maintenance. Furthermore, I no longer even use the library myself, and hardly write Python code anymore, so it makes
+little sense for me to continue maintaining it.
+
+Thank you to everyone who has contributed to the project, whether that be through code, documentation, or just by using
+it and giving feedback.
+
+**If you need an alternative library**, I strongly recommend [maubot](https://mau.bot), or the underlying library it
+uses, [mautrix-python](https://docs.mau.fi/python/latest/). Both of these are exceptionally high quality libraries, and
+you may find them even easier to use.
+
+The domain `nio-bot.dev` will not be renewed after this notice is posted, so the hosted documentation will eventually go
+offline. The GitHub repository will remain online, but it will be archived and set to read-only.
+
+<details>
+<summary>pre-archive README</summary>
+
 # Nio-Bot
 
 ## Making Matrix bots simple
@@ -59,7 +79,7 @@ possible. Some features include, but are not limited to:
 
 ## Help
 
-You can join our [Matrix Room](https://nio-bot.dev/support) for help, or to just chat.
+You can join our [Matrix Room](https://matrix.to/#/#niobot:nexy7574.co.uk) for help, or to just chat.
 You can also get the latest updates in development there, including having your say in how new
 things are implemented!
 
@@ -120,3 +140,5 @@ successful.
 
 Look at the [docs](https://docs.nio-bot.dev) for more information on how to use Nio-Bot, or the
 [examples on GitHub](https://github.com/nexy7574/niobot).
+
+</details>
